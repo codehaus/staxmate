@@ -1,0 +1,260 @@
+<?xml version="1.0" standalone='yes'?>
+
+    <project name="StaxMate" basedir="." default="readme">
+
+    <!-- Version information -->
+
+    <!-- Woodstox version -->
+    <property name="STAXMATE_TITLE" value="StaxMate" />
+    <property name="STAXMATE_VERSION" value="0.9.2" />
+    <property name="STAXMATE_VENDOR" value="http://woodstox.codehaus.org" />
+
+    <property name="ProjectName" value="StaxMate library" />
+    <!-- Source directories -->
+    <property name="SrcDir" location="${basedir}/src" />
+    <property name="JavaSrcDir" location="${SrcDir}/java" />
+    <property name="TestSrcDir" location="${SrcDir}/test" />
+    <!-- Libs -->
+    <property name="LibDir" location="${basedir}/lib" />
+    <!-- Build-related -->
+    <property name="BuildDir" location="${basedir}/build" />
+    <property name="BuildClassesDir" location="${BuildDir}/classes" />
+    <!-- Documentation -->
+    <property name="DocDir" location="${basedir}/doc" />
+    <property name="JavaDocDir" location="${BuildDir}/javadoc" />
+    <!-- Test suite -->
+    <property name="TestDir" location="${basedir}/test" />
+    <property name="TestClassesDir" location="${TestDir}/classes" />
+    <property name="TestResultsDir" location="${TestDir}/results" />
+    <property name="TestXmlResultsDir" location="${TestResultsDir}/xml" />
+    <!-- Distribution -->
+    <property name="DistDir" location="${basedir}/dist" />
+
+    <!-- jars needed for compilation -->
+    <path id="compile-classpath">
+        <fileset dir="${LibDir}" includes="*.jar" />
+    </path>
+
+    <path id="junit-libs">
+       <fileset dir="${LibDir}">
+            <include name="junit/junit*.jar" />
+       </fileset>
+    </path>
+
+    <!-- Source files to include in source packages (tar, zip) -->
+    <patternset id="dist-src-files">
+          <include name="src/**/*.java" />
+          <include name="src/java/**/*.html" />
+          <include name="release-notes/*" />
+          <include name="release-notes/asl/*" />
+          <include name="release-notes/lgpl/*" />
+          <include name="build.xml" />
+          <include name="project.xml" />
+          <!-- need jars too; at least the api jar, but let's copy
+               all for now... it's nice to have the unit tests in there
+               too. This way src packages are proper supersets of binary ones
+            -->
+          <include name="lib/*.jar" />
+    </patternset>
+
+
+    <!--*********************************************************************-->
+    <!-- The readme target shows a brief description of all targets          -->
+    <!-- supported by this ant build file                                    -->
+    <!--*********************************************************************-->
+    <target name="readme">
+        <echo message = "${ProjectName}'s available targets" />
+        <echo message = "---------------------------------------------------" />
+        <echo message = "1)  readme - Displays this information (default target)." />
+        <echo message = "2)  clean - Remove any generated files/directories." />
+        <echo message = "3)  compile - Compile all non-test ${ProjectName} code." />
+        <echo message = "4)  jar - Compile and create jar for non-test ${ProjectName} code." />
+        <echo message = "5)  javadoc - Generate ${ProjectName} code documentation." />
+        <echo message = "6)  test.compile - Compile ${ProjectName} code and test code" />
+        <echo message = "       for JUnit tests." />
+        <echo message = "7)  test - Run JUnit tests." />
+        <echo message = "       Reports results and generates html output." />
+        <echo message = "8)  dist - Create distribution directory and copy necessary files there" />
+        <echo message = "9) all - Run the clean, compile, javadoc," />
+        <echo message = "         test and dist targets." />  
+    </target>
+
+    <target name="prepare">
+        <!-- make build directories -->
+        <mkdir dir="${BuildDir}" />
+        <mkdir dir="${BuildClassesDir}" />
+
+        <!-- make docs directories -->
+        <mkdir dir="${DocDir}" />
+        <mkdir dir="${JavaDocDir}" />
+
+        <!-- make test output directories -->
+        <mkdir dir="${TestDir}" />
+        <mkdir dir="${TestClassesDir}" />
+        <mkdir dir="${TestResultsDir}" />
+        <mkdir dir="${TestXmlResultsDir}" />
+
+        <!-- and finally distribution dir -->
+        <mkdir dir="${DistDir}" />
+    </target>
+
+    <target name="all" depends="clean,javadoc,test,dist">
+        <!-- This target simply depends on others to do its job -->
+    </target>
+
+    <!--*********************************************************-->
+    <!-- clean - Removes all generated files/directories.        -->
+    <!--*********************************************************-->
+    <target name="clean">
+        <delete dir="${BuildDir}"/>
+        <delete dir="${DocDir}"/>
+        <delete dir="${TestDir}"/>
+        <delete dir="${DistDir}"/>
+    </target>
+
+    <!--*********************************************************-->
+    <!-- Compilation -->
+    <!--*********************************************************-->
+
+    <target name="compile" depends="prepare">
+        <javac SrcDir="${JavaSrcDir}" destdir="${BuildClassesDir}"
+            debug="true"
+        >
+            <include name="org/codehaus/staxmate/**/*.java" />
+            <include name="test/**/*.java" />
+            <classpath refid="compile-classpath" />
+        </javac>
+    </target>
+
+    <!--*********************************************************-->
+    <!-- Packaging... -->
+    <!--*********************************************************-->
+ 
+    <target name="dist" depends="compile,jar,src-dist,sample-dist,javadoc">
+       <!-- First, let's copy the binary jars to dist -->
+       <copy todir="${DistDir}">
+           <fileset dir="${BuildDir}">
+             <include name="staxmate-*.jar" />
+           </fileset>
+       </copy>
+       <!-- Then copy javadocs -->
+       <copy todir="${DistDir}">
+         <fileset dir="${BuildDir}" includes="javadoc/**/*" />
+       </copy>
+       <!-- Plus, let's also just copy README and compatibility files, in
+            addition to being included in source package
+         -->
+       <copy todir="${DistDir}" >
+            <fileset dir="." includes="release-notes/*" />
+            <fileset dir="." includes="release-notes/asl/*" />
+            <fileset dir="." includes="release-notes/lgpl/*" />
+       </copy>
+    </target>
+
+    <target name="src-dist">
+       <tar basedir="${basedir}" destfile="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar">
+         <patternset refid="dist-src-files" />
+       </tar>
+       <gzip zipfile="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar.gz"
+         src="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar" />
+       <delete file="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar" />
+       <zip basedir="${basedir}" destfile="${DistDir}/staxmate-src-${STAXMATE_VERSION}.zip">
+         <patternset refid="dist-src-files" />
+       </zip>
+    </target>
+
+    <target name="sample-dist">
+       <tar basedir="${basedir}/sample-webapp" destfile="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar">
+          <include name="*.sh" />
+          <include name="src/**/*.java" />
+          <include name="html/*.html" />
+          <include name="cfg/*" />
+          <include name="jetty/**/*" />
+          <include name="build.xml" />
+          <include name="lib/*.jar" />
+       </tar>
+       <gzip zipfile="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar.gz"
+         src="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar" />
+       <delete file="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar" />
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar jarfile="${BuildDir}/staxmate-${STAXMATE_VERSION}.jar"
+            filesonly="true" >
+          <manifest>
+            <attribute name="Built-By" value="${user.name}"/>
+            <attribute name="Implementation-Title"   value="${STAXMATE_TITLE}"/>
+            <attribute name="Implementation-Version" value="${STAXMATE_VERSION}"/>
+            <attribute name="Implementation-Vendor"  value="${STAXMATE_VENDOR}"/>
+          </manifest>
+          <fileset dir="${BuildClassesDir}">
+             <include name="org/codehaus/staxmate/**/*.class" />
+             <exclude name="org/codehaus/staxmate/samples/*.class" />
+          </fileset>
+          <!-- 12-Oct-2006, tatus: for now, let's just default to ASL;
+             -    can have separate targets for lgpl if need be
+            -->
+          <fileset dir="release-notes/asl">
+            <include name="*" />
+          </fileset>
+        </jar>
+    </target> 
+
+    <target name="javadoc" depends="prepare">
+        <!-- Build a dirpath that contains just the "source" tree -->
+        <javadoc windowtitle="${ProjectName}" destdir="${JavaDocDir}" 
+          author="true"  version="true">
+            <packageset dir="${JavaSrcDir}" defaultexcludes="yes">
+                <include name="org/codehaus/staxmate/**" />
+                <exclude name="org/codehaus/staxmate/samples/**" />
+            </packageset>
+            <classpath refid="compile-classpath" />
+        </javadoc>
+    </target> 
+
+    <!--*********************************************************************-->
+    <!-- Tasks from here down are in support of junit tests.                 -->
+    <!--*********************************************************************-->
+    <target name="junit">
+        <available property="junit.present" classname="junit.framework.TestCase" />
+    </target>
+
+    <target name="test.compile" depends="junit, jar" if="junit.present">
+        <javac SrcDir="${TestSrcDir}" destdir="${TestClassesDir}"
+            debug="true"
+        >
+            <include name="**/*.java" />
+            <classpath refid="compile-classpath" />
+            <classpath>
+                <pathelement path="${BuildClassesDir}"/>  
+                <path refid="junit-libs"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="test" depends="test.compile">
+        <!-- showoutput 'yes' to allow outputting debug msgs... -->
+        <junit fork="no" printsummary="yes" haltonfailure="no"
+         showoutput="yes">
+            <batchtest fork="no" todir="${TestXmlResultsDir}">
+                <fileset dir="${TestClassesDir}">
+                    <include name="**/Test*.class"/>
+                </fileset>
+            </batchtest>
+            <formatter type="xml" />
+            <classpath refid="compile-classpath" />
+            <classpath>
+                <pathelement path="${BuildClassesDir}" />
+                <pathelement location="${TestClassesDir}" /> 
+                <path refid="junit-libs"/>
+            </classpath>     
+        </junit>
+
+        <junitreport todir="${TestResultsDir}">
+            <fileset dir="${TestXmlResultsDir}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report todir="${TestResultsDir}" />
+        </junitreport>
+   </target>
+</project>
