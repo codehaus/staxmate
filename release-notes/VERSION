@@ -1,0 +1,50 @@
+Version: 0.9.2
+
+Release date: 12-Sep-2006
+
+Description:
+  Fixed an important problem, cleaned up some comments, and wanted
+  to release current state to be used for some sample code.
+
+  Problems fixed:
+
+  * Handling of sub-tree skipping when START_ELEMENT were filtered out
+    was not working correctly (either with hierarchic or flat cursors)
+
+  New functionality:
+
+  * Added ElementFilter, for only accessing elements with specified
+    name
+  * Added unit tests for filters
+
+== History: ==
+
+0.9.1: [12-Sep-2006]
+
+  Problems fixed:
+
+  * Nested cursor synchronization problems fixed, unit tests added
+    [contributed by Ed G, David B]
+
+0.9: [11-Aug-2006]
+
+  New functionality:
+
+  * Full writer-side functionality included
+
+  Rewrite:
+
+  * Converted StaxMate to JDK 1.5: now uses Enums as return values, which
+    is nice as Enums can have properties.
+  * Renamed 'iterators' to 'cursors' (input side change); renamed packages
+    to have more meaningful names.
+
+....
+
+0.6: [late 2004]
+
+  Added writer-side functionality
+
+0.5: [mid-2004]:
+
+  First version, proof-of-concept, only reader side functionality.

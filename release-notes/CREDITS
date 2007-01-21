@@ -1,0 +1,11 @@
+Here are people who have contributed to StaxMate development:
+(version numbers in brackets indicate release in which the problem was fixed)
+
+Tatu Saloranta, tatu.saloranta@iki.fi: Author
+
+David S Boyer:
+
+  * Reported problems with hierarchic cursor traversal and contributed
+    patches to fix them, as well as matching unit tests to point out the
+    problem and verify solution
+    [0.9.1]

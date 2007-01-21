@@ -5,10 +5,12 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.codehaus.stax2.XMLStreamWriter2;
+import org.codehaus.stax2.ri.Stax2WriterAdapter;
+
 import org.codehaus.staxmate.out.SMOutputContext;
 import org.codehaus.staxmate.out.SMOutputDocument;
 import org.codehaus.staxmate.out.SMRootFragment;
-import org.codehaus.staxmate.util.Stax2WriterAdapter;
 
 /**
  * Factory class used to create various outputter (like
