@@ -147,8 +147,15 @@ public class SMHierarchicCursor
             skipSubTree(0);
         } else if (state == State.INITIAL) {
             skipSubTree(0);
-        } else {
-            skipSubTree(1);
+        } else { // State.ACTIVE
+            /* 19-Feb-2007, Tatus: This is not an elegant solution, but for
+             *   now, let's try such a work-around:
+             */
+            if (mStreamReader.getEventType() == XMLStreamConstants.START_ELEMENT) {
+                skipSubTree(1);
+            } else {
+                skipSubTree(0);
+            }
         }
     }
 }
