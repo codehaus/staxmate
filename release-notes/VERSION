@@ -1,17 +1,18 @@
-Version: 0.9.2
+Version: 1.0.0
 
-Release date: 12-Sep-2006
+Release date: xx-Apr-2007
 
 Description:
-  Fixed an important problem, cleaned up some comments, and wanted
-  to release current state to be used for some sample code.
+  First official release of StaxMate. Contains baseline functionality
+  and is to work with upcoming Stax2 API v3.0 (which will be released
+  along with Woodstox 4.0).
 
-  Problems fixed:
+Problems fixed:
 
   * Handling of sub-tree skipping when START_ELEMENT were filtered out
     was not working correctly (either with hierarchic or flat cursors)
 
-  New functionality:
+New functionality:
 
   * Added ElementFilter, for only accessing elements with specified
     name
