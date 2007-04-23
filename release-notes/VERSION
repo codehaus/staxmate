@@ -9,6 +9,8 @@ Description:
 
 Problems fixed:
 
+  * [STAXMATE-1]: Cursor synchronization did not work as expected 
+    when reading text nodes.
   * Handling of sub-tree skipping when START_ELEMENT were filtered out
     was not working correctly (either with hierarchic or flat cursors)
 
