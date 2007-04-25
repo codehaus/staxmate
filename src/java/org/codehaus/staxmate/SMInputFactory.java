@@ -3,9 +3,9 @@ package org.codehaus.staxmate;
 import javax.xml.stream.*;
 
 import org.codehaus.stax2.XMLStreamReader2;
-import org.codehaus.stax2.ri.Stax2ReaderAdapter;
 
 import org.codehaus.staxmate.in.*;
+import org.codehaus.staxmate.util.Stax2ReaderAdapter;
 
 /**
  * Factory class used to create {@link SMInputCursor} instances.
