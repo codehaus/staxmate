@@ -6,7 +6,7 @@
 
     <!-- Woodstox version -->
     <property name="STAXMATE_TITLE" value="StaxMate" />
-    <property name="STAXMATE_VERSION" value="0.9.2" />
+    <property name="STAXMATE_VERSION" value="1.0.0" />
     <property name="STAXMATE_VENDOR" value="http://woodstox.codehaus.org" />
 
     <property name="ProjectName" value="StaxMate library" />
@@ -46,8 +46,6 @@
           <include name="src/**/*.java" />
           <include name="src/java/**/*.html" />
           <include name="release-notes/*" />
-          <include name="release-notes/asl/*" />
-          <include name="release-notes/lgpl/*" />
           <include name="build.xml" />
           <include name="project.xml" />
           <!-- need jars too; at least the api jar, but let's copy
@@ -146,8 +144,12 @@
          -->
        <copy todir="${DistDir}" >
             <fileset dir="." includes="release-notes/*" />
-            <fileset dir="." includes="release-notes/asl/*" />
-            <fileset dir="." includes="release-notes/lgpl/*" />
+       </copy>
+       <copy todir="${DistDir}">
+            <fileset dir="${SrcDir}/maven" includes="*.pom" />
+            <filterset>
+              <filter token="VERSION" value="${STAXMATE_VERSION}" />
+            </filterset>
        </copy>
     </target>
 
@@ -194,8 +196,8 @@
           <!-- 12-Oct-2006, tatus: for now, let's just default to ASL;
              -    can have separate targets for lgpl if need be
             -->
-          <fileset dir="release-notes/asl">
-            <include name="*" />
+          <fileset dir="release-notes/">
+            <include name="LICENSE" />
           </fileset>
         </jar>
     </target> 
