@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Sample Maven project file for StaxMate, modelled after
+     one from Woodstox project
+  -->
+
+<project>
+    <!-- maven project version -->
+    <pomVersion>3</pomVersion>
+    
+    <!-- Project IDs (used in JARs and such) -->
+    <id>staxmate</id>
+    <groupId>staxmate</groupId>
+    
+    <!-- Project Info -->
+    <name>StaxMate</name>
+    <currentVersion>1.1.0</currentVersion>
+    
+    <shortDescription>StaxMate is a light-weight XML processing library built on top of Stax API.
+    </shortDescription>
+    
+    <description>
+StaxMate is a light-weight framework that adds convenience to streaming XML-processing  without significant additional overhead.
+It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.
+    </description>
+    
+    <!-- Project URL -->
+    <url>http://staxmate.codehaus.org/</url>
+    
+    <!-- Developers -->
+    <developers>
+        <developer>
+            <name>Tatu Saloranta</name>
+            <email>cowtowncoder@yahoo.com</email>
+        </developer>
+    </developers>
+    
+    <!-- Distribution Licenses -->
+    <licenses>
+        <license>
+            <name>BSD</name>
+            <url>http://www.opensource.org/licenses/bsd-license.php</url>
+        </license>
+    </licenses>
+    
+    <!-- basic dependencies -->
+    <dependencies>
+        <!-- Stax API -->
+        <dependency>
+            <groupId>jsr173</groupId>
+            <artifactId>jsr173-api</artifactId>
+            <jar>jsr173_1.0_api.jar</jar>
+            <url>http://www.jcp.org/en/jsr/detail?id=173</url>
+        </dependency>
+    </dependencies>
+    
+    <!-- Build Settings -->
+    <build>
+        <sourceDirectory>${basedir}/src/java</sourceDirectory>
+        <resources>
+        </resources>
+    </build>
+    
+</project>
