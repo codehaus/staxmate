@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
 
+  <modelVersion>1.0.0</modelVersion>
+
  <!-- General information -->
 
-  <modelVersion>1.0.0</modelVersion>
-  <groupId>org.codehaus.staxmate</groupId>
-  <artifactId>staxmate</artifactId>
   <name>StaxMate</name>
   <version>@VERSION@</version>
+  <groupId>org.codehaus.staxmate</groupId>
+  <artifactId>staxmate</artifactId>
+  <packaging>jar</packaging>
   <description>
 StaxMate is a light-weight framework that adds convenience to streaming XML-processing  without significant additional overhead.
 It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.

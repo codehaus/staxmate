@@ -9,3 +9,8 @@ David S Boyer:
     patches to fix them, as well as matching unit tests to point out the
     problem and verify solution
     [0.9.1]
+
+Michel Goldstein:
+  * Reported [STAXMATE-1], another problem with hierarchic cursor
+    traversal, and contributed unit test for testing it.
+    [1.0.0]
