@@ -1,13 +1,21 @@
-Version: 0.9.2
+Version: 1.1rc1
 
-Release date: 12-Sep-2006
+Release date: xx-xxx-2007
 
 Description:
-  Fixed an important problem, cleaned up some comments, and wanted
-  to release current state to be used for some sample code.
+
+Problems fixed:
+
+New functionality:
+
+== History: ==
+
+1.0.0: [02-May-2007]
 
   Problems fixed:
 
+  * [STAXMATE-1]: Cursor synchronization did not work as expected 
+    when reading text nodes.
   * Handling of sub-tree skipping when START_ELEMENT were filtered out
     was not working correctly (either with hierarchic or flat cursors)
 
@@ -15,9 +23,6 @@ Description:
 
   * Added ElementFilter, for only accessing elements with specified
     name
-  * Added unit tests for filters
-
-== History: ==
 
 0.9.1: [12-Sep-2006]
 

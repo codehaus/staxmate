@@ -3,11 +3,11 @@
     <project name="StaxMate" basedir="." default="readme">
 
     <!-- Version information -->
-
-    <!-- Woodstox version -->
     <property name="STAXMATE_TITLE" value="StaxMate" />
     <property name="STAXMATE_VERSION" value="1.1rc1" />
     <property name="STAXMATE_VENDOR" value="http://woodstox.codehaus.org" />
+
+    <property name="BASENAME" value="staxmate-${STAXMATE_VERSION}" />
 
     <property name="ProjectName" value="StaxMate library" />
     <!-- Source directories -->
@@ -188,8 +188,8 @@
     </target>
 
     <target name="jar" depends="compile">
-        <jar jarfile="${BuildDir}/staxmate-${STAXMATE_VERSION}.jar"
-            filesonly="true" >
+        <!-- First, primary jar, without Stax2 classes -->
+        <jar jarfile="${BuildDir}/${BASENAME}.jar" filesonly="true" >
           <manifest>
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Implementation-Title"   value="${STAXMATE_TITLE}"/>
@@ -200,9 +200,23 @@
              <include name="org/codehaus/staxmate/**/*.class" />
              <exclude name="org/codehaus/staxmate/samples/*.class" />
           </fileset>
-          <!-- 12-Oct-2006, tatus: for now, let's just default to ASL;
-             -    can have separate targets for lgpl if need be
-            -->
+          <fileset dir="release-notes/">
+            <include name="LICENSE" />
+          </fileset>
+        </jar>
+
+        <!-- And second, extended jar, with Stax2 classes -->
+        <jar jarfile="${BuildDir}/staxmate-with-stax2-${STAXMATE_VERSION}.jar" filesonly="true"
+           filesetmanifest="skip"
+        >
+          <manifest>
+            <attribute name="Built-By" value="${user.name}"/>
+            <attribute name="Implementation-Title"   value="${STAXMATE_TITLE}"/>
+            <attribute name="Implementation-Version" value="${STAXMATE_VERSION}"/>
+            <attribute name="Implementation-Vendor"  value="${STAXMATE_VENDOR}"/>
+          </manifest>
+          <zipfileset src="${BuildDir}/${BASENAME}.jar" />
+          <zipfileset dir="${LibDir}" includes="stax2*.jar" />
           <fileset dir="release-notes/">
             <include name="LICENSE" />
           </fileset>
