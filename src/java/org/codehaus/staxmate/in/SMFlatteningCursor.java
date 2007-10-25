@@ -26,17 +26,6 @@ import org.codehaus.stax2.XMLStreamReader2;
 public class SMFlatteningCursor
     extends SMInputCursor
 {
-    /*
-    ////////////////////////////////////////////
-    // Iteration state
-    ////////////////////////////////////////////
-     */
-
-    /**
-     * Number of nested start elements this element has iterated over,
-     * including current one (if pointing to one)
-     */
-    protected int mNesting;
 
     /*
     ////////////////////////////////////////////
@@ -47,7 +36,6 @@ public class SMFlatteningCursor
     public SMFlatteningCursor(SMInputCursor parent, XMLStreamReader2 sr, SMFilter f)
     {
         super(parent, sr, f);
-        mNesting = 0;
     }
 
     /*
@@ -56,9 +44,32 @@ public class SMFlatteningCursor
     ///////////////////////////////////////////////////
      */
 
-    public int getDepth()
+    public int getParentCount()
     {
-        return mParentCount + mNesting;
+        /* First things first: if we have a child cursor, we can not
+         * ask stream, since its depth depends on how far child
+         * cursor has travelled. But it does know its base parent
+         * count, which has to be one bigger than our parent count
+         * at time when child cursor was created, which is the latest
+         * node this cursor traversed over.
+         */
+        if (mChildCursor != null) {
+            return mChildCursor.getBaseParentCount();
+        }
+        // No event yet, or we are closed? base depth is ok then
+        if (mCurrEvent == null) {
+            return mBaseDepth;
+        }
+
+        /* Otherwise, stream's count can be used. However, it'll be
+         * off by one for both START_ELEMENT and END_ELEMENT.
+         */
+        int depth = mStreamReader.getDepth();
+        if (mCurrEvent == SMEvent.START_ELEMENT
+            || mCurrEvent == SMEvent.END_ELEMENT) {
+            --depth;
+        }
+        return depth;
     }
 
     /*
@@ -78,20 +89,12 @@ public class SMFlatteningCursor
          * through
          */
         if (mState == State.HAS_CHILD) {
-            mChildCursor.skipTree();
+            mChildCursor.skipAll();
             mChildCursor = null;
             mState = State.ACTIVE;
         } else if (mState == State.INITIAL) {
             mState = State.ACTIVE;
-        } else { // active
-            /* Start element parent count can only be updated AFTER the node
-             * has been observed; whereas end element has to be updated
-             * when (AFTER) observed.
-             */
-            if (mCurrEvent == SMEvent.START_ELEMENT) {
-                ++mNesting;
-            }
-        }
+        } // nothing to do if we are active
 
         while (true) {
             int type;
@@ -118,15 +121,21 @@ public class SMFlatteningCursor
             ++mNodeCount;
 
             if (type == XMLStreamConstants.END_ELEMENT) {
-                if (--mNesting < 0) { // starts at 0
+                /* Base depth was depth at START_ELEMENT, Stax2.getDepth()
+                 * will return identical value for END_ELEMENT (and
+                 * <= used instead of < just for sanity checking)
+                 */
+                if (mStreamReader.getDepth() < mBaseDepth) {
                     break;
                 }
             } else if (type == XMLStreamConstants.START_ELEMENT) {
-                ++mNesting;
                 ++mElemCount;
-            }
-            // !!! only here temporarily, shouldn't be needed
-            else if (type == XMLStreamConstants.END_DOCUMENT) {
+
+                /* !!! 24-Oct-2007, tatus: This sanity check really
+                 *   shouldn't be needed any more... but let's leave
+                 *   it for time being
+                 */
+            } else if (type == XMLStreamConstants.END_DOCUMENT) {
                 throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()+")");
             }
 
@@ -170,47 +179,6 @@ public class SMFlatteningCursor
 
     public SMInputCursor constructDescendantCursor(SMFilter f) {
         return new SMFlatteningCursor(this, mStreamReader, f);
-    }
-
-    /**
-     * Method called by the parent cursor, to skip over the scope
-     * this cursor iterates, and of its sub-scopes if any.
-     *<p>
-     * Note: implementation differs from that of non-flattening cursor
-     * mostly since we may be deeper down in the tree already, and
-     * thus may need to encounter multiple end tags.
-     */
-    @Override
-    protected void skipTree()
-        throws XMLStreamException
-    {
-        if (mState == State.CLOSED) { // already finished?
-            return;
-        }
-        State state = mState;
-        mState = State.CLOSED;
-        mCurrEvent = null;
-
-        // child cursor(s) to delegate skipping to?
-        if (state == State.HAS_CHILD) {
-            mChildCursor.skipTree();
-            mChildCursor = null;
-        }
-
-        int depth = mNesting;
-        while (true) {
-            int type = mStreamReader.next();
-            if (type == XMLStreamConstants.START_ELEMENT) {
-                ++depth;
-            } else if (type == XMLStreamConstants.END_ELEMENT) {
-                if (--depth < 0) {
-                    break;
-                }
-            } else if (type == XMLStreamConstants.END_DOCUMENT) { // sanity check
-                // An error...
-                throw new IllegalStateException("Unexpected END_DOCUMENT encountered when skipping a sub-tree.");
-            }
-        }
     }
 
     /*

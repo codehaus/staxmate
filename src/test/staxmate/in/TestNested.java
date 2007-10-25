@@ -7,6 +7,10 @@ import javax.xml.stream.*;
 import org.codehaus.staxmate.SMInputFactory;
 import org.codehaus.staxmate.in.*;
 
+/**
+ * Basic unit tests for verifying that traversal using nested cursors
+ * works as expected
+ */
 public class TestNested
     extends BaseReaderTest
 {
@@ -20,14 +24,19 @@ public class TestNested
             +"</root>\n";
         XMLStreamReader sr = XMLInputFactory.newInstance().createXMLStreamReader(new StringReader(XML));
         SMInputCursor rootc = SMInputFactory.rootElementCursor(sr);
+        assertEquals(0, rootc.getParentCount());
         assertEquals(SMEvent.START_ELEMENT, rootc.getNext()); // should always have root
         assertEquals("root", rootc.getLocalName());
+        assertEquals(0, rootc.getParentCount());
         SMInputCursor leafc = rootc.childElementCursor();
 
+        assertEquals(1, leafc.getParentCount());
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
         assertEquals("leaf", leafc.getLocalName());
+        assertEquals(1, leafc.getParentCount());
 
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
+        assertEquals(1, leafc.getParentCount());
         assertEquals("leaf", leafc.getLocalName());
         assertEquals(1, leafc.getAttrCount());
         assertEquals("attr", leafc.getAttrLocalName(0));
@@ -42,7 +51,7 @@ public class TestNested
         sr.close();
     }
 
-    public void XXXtestSimpleThreeLevel()
+    public void testSimpleThreeLevel()
         throws XMLStreamException
     {
         String XML =
@@ -67,17 +76,20 @@ public class TestNested
         assertEquals(SMEvent.START_ELEMENT, rootc.getNext()); // should always have root
         assertEquals("root", rootc.getLocalName());
         assertEquals(3, rootc.getAttrCount());
+        assertEquals(0, rootc.getParentCount());
 
         SMInputCursor brc = rootc.childElementCursor();
         assertEquals(SMEvent.START_ELEMENT, brc.getNext());
         assertEquals("pt", brc.getLocalName());
         assertEquals(1, brc.getAttrCount());
+        assertEquals(1, brc.getParentCount());
 
         SMInputCursor leafc = brc.childElementCursor();
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
+        assertEquals(2, leafc.getParentCount());
         assertEquals("prop", leafc.getLocalName());
         assertEquals(1, leafc.getAttrCount());
-        //assertEquals("Authority Non Buyable", leafc.collectDescendantText(false));
+        assertEquals("Authority Non Buyable", leafc.collectDescendantText(false));
 
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
         assertEquals("prop", leafc.getLocalName());
@@ -89,7 +101,7 @@ public class TestNested
 
         // Enough, let's move to the next at branch level:
         assertEquals(SMEvent.START_ELEMENT, brc.getNext());
-        //assertEquals("pt", brc.getLocalName());
+        assertEquals("pt", brc.getLocalName());
 
         // And then check that root is done:
 
@@ -115,13 +127,16 @@ public class TestNested
         XMLStreamReader sr = XMLInputFactory.newInstance().createXMLStreamReader(new StringReader(XML));
         SMInputCursor rootc = SMInputFactory.rootElementCursor(sr);
         rootc.getNext(); // should always have root
-        assertEquals("root", rootc.getLocalName());
+        assertEquals("root", rootc.getLocalName()); 
+        assertEquals(0, rootc.getParentCount());
         SMInputCursor ptCursor = rootc.childElementCursor();
         while (ptCursor.getNext() != null) {
+            assertEquals(1, ptCursor.getParentCount());
             assertEquals("pt", ptCursor.getLocalName());
             assertNotNull(ptCursor.getAttrValue("name"));
             SMInputCursor propCursor = ptCursor.childElementCursor();
             while (propCursor.getNext() != null) {
+                assertEquals(2, propCursor.getParentCount());
                 assertEquals("prop", propCursor.getLocalName());
                 String propName = propCursor.getAttrValue("name");
                 assertNotNull(propName);

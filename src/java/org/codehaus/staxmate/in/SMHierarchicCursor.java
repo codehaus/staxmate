@@ -31,8 +31,8 @@ public class SMHierarchicCursor
     ///////////////////////////////////////////////////
      */
 
-    public int getDepth() {
-        return mParentCount;
+    public int getParentCount() {
+        return mBaseDepth;
     }
 
     /*
@@ -49,7 +49,7 @@ public class SMHierarchicCursor
         }
         // If there is a child cursor, it has to be traversed through
         if (mState == State.HAS_CHILD) {
-            mChildCursor.skipTree();
+            mChildCursor.skipAll();
             mChildCursor = null;
             mState = State.ACTIVE;
         } else if (mState == State.INITIAL) {
@@ -57,7 +57,7 @@ public class SMHierarchicCursor
         } else { // active
             // If we had a start element, need to skip the subtree...
             if (mCurrEvent == SMEvent.START_ELEMENT) {
-                skipSubTree(0);
+                skipToEndElement();
             }
         }
 
@@ -101,7 +101,7 @@ public class SMHierarchicCursor
                     if (mElemTracking == Tracking.ALL_SIBLINGS) {
                         mTrackedElement = constructElementInfo(mParentTrackedElement, mTrackedElement);
                     }
-                    skipSubTree(0);
+                    skipToEndElement();
                 }
                 continue;
             }
@@ -130,31 +130,35 @@ public class SMHierarchicCursor
         return new SMFlatteningCursor(this, mStreamReader, f);
     }
 
-    protected void skipTree()
+    /*
+    ////////////////////////////////////////////
+    // Internal methods
+    ////////////////////////////////////////////
+     */
+
+    /**
+     * Method called when current event/token is START_ELEMENT, but
+     * we are not interested in its contents (children). Hence, needs
+     * to skip all intervening events/tokens until matching END_ELEMENT
+     * is encountered.
+     */
+    protected void skipToEndElement()
         throws XMLStreamException
     {
-        if (mState == State.CLOSED) { // already finished?
-            return;
-        }
-        State state = mState;
-        mState = State.CLOSED;
-        mCurrEvent = null;
-
-        // child cursor(s) to delegate skipping to?
-        if (state == State.HAS_CHILD) {
-            mChildCursor.skipTree();
-            mChildCursor = null;
-            skipSubTree(0);
-        } else if (state == State.INITIAL) {
-            skipSubTree(0);
-        } else { // State.ACTIVE
-            /* 19-Feb-2007, Tatus: This is not an elegant solution, but for
-             *   now, let's try such a work-around:
-             */
-            if (mStreamReader.getEventType() == XMLStreamConstants.START_ELEMENT) {
-                skipSubTree(1);
-            } else {
-                skipSubTree(0);
+        XMLStreamReader2 sr = mStreamReader;
+        // Stax2 guarantees that START_ELEMENT and END_ELEMENT depths match
+        int endDepth = sr.getDepth();
+        while (true) {
+            int type = sr.next();
+            if (type == XMLStreamConstants.END_ELEMENT) {
+                if (sr.getDepth() <= endDepth) {
+                    break;
+                }
+            } else if (type == XMLStreamConstants.END_DOCUMENT) {
+                /* This is just a sanity check, to give more meaningful
+                 * error messages in case something weird happens
+                 */
+                throw new IllegalStateException("Unexpected END_DOCUMENT encountered when hierarchic cursor was skipping element contents");
             }
         }
     }

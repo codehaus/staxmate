@@ -40,7 +40,8 @@ public abstract class SMInputCursor
      * Using tracking will consume more memory, but generally less
      * than constructing a full in-memory tree object model (such
      * as DOM), since it the represenation is compact, read-only,
-     * and only subset of a full tree (depending on tracking setting).
+     * and only subset of a full tree. Size (and hence memory overhead)
+     * of that sub-tree depends on tracking settings.
      */
     public enum Tracking
     {
@@ -204,10 +205,11 @@ public abstract class SMInputCursor
     protected int mElemCount = 0;
 
     /**
-     * Number of enclosing start elements for this cursor; 0 for root
-     * cursors
+     * Depth the underlying stream reader had when this cursor was
+     * created (which is the number of currently open parent elements).
+     * 0 only for root cursor.
      */
-    protected final int mParentCount;
+    protected final int mBaseDepth;
 
     /**
      * Element that was last "tracked"; element over which cursor was
@@ -220,8 +222,8 @@ public abstract class SMInputCursor
     protected SMElementInfo mTrackedElement = null;
 
     /**
-     * Element parent cursor tracked when this cursor was created,
-     * if any.
+     * Element that the parent of this cursor tracked (if any),
+     * when this cursor was created.
      */
     protected SMElementInfo mParentTrackedElement = null;
 
@@ -262,13 +264,13 @@ public abstract class SMInputCursor
         if (parent == null) {
             mElemTracking = Tracking.NONE;
             mParentTrackedElement = null;
-            mParentCount = 0;
             mElemInfoFactory = null;
+            mBaseDepth = 0;
         } else {
             mElemTracking = parent.getElementTracking();
             mParentTrackedElement = parent.getTrackedElement();
-            mParentCount = parent.getDepth() + 1;
             mElemInfoFactory = parent.getElementInfoFactory();
+            mBaseDepth = sr.getDepth();
         }
     }
 
@@ -324,13 +326,23 @@ public abstract class SMInputCursor
         return mNodeCount;
     }
 
+    @Deprecated
+    public final int getDepth() {
+        return getParentCount();
+    }
+
     /**
-     * Returns number of parent elements current node (or, the last
-     * node cursor pointed to, or in absence of one [before cursor
-     * has been advanced for the first time], it would point if advanced)
-     * has.
+     * Number of parent elements that the token/event cursor points to has,
+     * if it points to one. If not, either most recent valid parent
+     * count (if cursor is closed), or the depth that it will have
+     * once is is advanced. One practical result is that a nested
+     * cursor instance will always have a single constant value it
+     * returns, whereas flattening cursors can return different
+     * values during traversal. Another thing to notice that matching
+     * START_ELEMENT and END_ELEMENT will always correspond to the
+     * same parent count.
      *<p>
-     * For example, here are expected results for <code>getDepth()</code>
+     * For example, here are expected return values
      * for an example XML document:
      *<pre>
      *  &lt;!-- Comment outside tree --> [0]
@@ -338,22 +350,22 @@ public abstract class SMInputCursor
      *    Text [1]
      *    &lt;branch> [1]
      *      Inner text [2]
-     *      &lt;child /> [2]
+     *      &lt;child /> [2]/[2]
      *    &lt;/branch> [1]
      *  &lt;/root> [0]
      *</pre>
      * Numbers in bracket are depths that would be returned when the
      * cursor points to the node.
      *<p>
-     * Note: depths are different from what some APIs (such as XmlPull)
-     * return.
+     * Note: depths are different from what many other xml processing
+     * APIs (such as Stax and XmlPull)return.
      *
      * @return Number of enclosing nesting levels, ie. number of parent
      *   start elements for the node that cursor currently points to (or,
      *   in case of initial state, that it will point to if scope has
      *   node(s)).
      */
-    public abstract int getDepth();
+    public abstract int getParentCount();
 
     /**
      * Returns the type of event this cursor either currently points to
@@ -1000,11 +1012,53 @@ public abstract class SMInputCursor
      */
 
     /**
+     * This method is needed by flattening cursors when they
+     * have child cursors: if so, they can determine their
+     * depth relative to child cursor's base parent count
+     * (and can not check stream -- as it may have moved --
+     * nor want to have separate field to track this information)
+     */
+    protected final int getBaseParentCount() {
+        return mBaseDepth;
+    }
+
+    /**
      * Method called by the parent cursor, to skip over the scope
      * this cursor iterates, and of its sub-scopes if any.
      */
-    protected abstract void skipTree()
-        throws XMLStreamException;
+    protected final void skipAll()
+        throws XMLStreamException
+    {
+        if (mState == State.CLOSED) { // already finished?
+            return;
+        }
+        State state = mState;
+        mState = State.CLOSED;
+        mCurrEvent = null;
+
+
+        // child cursor(s) to delegate skipping to?
+        if (state == State.HAS_CHILD) {
+            mChildCursor.skipAll();
+            mChildCursor = null;
+        }
+        
+        /* Our base count matches what Stax2 getDepth() returns, even
+         * tho our parent count doesn't...
+         */
+        int endLevel = mBaseDepth;
+        while (true) {
+            int type = mStreamReader.next();
+            if (type == XMLStreamConstants.END_ELEMENT) {
+                if (mStreamReader.getDepth() <= endLevel) {
+                    break;
+                }
+            } else if (type == XMLStreamConstants.END_DOCUMENT) { // sanity check
+                // An error...
+                throw new IllegalStateException("Unexpected END_DOCUMENT encountered when skipping a sub-tree.");
+            }
+        }
+    }
 
     /**
      * Method cursor calls when it needs to track element state information;
@@ -1072,29 +1126,7 @@ public abstract class SMInputCursor
      */
 
     protected final boolean isRootCursor() {
-        return (mParentCount == 0);
-    }
-
-    /**
-     * @param depth Number of enclosing 'extra' START_ELEMENTs to match;
-     *   usually either 0 or 1
-     */
-    protected void skipSubTree(int depth)
-        throws XMLStreamException
-    {
-        while (true) {
-            int type = mStreamReader.next();
-            if (type == XMLStreamConstants.START_ELEMENT) {
-                ++depth;
-            } else if (type == XMLStreamConstants.END_ELEMENT) {
-                if (--depth < 0) {
-                    break;
-                }
-            } else if (type == XMLStreamConstants.END_DOCUMENT) {
-                // An error...
-                throw new IllegalStateException("Unexpected END_DOCUMENT encountered when skipping a sub-tree.");
-            }
-        }
+        return (mBaseDepth == 0);
     }
 
     protected String notAccessible(String method)
