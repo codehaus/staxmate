@@ -637,6 +637,91 @@ public abstract class SMInputCursor
         return mStreamReader.getPrefixedName();
     }
 
+    /**
+     * @return True if the local name associated with the event
+     *  this
+     */
+    public boolean hasLocalName(String expName)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            notAccessible("hasName");
+        }
+        if (expName == null) {
+            throw new IllegalArgumentException("Can not pass null name to method");
+        }
+        int type = getCurrEventCode();
+        String name;
+
+        switch (type) {
+        case XMLStreamConstants.START_ELEMENT:
+        case XMLStreamConstants.END_ELEMENT:
+        case XMLStreamConstants.ENTITY_REFERENCE:
+            name = mStreamReader.getLocalName();
+            break;
+        case XMLStreamConstants.PROCESSING_INSTRUCTION:
+            name = mStreamReader.getPITarget();
+            break;
+        case XMLStreamConstants.DTD:
+            {
+                DTDInfo dtd = mStreamReader.getDTDInfo();
+                name = (dtd == null) ? null : dtd.getDTDRootName();
+            }
+            break;
+        default:
+            return false;
+        }
+
+        return (name != null) && expName.equals(name);
+    }
+
+    public boolean hasName(String expNsURI, String expLN)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            notAccessible("hasName");
+        }
+
+        int type = getCurrEventCode();
+        String uri;
+        String ln;
+
+        switch (type) {
+        case XMLStreamConstants.START_ELEMENT:
+        case XMLStreamConstants.END_ELEMENT:
+            ln = mStreamReader.getLocalName();
+            uri = mStreamReader.getNamespaceURI();
+            break;
+
+        case XMLStreamConstants.ENTITY_REFERENCE:
+            ln = mStreamReader.getLocalName();
+            uri = null;
+            break;
+        case XMLStreamConstants.PROCESSING_INSTRUCTION:
+            ln = mStreamReader.getPITarget();
+            uri = null;
+            break;
+        case XMLStreamConstants.DTD:
+            {
+                DTDInfo dtd = mStreamReader.getDTDInfo();
+                ln = (dtd == null) ? null : dtd.getDTDRootName();
+            }
+            uri = null;
+            break;
+        default:
+            return false;
+        }
+
+        if (ln == null || !ln.equals(expLN)) {
+            return false;
+        }
+        if (expNsURI == null || expNsURI.length() == 0) { // no namespace
+            return (uri == null) || (uri.length() == 0);
+        }
+
+        return (uri != null) && expNsURI.equals(uri);
+    }
+
     /*
     ////////////////////////////////////////////////////
     // Public API, accessing current element's attribute
@@ -1023,40 +1108,59 @@ public abstract class SMInputCursor
     }
 
     /**
-     * Method called by the parent cursor, to skip over the scope
-     * this cursor iterates, and of its sub-scopes if any.
+     * Method called to skim through the content that the child
+     * cursor(s) are pointing to, end return once next call to
+     * XMLStreamReader2.next() will return the next event
+     * this cursor should see.
      */
-    protected final void skipAll()
+    protected final void rewindPastChild()
         throws XMLStreamException
     {
-        if (mState == State.CLOSED) { // already finished?
-            return;
+        final SMInputCursor child = mChildCursor;
+        mChildCursor = null;
+
+        child.invalidate();
+
+        /* Base depth to match is always known by the child in question,
+         * so let's ask it (hierarchic cursor parent also knows it)
+         */
+        final int endDepth = child.getBaseParentCount();
+        final XMLStreamReader2 sr = mStreamReader;
+        
+
+        for (int type = sr.getEventType(); true; type = sr.next()) {
+            if (type == XMLStreamConstants.END_ELEMENT) {
+                int depth = sr.getDepth();
+                if (depth > endDepth) {
+                    continue;
+                }
+                if (depth != endDepth) { // sanity check
+                    throwWrongEndElem(endDepth, depth);
+                }
+                break;
+            } else if (type == XMLStreamConstants.END_DOCUMENT) {
+                throwUnexpectedEndDoc();
+            }
         }
-        State state = mState;
+    }
+
+
+    /**
+     * Method called by the parent cursor, to indicate it has to
+     * traverse over xml content and that child cursor as well
+     * as all of its descendant cursors (if any) are to be
+     * considered invalid.
+     */
+    protected void invalidate()
+        throws XMLStreamException
+    {
         mState = State.CLOSED;
         mCurrEvent = null;
 
-
         // child cursor(s) to delegate skipping to?
-        if (state == State.HAS_CHILD) {
-            mChildCursor.skipAll();
+        if (mChildCursor != null) {
+            mChildCursor.invalidate();
             mChildCursor = null;
-        }
-        
-        /* Our base count matches what Stax2 getDepth() returns, even
-         * tho our parent count doesn't...
-         */
-        int endLevel = mBaseDepth;
-        while (true) {
-            int type = mStreamReader.next();
-            if (type == XMLStreamConstants.END_ELEMENT) {
-                if (mStreamReader.getDepth() <= endLevel) {
-                    break;
-                }
-            } else if (type == XMLStreamConstants.END_DOCUMENT) { // sanity check
-                // An error...
-                throw new IllegalStateException("Unexpected END_DOCUMENT encountered when skipping a sub-tree.");
-            }
         }
     }
 
@@ -1151,6 +1255,18 @@ public abstract class SMInputCursor
     protected String currentEventStr()
     {
         return (mCurrEvent == null) ? "null" : mCurrEvent.toString();
+    }
+
+    protected void throwUnexpectedEndDoc()
+        throws XMLStreamException
+    {
+        throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()+")");
+    }
+
+    protected void throwWrongEndElem(int expDepth, int actDepth)
+        throws IllegalStateException
+    {
+        throw new IllegalStateException("Expected to encounter END_ELEMENT with depth >= "+expDepth+", got "+actDepth);
     }
 
     protected void throwXsEx(String msg)

@@ -1,14 +1,19 @@
-Version: 1.1rc1
+Version: 2.0rc1
 
 Release date: xx-xxx-2007
 
 Description:
 
-Changes:
-
 Problems fixed:
 
 New functionality:
+  * [WSTX-2]: Added SMInputCursor.hasName() methods.
+
+Improvements:
+
+  * [STAXMATE-4]: Rewrite cursor synchronization (sub-tree skipping) using
+    depth information given by underlying Stax2 stream reader, instead of
+    each cursor keeping local nesting counts.
 
 == History: ==
 

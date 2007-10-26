@@ -49,8 +49,8 @@ public class SMHierarchicCursor
         }
         // If there is a child cursor, it has to be traversed through
         if (mState == State.HAS_CHILD) {
-            mChildCursor.skipAll();
-            mChildCursor = null;
+            // After this, we'll be located at END_ELEMENT
+            rewindPastChild();
             mState = State.ACTIVE;
         } else if (mState == State.INITIAL) {
             mState = State.ACTIVE;
@@ -85,10 +85,10 @@ public class SMHierarchicCursor
             }
             if (type == XMLStreamConstants.START_ELEMENT) {
                 ++mElemCount;
+            } else if (type == XMLStreamConstants.END_DOCUMENT) {
+                // just a sanity check; shouldn't really be needed
+                throwUnexpectedEndDoc();
             }
-            // !!! only here temporarily, shouldn't be needed
-            else if (type == XMLStreamConstants.END_DOCUMENT) {
-                throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()+")"); }
             SMEvent evt = sEventsByIds[type];
             mCurrEvent = evt;
             
@@ -146,19 +146,29 @@ public class SMHierarchicCursor
         throws XMLStreamException
     {
         XMLStreamReader2 sr = mStreamReader;
-        // Stax2 guarantees that START_ELEMENT and END_ELEMENT depths match
-        int endDepth = sr.getDepth();
+        /* Here we have two choices: first, depth of current START_ELEMENT should
+         * match that of matching END_ELEMENT. Additionally, START_ELEMENT's depth
+         * for hierarchic cursors must be baseDepth+1.
+         */
+        //int endDepth = sr.getDepth();
+        int endDepth = mBaseDepth+1;
+
         while (true) {
             int type = sr.next();
             if (type == XMLStreamConstants.END_ELEMENT) {
-                if (sr.getDepth() <= endDepth) {
-                    break;
+                int depth = sr.getDepth();
+                if (depth > endDepth) {
+                    continue;
                 }
+                if (depth != endDepth) { // sanity check
+                    throwWrongEndElem(endDepth, depth);
+                }
+                break;
             } else if (type == XMLStreamConstants.END_DOCUMENT) {
                 /* This is just a sanity check, to give more meaningful
                  * error messages in case something weird happens
                  */
-                throw new IllegalStateException("Unexpected END_DOCUMENT encountered when hierarchic cursor was skipping element contents");
+                throwUnexpectedEndDoc();
             }
         }
     }

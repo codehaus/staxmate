@@ -89,13 +89,12 @@ public class SMFlatteningCursor
          * through
          */
         if (mState == State.HAS_CHILD) {
-            mChildCursor.skipAll();
-            mChildCursor = null;
+            // After this, we'll be located at END_ELEMENT
+            rewindPastChild();
             mState = State.ACTIVE;
         } else if (mState == State.INITIAL) {
             mState = State.ACTIVE;
         } // nothing to do if we are active
-
         while (true) {
             int type;
 
@@ -125,7 +124,11 @@ public class SMFlatteningCursor
                  * will return identical value for END_ELEMENT (and
                  * <= used instead of < just for sanity checking)
                  */
-                if (mStreamReader.getDepth() < mBaseDepth) {
+                int depth = mStreamReader.getDepth();
+                if (depth <= mBaseDepth) {
+                    if (depth != mBaseDepth) {
+                        throwWrongEndElem(mBaseDepth, depth);
+                    }
                     break;
                 }
             } else if (type == XMLStreamConstants.START_ELEMENT) {
@@ -186,5 +189,4 @@ public class SMFlatteningCursor
     // Internal/package methods
     ////////////////////////////////////////////
      */
-
 }

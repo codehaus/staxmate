@@ -26,18 +26,18 @@ public class TestNested
         SMInputCursor rootc = SMInputFactory.rootElementCursor(sr);
         assertEquals(0, rootc.getParentCount());
         assertEquals(SMEvent.START_ELEMENT, rootc.getNext()); // should always have root
-        assertEquals("root", rootc.getLocalName());
+        assertElem(rootc, null, "root");
         assertEquals(0, rootc.getParentCount());
         SMInputCursor leafc = rootc.childElementCursor();
 
         assertEquals(1, leafc.getParentCount());
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
-        assertEquals("leaf", leafc.getLocalName());
+        assertElem(leafc, null, "leaf");
         assertEquals(1, leafc.getParentCount());
 
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
         assertEquals(1, leafc.getParentCount());
-        assertEquals("leaf", leafc.getLocalName());
+        assertElem(leafc, null, "leaf");
         assertEquals(1, leafc.getAttrCount());
         assertEquals("attr", leafc.getAttrLocalName(0));
         assertEquals("xyz", leafc.getAttrValue(0));
@@ -65,7 +65,7 @@ public class TestNested
             */
 "<?xml version='1.0' encoding='UTF-8'?>\n"
 +"<root name='123' xyx='abc' attr='!'>\n"
-+"<pt name='...'><prop name='a'>Authority Non Buyable</prop><prop name='b'>Authority Non Buyable</prop><prop name='c'>false</prop></pt>\n"
++"<pt name='...'><prop name='a'>Authority Non Buyable</prop><prop name='b'>something else</prop><prop name='c'>false</prop></pt>\n"
 +"<pt name='pt2'><prop name='1'>Apparel</prop><prop name='2'>Apparel</prop></pt>\n"
 +"</root>"
             ;
@@ -74,34 +74,38 @@ public class TestNested
         SMInputCursor rootc = SMInputFactory.rootElementCursor(sr);
 
         assertEquals(SMEvent.START_ELEMENT, rootc.getNext()); // should always have root
-        assertEquals("root", rootc.getLocalName());
+        assertElem(rootc, null, "root");
         assertEquals(3, rootc.getAttrCount());
         assertEquals(0, rootc.getParentCount());
 
         SMInputCursor brc = rootc.childElementCursor();
         assertEquals(SMEvent.START_ELEMENT, brc.getNext());
-        assertEquals("pt", brc.getLocalName());
+        assertElem(brc, null, "pt");
         assertEquals(1, brc.getAttrCount());
         assertEquals(1, brc.getParentCount());
+        assertEquals("...", brc.getAttrValue("name"));
 
         SMInputCursor leafc = brc.childElementCursor();
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
         assertEquals(2, leafc.getParentCount());
-        assertEquals("prop", leafc.getLocalName());
+        assertElem(leafc, null, "prop");
         assertEquals(1, leafc.getAttrCount());
+        assertEquals("a", leafc.getAttrValue("name"));
         assertEquals("Authority Non Buyable", leafc.collectDescendantText(false));
 
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
-        assertEquals("prop", leafc.getLocalName());
+        assertElem(leafc, null, "prop");
+        assertEquals(1, leafc.getAttrCount());
+        assertEquals("b", leafc.getAttrValue("name"));
 
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
-        assertEquals("prop", leafc.getLocalName());
+        assertElem(leafc, null, "prop");
 
         assertNull(leafc.getNext());
 
         // Enough, let's move to the next at branch level:
         assertEquals(SMEvent.START_ELEMENT, brc.getNext());
-        assertEquals("pt", brc.getLocalName());
+        assertElem(brc, null, "pt");
 
         // And then check that root is done:
 
@@ -127,17 +131,18 @@ public class TestNested
         XMLStreamReader sr = XMLInputFactory.newInstance().createXMLStreamReader(new StringReader(XML));
         SMInputCursor rootc = SMInputFactory.rootElementCursor(sr);
         rootc.getNext(); // should always have root
-        assertEquals("root", rootc.getLocalName()); 
+
+        assertElem(rootc, null, "root");
         assertEquals(0, rootc.getParentCount());
         SMInputCursor ptCursor = rootc.childElementCursor();
         while (ptCursor.getNext() != null) {
             assertEquals(1, ptCursor.getParentCount());
-            assertEquals("pt", ptCursor.getLocalName());
+            assertElem(ptCursor, null, "pt");
             assertNotNull(ptCursor.getAttrValue("name"));
             SMInputCursor propCursor = ptCursor.childElementCursor();
             while (propCursor.getNext() != null) {
                 assertEquals(2, propCursor.getParentCount());
-                assertEquals("prop", propCursor.getLocalName());
+                assertElem(propCursor, null, "prop");
                 String propName = propCursor.getAttrValue("name");
                 assertNotNull(propName);
                 String value = propCursor.collectDescendantText(false);

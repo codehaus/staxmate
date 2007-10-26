@@ -25,7 +25,8 @@ public class TestFlattening
         XMLStreamReader sr = getCoalescingReader(XML);
         SMInputCursor rootc = SMInputFactory.rootElementCursor(sr);
         assertEquals(SMEvent.START_ELEMENT, rootc.getNext());
-        assertEquals(1, rootc.getParentCount());
+        assertEquals(0, rootc.getParentCount());
+        assertElem(rootc, null, "root");
         SMInputCursor leafc = rootc.descendantCursor();
         assertEquals(1, leafc.getParentCount());
 
@@ -34,24 +35,25 @@ public class TestFlattening
         assertEquals(1, leafc.getParentCount());
 
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
-        assertEquals("leaf", leafc.getLocalName());
-        //        assertEquals(1, leafc.getParentCount());
+        assertElem(leafc, null, "leaf");
+        assertEquals(1, leafc.getParentCount());
         assertEquals(SMEvent.END_ELEMENT, leafc.getNext());
-        assertEquals("leaf", leafc.getLocalName());
-        //assertEquals(1, leafc.getParentCount());
+        assertElem(leafc, null, "leaf");
+        assertEquals(1, leafc.getParentCount());
 
         assertEquals(SMEvent.START_ELEMENT, leafc.getNext());
-        assertEquals("leaf", leafc.getLocalName());
-        //assertEquals(1, leafc.getParentCount());
+        assertElem(leafc, null, "leaf");
+        assertEquals(1, leafc.getParentCount());
         assertEquals(SMEvent.TEXT, leafc.getNext());
         assertEquals("R&b", leafc.getText());
-        //assertEquals(2, leafc.getParentCount());
+        assertEquals(2, leafc.getParentCount());
         assertEquals(SMEvent.END_ELEMENT, leafc.getNext());
-        assertEquals("leaf", leafc.getLocalName());
+        assertElem(leafc, null, "leaf");
         assertEquals(1, leafc.getParentCount());
 
         assertNull(leafc.getNext());
 
+        assertEquals(0, rootc.getParentCount());
         assertNull(rootc.getNext());
         
         sr.close();
