@@ -4,7 +4,7 @@
 
     <!-- Version information -->
     <property name="STAXMATE_TITLE" value="StaxMate" />
-    <property name="STAXMATE_VERSION" value="1.1rc1" />
+    <property name="STAXMATE_VERSION" value="1.1" />
     <property name="STAXMATE_VENDOR" value="http://woodstox.codehaus.org" />
 
     <property name="BASENAME" value="staxmate-${STAXMATE_VERSION}" />
