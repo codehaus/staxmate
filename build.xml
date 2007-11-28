@@ -216,7 +216,7 @@
             <attribute name="Implementation-Vendor"  value="${STAXMATE_VENDOR}"/>
           </manifest>
           <zipfileset src="${BuildDir}/${BASENAME}.jar" />
-          <zipfileset dir="${LibDir}" includes="stax2-*.jar" />
+          <zipfileset src="${LibDir}/stax2-2.0.jar" />
           <fileset dir="release-notes/">
             <include name="LICENSE" />
           </fileset>
