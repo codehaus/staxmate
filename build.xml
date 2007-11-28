@@ -128,7 +128,7 @@
     <!-- Packaging... -->
     <!--*********************************************************-->
  
-    <target name="dist" depends="compile,jar,src-dist,sample-dist,javadoc">
+    <target name="dist" depends="compile,jars,src-dist,sample-dist,javadoc">
        <!-- First, let's copy the binary jars to dist -->
        <copy todir="${DistDir}">
            <fileset dir="${BuildDir}">
@@ -187,7 +187,7 @@
        <delete file="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar" />
     </target>
 
-    <target name="jar" depends="compile">
+    <target name="jars" depends="compile">
         <!-- First, primary jar, without Stax2 classes -->
         <jar jarfile="${BuildDir}/${BASENAME}.jar" filesonly="true" >
           <manifest>
@@ -216,7 +216,7 @@
             <attribute name="Implementation-Vendor"  value="${STAXMATE_VENDOR}"/>
           </manifest>
           <zipfileset src="${BuildDir}/${BASENAME}.jar" />
-          <zipfileset dir="${LibDir}" includes="stax2*.jar" />
+          <zipfileset src="${LibDir}/stax2-2.1.jar" />
           <fileset dir="release-notes/">
             <include name="LICENSE" />
           </fileset>
@@ -242,7 +242,7 @@
         <available property="junit.present" classname="junit.framework.TestCase" />
     </target>
 
-    <target name="test.compile" depends="junit, jar" if="junit.present">
+    <target name="test.compile" depends="junit, jars" if="junit.present">
         <javac SrcDir="${TestSrcDir}" destdir="${TestClassesDir}"
             debug="true"
         >
