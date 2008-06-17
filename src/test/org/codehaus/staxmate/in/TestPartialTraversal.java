@@ -1,4 +1,4 @@
-package staxmate.in;
+package org.codehaus.staxmate.in;
 
 import java.io.InputStream;
 

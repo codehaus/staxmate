@@ -1,11 +1,10 @@
-package staxmate.in;
+package org.codehaus.staxmate.in;
 
 import java.io.StringReader;
 
 import javax.xml.stream.*;
 
 import org.codehaus.staxmate.SMInputFactory;
-import org.codehaus.staxmate.in.*;
 
 /**
  * Unit tests for verifying that bundled SMFilter implementations

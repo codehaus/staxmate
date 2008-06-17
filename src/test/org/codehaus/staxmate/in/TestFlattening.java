@@ -1,6 +1,4 @@
-package staxmate.in;
-
-import java.io.*;
+package org.codehaus.staxmate.in;
 
 import javax.xml.stream.*;
 

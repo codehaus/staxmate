@@ -246,14 +246,8 @@
     <!--*********************************************************************-->
     <!-- Tasks from here down are in support of junit tests.                 -->
     <!--*********************************************************************-->
-    <target name="junit">
-        <available property="junit.present" classname="junit.framework.TestCase" />
-    </target>
-
-    <target name="test.compile" depends="junit, jars" if="junit.present">
-        <javac SrcDir="${TestSrcDir}" destdir="${TestClassesDir}"
-            debug="true"
-        >
+    <target name="test.compile" depends="jars">
+        <javac SrcDir="${TestSrcDir}" destdir="${TestClassesDir}">
             <include name="**/*.java" />
             <classpath refid="compile-classpath" />
             <classpath>

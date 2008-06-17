@@ -1,12 +1,10 @@
-package staxmate.in;
+package org.codehaus.staxmate.in;
 
 import java.io.*;
 
 import javax.xml.stream.*;
 
 import junit.framework.TestCase;
-
-import org.codehaus.staxmate.in.SMInputCursor;
 
 class BaseReaderTest
     extends TestCase
