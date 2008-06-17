@@ -2,7 +2,6 @@ package org.codehaus.staxmate;
 
 import javax.xml.stream.*;
 
-import org.codehaus.stax2.XMLStreamReader2;
 import org.codehaus.stax2.ri.Stax2ReaderAdapter;
 
 import org.codehaus.staxmate.in.*;
@@ -109,7 +108,8 @@ public final class SMInputFactory
     /////////////////////////////////////////////////
      */
 
-    public static void main(String[] args)
+    @SuppressWarnings("deprecation")
+	public static void main(String[] args)
         throws Exception
     {
         if (args.length != 1) {
@@ -142,7 +142,7 @@ public final class SMInputFactory
         SMEvent evt;
 
         while ((evt = it.getNext()) != null) {
-            System.out.print("["+it.getDepth()+"] -> "+evt);
+            System.out.print("["+it.getParentCount()+"] -> "+evt);
             switch (evt) {
             case START_ELEMENT:
                 System.out.print(" <"+it.getPrefixedName()+">");
@@ -162,7 +162,7 @@ public final class SMInputFactory
             }
         }
 
-        System.out.println("["+it.getDepth()+"] END");
+        System.out.println("["+it.getParentCount()+"] END");
     }
 
     static void traverseFlat(SMInputCursor it)
@@ -171,7 +171,7 @@ public final class SMInputFactory
         SMEvent evt;
 
         while ((evt = it.getNext()) != null) {
-            System.out.print("["+it.getDepth()+"] -> "+evt);
+            System.out.print("["+it.getParentCount()+"] -> "+evt);
 
             switch (evt) {
             case START_ELEMENT:
@@ -196,7 +196,7 @@ public final class SMInputFactory
             }
         }
 
-        System.out.println("["+it.getDepth()+"] END");
+        System.out.println("["+it.getParentCount()+"] END");
     }
 
     static String getPath(SMInputCursor it)

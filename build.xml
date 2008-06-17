@@ -123,9 +123,7 @@
     <!--*********************************************************-->
 
     <target name="compile" depends="prepare">
-        <javac SrcDir="${JavaSrcDir}" destdir="${BuildClassesDir}"
-            debug="true"
-        >
+        <javac SrcDir="${JavaSrcDir}" destdir="${BuildClassesDir}" debug="true">
             <include name="org/codehaus/staxmate/**/*.java" />
             <include name="test/**/*.java" />
             <classpath refid="compile-classpath" />
@@ -247,7 +245,7 @@
     <!-- Tasks from here down are in support of junit tests.                 -->
     <!--*********************************************************************-->
     <target name="test.compile" depends="jars">
-        <javac SrcDir="${TestSrcDir}" destdir="${TestClassesDir}">
+        <javac SrcDir="${TestSrcDir}" destdir="${TestClassesDir}" debug="true">
             <include name="**/*.java" />
             <classpath refid="compile-classpath" />
             <classpath>

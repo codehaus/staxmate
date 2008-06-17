@@ -5,7 +5,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.codehaus.stax2.XMLStreamWriter2;
 import org.codehaus.stax2.ri.Stax2WriterAdapter;
 
 import org.codehaus.staxmate.out.SMOutputContext;

@@ -829,7 +829,13 @@ public abstract class SMInputCursor
          * really wants (or, at least should use), so let's pass
          * "" to indicate "no namespace"
          */
-        return mStreamReader.getAttributeValue("", localName);
+        /* 16-Jun-2008, tatu: Alas, Sun sjsxp doesn't seem to work
+         *   well if we do pass "" instead of null! Since Woodstox
+         *   works ok with both, let's use null -- specs are irrelevant
+         *   if no implementation follows this particular quirk.
+         */
+        //return mStreamReader.getAttributeValue("", localName);
+        return mStreamReader.getAttributeValue(null, localName);
     }
 
     public String getAttrValue(String uri, String localName)

@@ -54,6 +54,7 @@ import org.safehaus.uuid.UUIDGenerator;
  *   </li>
  *  </ul>
  */
+@SuppressWarnings("serial")
 public class UuidServlet
     extends HttpServlet
 {
@@ -434,7 +435,7 @@ public class UuidServlet
         public synchronized void stopRunning()
         {
             if (mRunning) {
-                Thread t = mThread;
+                //Thread t = mThread;
                 mThread = null;
                 mRunning = false;
                 this.notify();
