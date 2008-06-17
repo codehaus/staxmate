@@ -41,6 +41,14 @@
        </fileset>
     </path>
 
+    <!-- Then paths to libs needed by Stax implementations -->
+    <path id="woodstox-libs">
+       <fileset dir="${LibDir}" includes="wstx/*.jar" />
+    </path>
+    <path id="sjsxp-libs">
+       <fileset dir="${LibDir}" includes="sjsxp/*.jar" />
+    </path>
+
     <!-- Source files to include in source packages (tar, zip) -->
     <patternset id="dist-src-files">
           <include name="src/**/*.java" />
@@ -270,9 +278,37 @@
                 <pathelement path="${BuildClassesDir}" />
                 <pathelement location="${TestClassesDir}" /> 
                 <path refid="junit-libs"/>
-            </classpath>     
+                <path refid="woodstox-libs"/>
+            </classpath>
         </junit>
 
+        <junitreport todir="${TestResultsDir}">
+            <fileset dir="${TestXmlResultsDir}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report todir="${TestResultsDir}" />
+        </junitreport>
+   </target>
+
+    <!-- 16-Jun-2008, tatu: let's test compatibility with
+        sjsxp as well as woodstox, shall we
+      -->
+    <target name="test-sjsxp" depends="test.compile">
+        <junit fork="no" printsummary="yes" haltonfailure="no" showoutput="yes">
+            <batchtest fork="no" todir="${TestXmlResultsDir}">
+                <fileset dir="${TestClassesDir}">
+                    <include name="**/Test*.class"/>
+                </fileset>
+            </batchtest>
+            <formatter type="xml" />
+            <classpath refid="compile-classpath" />
+            <classpath>
+                <pathelement path="${BuildClassesDir}" />
+                <pathelement location="${TestClassesDir}" /> 
+                <path refid="junit-libs"/>
+                <path refid="sjsxp-libs"/>
+            </classpath>     
+        </junit>
         <junitreport todir="${TestResultsDir}">
             <fileset dir="${TestXmlResultsDir}">
                 <include name="TEST-*.xml" />

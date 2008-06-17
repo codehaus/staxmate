@@ -138,7 +138,7 @@ public class TestNested
         while (ptCursor.getNext() != null) {
             assertEquals(1, ptCursor.getParentCount());
             assertElem(ptCursor, null, "pt");
-            assertNotNull(ptCursor.getAttrValue("name"));
+            assertNotNull("Should be able to find attribute 'name'", ptCursor.getAttrValue("name"));
             SMInputCursor propCursor = ptCursor.childElementCursor();
             while (propCursor.getNext() != null) {
                 assertEquals(2, propCursor.getParentCount());

@@ -291,6 +291,11 @@ public abstract class SMInputCursor
         return mElemTracking;
     }
 
+    /**
+     * Set element info factory used for constructing
+     * {@link ElementInfo} instances during traversal for this
+     * cursor, as well as all of its children.
+     */
     public final void setElementInfoFactory(ElementInfoFactory f) {
         mElemInfoFactory = f;
     }
@@ -416,6 +421,19 @@ public abstract class SMInputCursor
     ////////////////////////////////////////////////
      */
 
+    /**
+     * Method that can be used to check whether this cursor is
+     * currently valid; that is, it is the cursor that points
+     * to the event underlying stream is at. Only one cursor
+     * at any given time is valid in this sense, although other
+     * cursors may be made valid by advancing them (and by process
+     * invalidating the cursor that was valid at that point).
+     * It is also possible that none of cursors is valid at
+     * some point: this is the case when formerly valid cursor
+     * reached end of its contet (END_ELEMENT).
+     *
+     * @return True if the cursor is currently valid; false if not
+     */
     public final boolean readerAccessible() {
         return (mState == State.ACTIVE);
     }
