@@ -293,7 +293,7 @@ public abstract class SMInputCursor
 
     /**
      * Set element info factory used for constructing
-     * {@link ElementInfo} instances during traversal for this
+     * {@link SMElementInfo} instances during traversal for this
      * cursor, as well as all of its children.
      */
     public final void setElementInfoFactory(ElementInfoFactory f) {

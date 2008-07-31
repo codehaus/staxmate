@@ -3,14 +3,15 @@
 
  <!-- General information -->
 
-  <modelVersion>1.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
   <groupId>org.codehaus.staxmate</groupId>
   <artifactId>staxmate</artifactId>
   <name>StaxMate</name>
+  <packaging>jar</packaging>
   <version>@VERSION@</version>
   <description>
 StaxMate is a light-weight framework that adds convenience to streaming XML-processing  without significant additional overhead.
-It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.
+It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox or Sjsxp (default Stax implementation of JDK 1.6) and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.
 </description>
 
  <!-- Contact information -->
@@ -26,6 +27,9 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox a
     <!-- Stax API jar is needed; 1.0.1 preferable over vanilla 1.0, since
          it contains one critical bug fix to implementation auto-detection
       -->
+    <!-- But how about Stax2 jar dependency? Should it be separately
+         modelled? (Woodstox provides it, but Sjsxp will not)
+      -->
     <dependency>
       <groupId>stax</groupId>
       <artifactId>stax-api</artifactId>
@@ -36,8 +40,8 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox a
   <!-- Licensing -->
   <licenses>
     <license>
-            <name>BSD</name>
-            <url>http://www.opensource.org/licenses/bsd-license.php</url>
+      <name>BSD</name>
+      <url>http://www.opensource.org/licenses/bsd-license.php</url>
       <distribution>repo</distribution>
     </license>
   </licenses>

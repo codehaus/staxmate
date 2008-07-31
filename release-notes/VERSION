@@ -1,15 +1,16 @@
-Version: 2.0
+Version: 1.2.0
 
-Release date: xx-Jan-2008
+Release date: 01-Aug-2008
 
 Description:
-
+  Maintenance release focused on improved interoperability by verifying
+  support for Stax implementations other than Woodstox.
 
 Problems fixed:
-
-New functionality:
-
-Improvements:
+  * [STAXMATE-6]: Verify that StaxMate works well on Sun Sjsxp (default
+    Stax impl of JDK 6). One fix to Stax2 ref. impl (from Woodstox);
+    one workaround to Sjsxp bug (#63).
+  * [STAXMATE-11]: Verify that StaxMate works well on Aalto XML processor
 
 == History: ==
 

@@ -3,11 +3,11 @@
     <project name="StaxMate" basedir="." default="readme">
 
     <!-- Version information -->
-    <property name="STAXMATE_TITLE" value="StaxMate" />
-    <property name="STAXMATE_VERSION" value="1.1" />
-    <property name="STAXMATE_VENDOR" value="http://woodstox.codehaus.org" />
+    <property name="IMPL_TITLE" value="StaxMate" />
+    <property name="IMPL_VERSION" value="1.2" />
+    <property name="IMPL_VENDOR" value="http://woodstox.codehaus.org" />
 
-    <property name="BASENAME" value="staxmate-${STAXMATE_VERSION}" />
+    <property name="BASENAME" value="staxmate-${IMPL_VERSION}" />
 
     <property name="ProjectName" value="StaxMate library" />
     <!-- Source directories -->
@@ -47,6 +47,9 @@
     </path>
     <path id="sjsxp-libs">
        <fileset dir="${LibDir}" includes="sjsxp/*.jar" />
+    </path>
+    <path id="aalto-libs">
+       <fileset dir="${LibDir}" includes="aalto/*.jar" />
     </path>
 
     <!-- Source files to include in source packages (tar, zip) -->
@@ -153,24 +156,25 @@
        </copy>
        <copy todir="${DistDir}">
             <fileset dir="${SrcDir}/maven" includes="*.pom" />
+            <globmapper from="*.pom" to="*-${IMPL_VERSION}.pom" />
             <filterset>
-              <filter token="VERSION" value="${STAXMATE_VERSION}" />
+              <filter token="VERSION" value="${IMPL_VERSION}" />
             </filterset>
        </copy>
     </target>
 
     <target name="src-dist">
-       <tar basedir="${basedir}" destfile="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar">
+       <tar basedir="${basedir}" destfile="${DistDir}/staxmate-src-${IMPL_VERSION}.tar">
          <patternset refid="dist-src-files" />
        </tar>
-       <gzip zipfile="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar.gz"
-         src="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar" />
-       <delete file="${DistDir}/staxmate-src-${STAXMATE_VERSION}.tar" />
-       <zip basedir="${basedir}" destfile="${DistDir}/staxmate-src-${STAXMATE_VERSION}.zip">
+       <gzip zipfile="${DistDir}/staxmate-src-${IMPL_VERSION}.tar.gz"
+         src="${DistDir}/staxmate-src-${IMPL_VERSION}.tar" />
+       <delete file="${DistDir}/staxmate-src-${IMPL_VERSION}.tar" />
+       <zip basedir="${basedir}" destfile="${DistDir}/staxmate-src-${IMPL_VERSION}.zip">
          <patternset refid="dist-src-files" />
        </zip>
       <!-- And create source jar for IDE support -->
-       <jar jarfile="${DistDir}/staxmate-${STAXMATE_VERSION}-sources.jar" filesonly
+       <jar jarfile="${DistDir}/staxmate-${IMPL_VERSION}-sources.jar" filesonly
 ="true" >
          <fileset dir="${basedir}">
            <patternset refid="dist-src-files" />
@@ -179,7 +183,7 @@
     </target>
 
     <target name="sample-dist">
-       <tar basedir="${basedir}/sample-webapp" destfile="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar">
+       <tar basedir="${basedir}/sample-webapp" destfile="${DistDir}/sample-webapp-${IMPL_VERSION}.tar">
           <include name="*.sh" />
           <include name="src/**/*.java" />
           <include name="html/*.html" />
@@ -188,9 +192,9 @@
           <include name="build.xml" />
           <include name="lib/*.jar" />
        </tar>
-       <gzip zipfile="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar.gz"
-         src="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar" />
-       <delete file="${DistDir}/sample-webapp-${STAXMATE_VERSION}.tar" />
+       <gzip zipfile="${DistDir}/sample-webapp-${IMPL_VERSION}.tar.gz"
+         src="${DistDir}/sample-webapp-${IMPL_VERSION}.tar" />
+       <delete file="${DistDir}/sample-webapp-${IMPL_VERSION}.tar" />
     </target>
 
     <target name="jars" depends="compile">
@@ -198,9 +202,9 @@
         <jar jarfile="${BuildDir}/${BASENAME}.jar" filesonly="true" >
           <manifest>
             <attribute name="Built-By" value="${user.name}"/>
-            <attribute name="Implementation-Title"   value="${STAXMATE_TITLE}"/>
-            <attribute name="Implementation-Version" value="${STAXMATE_VERSION}"/>
-            <attribute name="Implementation-Vendor"  value="${STAXMATE_VENDOR}"/>
+            <attribute name="Implementation-Title"   value="${IMPL_TITLE}"/>
+            <attribute name="Implementation-Version" value="${IMPL_VERSION}"/>
+            <attribute name="Implementation-Vendor"  value="${IMPL_VENDOR}"/>
           </manifest>
           <fileset dir="${BuildClassesDir}">
              <include name="org/codehaus/staxmate/**/*.class" />
@@ -212,14 +216,14 @@
         </jar>
 
         <!-- And second, extended jar, with Stax2 classes -->
-        <jar jarfile="${BuildDir}/staxmate-with-stax2-${STAXMATE_VERSION}.jar" filesonly="true"
+        <jar jarfile="${BuildDir}/staxmate-with-stax2-${IMPL_VERSION}.jar" filesonly="true"
            filesetmanifest="skip"
         >
           <manifest>
             <attribute name="Built-By" value="${user.name}"/>
-            <attribute name="Implementation-Title"   value="${STAXMATE_TITLE}"/>
-            <attribute name="Implementation-Version" value="${STAXMATE_VERSION}"/>
-            <attribute name="Implementation-Vendor"  value="${STAXMATE_VENDOR}"/>
+            <attribute name="Implementation-Title"   value="${IMPL_TITLE}"/>
+            <attribute name="Implementation-Version" value="${IMPL_VERSION}"/>
+            <attribute name="Implementation-Vendor"  value="${IMPL_VENDOR}"/>
           </manifest>
           <zipfileset src="${BuildDir}/${BASENAME}.jar" />
           <zipfileset src="${LibDir}/stax2-2.1.jar" />
@@ -299,6 +303,33 @@
                 <pathelement location="${TestClassesDir}" /> 
                 <path refid="junit-libs"/>
                 <path refid="sjsxp-libs"/>
+            </classpath>     
+        </junit>
+        <junitreport todir="${TestResultsDir}">
+            <fileset dir="${TestXmlResultsDir}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report todir="${TestResultsDir}" />
+        </junitreport>
+   </target>
+
+    <!-- 30-Jul-2008, tatu: Also, let's check out Aalto
+        (note: can't yet add jars into repo, due to licensing questions)
+      -->
+    <target name="test-aalto" depends="test.compile">
+        <junit fork="no" printsummary="yes" haltonfailure="no" showoutput="yes">
+            <batchtest fork="no" todir="${TestXmlResultsDir}">
+                <fileset dir="${TestClassesDir}">
+                    <include name="**/Test*.class"/>
+                </fileset>
+            </batchtest>
+            <formatter type="xml" />
+            <classpath refid="compile-classpath" />
+            <classpath>
+                <pathelement path="${BuildClassesDir}" />
+                <pathelement location="${TestClassesDir}" /> 
+                <path refid="junit-libs"/>
+                <path refid="aalto-libs"/>
             </classpath>     
         </junit>
         <junitreport todir="${TestResultsDir}">
