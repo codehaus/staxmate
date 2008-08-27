@@ -8,6 +8,28 @@ import org.codehaus.staxmate.in.*;
 
 /**
  * Factory class used to create {@link SMInputCursor} instances.
+ * Cursor come in two major flavors: "nested" and "flattening" cursors.
+ *<p>
+ * Nested cursor are used to iterate a single level nested events,
+ * so they can only traverse over immediate children of the event
+ * (generally, START_ELEEMENT) that the parent cursor points to.
+ * Flattening cursors on the other hand traverse over all the
+ * descendants (children, children of children etc) of the parent
+ * START_ELEMENT. One additional difference is that the flattening
+ * cursors do expose END_ELEMENTS so that matching of actual levels
+ * is still possible.
+ *<p>
+ * Beyond nested/flat (aka "child vs descendant") cursors, there
+ * are additional varieties, such as:
+ *<ul>
+ * <li>Filtered cursors: these will only expose events you want to 
+ *   see, and silently skip any other events. Most commonly
+ *   needed ones (element-only, text-only, element-and-text-only;
+ *   all of which skip comments, processing instructions) exist
+ *   for your convenience using
+ *  {@link org.codehaus.staxmate.in.SMFilterFactory}.
+ *   Filters are passed to the factory methods.
+ *</ul>
  *
  * @author Tatu Saloranta
  */
@@ -21,23 +43,55 @@ public final class SMInputFactory
     /////////////////////////////////////////////////
      */
 
+    /**
+     * Static factory method used to construct root-level hierarchic (child)
+     * cursor, when starting to process an xml document or fragment.
+     * Additional cursors are usually constructed via methods
+     * within this cursor and its child cursors).
+     *
+     * @param sr Underlying stream reader cursor will use
+     * @param f (optional) Filter to use for the cursor, if any; null
+     *   means that no filtering will be done.
+     */
     public static SMHierarchicCursor hierarchicCursor(XMLStreamReader sr, SMFilter f) {
         return new SMHierarchicCursor(null, Stax2ReaderAdapter.wrapIfNecessary(sr), f);
     }
 
+    /**
+     * Static factory method used to construct root-level flattening (descendant)
+     * cursor, when starting to process an xml document or fragment.
+     * Additional cursors are usually constructed via methods
+     * within this cursor and its child cursors).
+     *
+     * @param sr Underlying stream reader cursor will use
+     * @param f (optional) Filter to use for the cursor, if any; null
+     *   means that no filtering will be done.
+     */
     public static SMFlatteningCursor flatteningCursor(XMLStreamReader sr, SMFilter f) {
         return new SMFlatteningCursor(null, Stax2ReaderAdapter.wrapIfNecessary(sr), f);
     }
 
     /**
-     * Return a nested cursor that will only ever iterate to one node, that
+     * Convenience method that will construct and return 
+     * a nested cursor that will only ever iterate to one node, that
      * is, the root element of the document reader is reading.
+     *<p>
+     * Method uses standard "element-only" filter from
+     *  {@link org.codehaus.staxmate.in.SMFilterFactory}.
      */
     public static SMHierarchicCursor rootElementCursor(XMLStreamReader sr)
     {
         return hierarchicCursor(sr, SMFilterFactory.getElementOnlyFilter());
     }
 
+    /**
+     * Convenience method that will construct and return 
+     * a nested cursor that will iterate over root-level events
+     * (comments, PIs, root element), without filtering any events.
+     *<p>
+     * Method uses standard "element-only" filter from
+     *  {@link org.codehaus.staxmate.in.SMFilterFactory}.
+     */
     public static SMHierarchicCursor rootCursor(XMLStreamReader sr)
     {
         return hierarchicCursor(sr, null);
