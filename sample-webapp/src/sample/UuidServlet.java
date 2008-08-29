@@ -109,6 +109,18 @@ public class UuidServlet
 
     MyMetrics mMetrics = null;
 
+    /**
+     * For efficiency we should share this factory with all the
+     * threads: factories are thread-safe after construction.
+     */
+    SMInputFactory mSmInFactory;
+
+    /**
+     * For efficiency we should share this factory with all the
+     * threads: factories are thread-safe after construction.
+     */
+    SMOutputFactory mSmOutFactory;
+
     public UuidServlet() {
         mMacAddress = UUIDGenerator.getInstance().getDummyAddress();
     }
@@ -116,6 +128,8 @@ public class UuidServlet
     @Override
     public void init(ServletConfig cfg)
     {
+        mSmInFactory = SMInputFactory.getGlobalSMInputFactory();
+        mSmOutFactory = SMOutputFactory.getGlobalSMOutputFactory();
         // Independent of whether metrics are enabled, let's start thread
         mMetrics = new MyMetrics(this);
         mMetrics.startRunning();
@@ -146,7 +160,7 @@ public class UuidServlet
             // First, let's determine the method to use
             UUIDMethod method = determineMethod(req.getParameter("method"));
             String str = req.getParameter("count");
-            int count = (str == null || str.length() == 0) ? 1 : determineCount(str);
+            int count = determineCount(str);
             String name = req.getParameter("name");
             checkParameters(method, count, name);
             int origCount = count;
@@ -193,11 +207,11 @@ public class UuidServlet
         try {
             // Let's use the global Stax factory for the example
             InputStream in = req.getInputStream();
-            SMInputCursor rootc = SMInputFactory.rootElementCursor(SMInputFactory.getGlobalXMLInputFactory().createXMLStreamReader(in));
+            SMInputCursor rootc = mSmInFactory.rootElementCursor(in);
             rootc.getNext(); // well-formed docs have single root
 
             // And root element should be "<request>"
-            if (!"request".equals(rootc.getLocalName())) {
+            if (!rootc.hasLocalName("request")) {
                 reportProblem(resp, "Root element not <request>, as expected, but <"+rootc.getLocalName()+">", null);
                 return;
             }
@@ -208,11 +222,12 @@ public class UuidServlet
             List<UUID> uuids = new ArrayList<UUID>();
             while (requests.getNext() != null) {
                 // Can ignore, or signal an error: let's do latter
-                if (!"generate-uuid".equals(requests.getLocalName())) {
+                if (!requests.hasLocalName("generate-uuid")) {
                     reportProblem(resp, "Unrecognized element '"+requests.getLocalName()+"', expected <generate-uuid>", null);
                     return;
                 }
                 UUIDMethod method = determineMethod(requests.getAttrValue("method"));
+                // note: could use typed accessor from here
                 int count = determineCount(requests.getAttrValue("count"));
                 String name = requests.getAttrValue("name");
                 checkParameters(method, count, name);
@@ -267,7 +282,9 @@ public class UuidServlet
     SMOutputElement writeDocWithRoot(OutputStream out, String nonnsRootName)
         throws XMLStreamException
     {
-        SMOutputDocument doc = SMOutputFactory.createOutputDocument(SMOutputFactory.getGlobalXMLOutputFactory().createXMLStreamWriter(out, "UTF-8"), "1.0", "UTF-8", true);
+        // this create method defaults to UTF-8
+        SMOutputDocument doc = mSmOutFactory.createOutputDocument(out);
+
         /* Let's indent for debugging purposes: in production usually
          * shouldn't, to minimize message size. These settings give linefeed,
          * plus 2 spaces per level (initially just one char from the string,
