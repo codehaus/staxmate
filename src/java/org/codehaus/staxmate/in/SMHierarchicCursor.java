@@ -89,7 +89,7 @@ public class SMHierarchicCursor
                 // just a sanity check; shouldn't really be needed
                 throwUnexpectedEndDoc();
             }
-            SMEvent evt = sEventsByIds[type];
+            SMEvent evt = eventObjectByEventId(type);
             mCurrEvent = evt;
             
             // Ok, are we interested in this event?

@@ -1,18 +1,35 @@
-Version: 1.2.0
+Version: 1.3.0
 
-Release date: 01-Aug-2008
+Release date: xx-Sep-2008
 
 Description:
-  Maintenance release focused on improved interoperability by verifying
-  support for Stax implementations other than Woodstox.
+  Maintenance release that focuses on:
+
+  * improved documentation (better JavaDocs)
+  * more consistent coverage of existing method (adding missing
+    output-side methods; typed access methods)
+
+Problems fixed:
+  * Vastly improved Javadocs.
+  * Added more Typed Access methods to input cursors (only had int
+    accessors for attributes)
+
+New functionality:
+
+* [STAXMATE-19]: Add convenience method for accessing current stream
+  location (SMInputCursor.getStreamLocation()). Also added matching
+  'SMInputCursor.getCursorLocation()', and deprecated older ambiguously
+  name 'SMInputCursor.getLocation()'.
+
+== History: ==
+
+1.2.0: [01-Aug-2008]
 
 Problems fixed:
   * [STAXMATE-6]: Verify that StaxMate works well on Sun Sjsxp (default
     Stax impl of JDK 6). One fix to Stax2 ref. impl (from Woodstox);
     one workaround to Sjsxp bug (#63).
   * [STAXMATE-11]: Verify that StaxMate works well on Aalto XML processor
-
-== History: ==
 
 1.1.0: [13-Nov-2007]
 

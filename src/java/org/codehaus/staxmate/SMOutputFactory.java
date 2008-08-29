@@ -12,8 +12,15 @@ import org.codehaus.staxmate.out.SMOutputDocument;
 import org.codehaus.staxmate.out.SMRootFragment;
 
 /**
- * Factory class used to create various outputter (like
- * {@link SMOutputDocument} and {@link SMRootFragment}) instances.
+ * Factory class used to create root-level outputter object (like
+ * {@link SMOutputDocument} and {@link SMRootFragment}) instances,
+ * which are roots (global for documents, or local for fragments)
+ * of output content.
+ *<p>
+ * Note about life-cycle of root-level outputter objects: once
+ * you are done with a root-level outputter, you <b>MUST</b>
+ * call {@link SMRootFragment#closeRoot} method to ensure that
+ * all content is flushed to the underlying stream writer
  *<p>
  * Factory also has convenience method(s) for accessing a shared
  * global instance of a default {@link XMLOutputFactory}.
@@ -32,6 +39,20 @@ public final class SMOutputFactory
     ////////////////////////////////////////////////////
      */
 
+    /**
+     * Factory method for constructing output object that represents
+     * a complete xml document including xml declaration and will
+     * contain root element plus other optional elements (doctype
+     * declaration, comment(s), PI(s)).
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct fragments,
+     * for this purpose check out {@link #createOutputFragment}.
+     */
     public static SMOutputDocument createOutputDocument(XMLStreamWriter sw)
         throws XMLStreamException
     {
@@ -40,6 +61,15 @@ public final class SMOutputFactory
         return ctxt.createDocument();
     }
 
+    /**
+     * Factory method for constructing output object that represents
+     * a complete xml document including xml declaration and will
+     * contain root element plus other optional elements (doctype
+     * declaration, comment(s), PI(s)).
+     *<p>
+     * Note: you can not use this method to construct fragments,
+     * for this purpose check out {@link #createOutputFragment}.
+     */
     public static SMOutputDocument createOutputDocument(XMLStreamWriter sw,
                                                         String version,
                                                         String encoding,
@@ -60,6 +90,20 @@ public final class SMOutputFactory
     ///////////////////////////////////////////////////////
      */
 
+    /**
+     * Factory method for constructing output object that represents
+     * root-level of an xml fragment; container that can contain
+     * non-element markup (comments, PIs), textual data and
+     * zero or more elements.
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct actual documents,
+     * for this purpose check out {@link #createOutputDocument}.
+     */
     public static SMRootFragment createOutputFragment(XMLStreamWriter sw)
         throws XMLStreamException
     {

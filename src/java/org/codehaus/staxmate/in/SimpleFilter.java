@@ -5,7 +5,7 @@ import javax.xml.stream.XMLStreamException;
 /**
  * Simple bit-set based filter that can be configured by specifying allowed
  * event types. Such filters are immutable and can be easily shared, but
- * can only be used if
+ * can only be used if checks are strictly based on only event type.
  *
  * @author Tatu Saloranta
  */

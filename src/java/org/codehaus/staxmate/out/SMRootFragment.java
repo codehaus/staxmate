@@ -99,6 +99,9 @@ public class SMRootFragment
      * via StaxMate API. Since it is possible that the underlying stream
      * writer may be buffering some parts, it needs to be informed of
      * the closure.
+     *<p>
+     * Note that the underlying stream is <b>NOT</b> closed as part of
+     * this call, just this logical outputter object.
      */
     public void closeRoot()
         throws XMLStreamException

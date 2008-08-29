@@ -10,19 +10,27 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader; // for javadocs
 
 import org.codehaus.stax2.DTDInfo;
+import org.codehaus.stax2.LocationInfo;
 import org.codehaus.stax2.XMLStreamReader2;
+
+import org.codehaus.staxmate.util.DataUtil;
 
 /**
  * Base class for reader-side cursors that form the main input-side
  * abstraction offered by StaxMate.
  *<p>
- * Note: since cursors are thin wrappers around {@link XMLStreamReader2},
+ * Implementation Note: since cursors are thin wrappers around
+ * {@link XMLStreamReader2},
  * and since not all Stax implementations implement
- * {@link XMLStreamReader2}, some wrapping may be involved.
+ * {@link XMLStreamReader2}, some wrapping may be involved in exposing
+ * basic Stax 1.0 stream readers as Stax2 stream readers.
+ * Without native support, not all stax2 features may be available,
+ * but cursors will try to limit their usage to known working subset.
  *
  * @author Tatu Saloranta
  */
 public abstract class SMInputCursor
+    extends CursorBase
 {
     /*
     ////////////////////////////////////////////
@@ -33,8 +41,8 @@ public abstract class SMInputCursor
     // // // Constants for element tracking:
 
     /**
-     * This enumeration lists different tracking behaviors available
-     * for cursors. Tracking is a feature that can be used to store
+     * Different tracking behaviors available for cursors.
+     * Tracking is a feature that can be used to store
      * information about traversed sub-trees, to allow for a limited
      * access to information that is not limited to ancestor stack.
      * Using tracking will consume more memory, but generally less
@@ -93,68 +101,9 @@ public abstract class SMInputCursor
 
     /*
     ////////////////////////////////////////////
-    // Constants, initial cursor state
-    ////////////////////////////////////////////
-     */
-
-    // // // Constants for the cursor state
-
-    protected enum State {
-        /**
-         * Initial means that the cursor has been constructed, but hasn't
-         * yet been advanced. No data can be accessed yet, but the cursor
-         * can be advanced.
-         */
-        INITIAL,
-
-        /**
-         * Active means that cursor's data is valid and can be accessed;
-         * plus it can be advanced as well.
-         */
-        ACTIVE,
-
-        /**
-         * Status that indicates that although cursor would be active, there
-         * is a child cursor active which means that this cursor can not
-         * be used to access data: only the innermost child cursor can.
-         * It can still be advanced, however.
-         */
-        HAS_CHILD,
-
-        /**
-         * Closed cursors are ones that do not point to accessible data, nor
-         * can be advanced any further.
-         */
-        CLOSED
-    }
-
-    /*
-    ////////////////////////////////////////////
-    // Constants, other
-    ////////////////////////////////////////////
-     */
-
-    /**
-     * This is the mapping array, indexed by Stax 1.0 event type integer
-     * code, value being matching {@link SMEvent} enumeration value.
-     */
-    protected final static SMEvent[] sEventsByIds =
-        SMEvent.constructIdToEventMapping();
-
-
-    /*
-    ////////////////////////////////////////////
     // Configuration
     ////////////////////////////////////////////
      */
-
-    /**
-     * Underlying stream reader used. It will either be a native
-     * {@link XMLStreamReader2} instance, or a regular (Stax 1.0)
-     * {@link javax.xml.stream.XMLStreamReader} wrapped in an
-     * adapter.
-     */
-    protected final XMLStreamReader2 mStreamReader;
 
     /**
      * Optional filter object that can be used to filter out events of
@@ -181,62 +130,6 @@ public abstract class SMInputCursor
 
     /*
     ////////////////////////////////////////////
-    // Iteration state
-    ////////////////////////////////////////////
-     */
-
-    protected SMEvent mCurrEvent = null;
-
-    /**
-     * Current state of the cursor.
-     */
-    protected State mState = State.INITIAL;
-
-    /**
-     * Number of nodes iterated over by this cursor, including the
-     * current one.
-     */
-    protected int mNodeCount = 0;
-
-    /**
-     * Number of start elements iterated over by this cursor, including the
-     * current one.
-     */
-    protected int mElemCount = 0;
-
-    /**
-     * Depth the underlying stream reader had when this cursor was
-     * created (which is the number of currently open parent elements).
-     * 0 only for root cursor.
-     */
-    protected final int mBaseDepth;
-
-    /**
-     * Element that was last "tracked"; element over which cursor was
-     * moved, and of which state has been saved for further use. At this
-     * point, it can be null if no elements have yet been iterater over.
-     * Alternatively, if it's not null, it may be currently pointed to
-     * or not; if it's not, either child cursor is active, or this
-     * cursor points to a non-start-element node.
-     */
-    protected SMElementInfo mTrackedElement = null;
-
-    /**
-     * Element that the parent of this cursor tracked (if any),
-     * when this cursor was created.
-     */
-    protected SMElementInfo mParentTrackedElement = null;
-
-    /**
-     * Cursor that has been opened for iterating child nodes of the
-     * start element node this cursor points to. Needed to keep
-     * cursor hierarchy synchronized, independent of which ones are
-     * traversed.
-     */
-    protected SMInputCursor mChildCursor = null;
-
-    /*
-    ////////////////////////////////////////////
     // Additional data
     ////////////////////////////////////////////
      */
@@ -256,7 +149,7 @@ public abstract class SMInputCursor
 
     public SMInputCursor(SMInputCursor parent, XMLStreamReader2 sr, SMFilter filter)
     {
-        mStreamReader = sr;
+        super(sr, (parent == null) ? 0 : sr.getDepth());
         mFilter = filter;
         /* By default, we use parent cursor's element tracking setting;
          * or "no tracking" if we have no parent
@@ -265,12 +158,10 @@ public abstract class SMInputCursor
             mElemTracking = Tracking.NONE;
             mParentTrackedElement = null;
             mElemInfoFactory = null;
-            mBaseDepth = 0;
         } else {
             mElemTracking = parent.getElementTracking();
             mParentTrackedElement = parent.getTrackedElement();
             mElemInfoFactory = parent.getElementInfoFactory();
-            mBaseDepth = sr.getDepth();
         }
     }
 
@@ -311,26 +202,35 @@ public abstract class SMInputCursor
      */
 
     /**
-     * @return Number of nodes cursor has traversed (including ones
-     *   filtered out). Starts with 0, and is incremented each time
+     * Method to access number of nodes cursor has traversed
+     * (including ones that were filtered out, if any).
+     * Starts with 0, and is incremented each time
      *   underlying stream reader's {@link XMLStreamReader#next} method
      *   is called, but not counting child cursors' node counts.
+     *
+     * @return Number of nodes (events) cursor has traversed
      */
     public int getNodeCount() {
         return mNodeCount;
     }
 
     /**
-     * @return Number of start elements cursor has traversed (including ones
-     *   filtered out). Starts with 0, and is incremented each time
-     *   underlying stream reader's {@link XMLStreamReader#next} method
-     *   is called and has moved over a start element, but not counting
-     *   child cursors' element counts.
+     * Method to access number of start elements cursor has traversed
+     * (including ones that were filtered out, if any).
+     * Starts with 0, and is incremented each time
+     * underlying stream reader's {@link XMLStreamReader#next} method
+     * is called and has moved over a start element, but not counting
+     * child cursors' element counts.
+     *
+     * @return Number of start elements cursor has traversed
      */
     public int getElementCount() {
         return mNodeCount;
     }
 
+    /**
+     * @deprecated Use {@link #getParentCount()} instead
+     */
     @Deprecated
     public final int getDepth() {
         return getParentCount();
@@ -392,6 +292,14 @@ public abstract class SMInputCursor
         return (mCurrEvent == null) ? 0 : mCurrEvent.getEventCode();
     }
 
+    /**
+     * @return True if this cursor iterates over root level of
+     *   the underlying stream reader
+     */
+    public final boolean isRootCursor() {
+        return (mBaseDepth == 0);
+    }
+
     /*
     ////////////////////////////////////////////
     // Public API, accessing tracked elements
@@ -450,12 +358,66 @@ public abstract class SMInputCursor
         return mStreamReader;
     }
 
+    /**
+     * Method to access starting Location of event (as defined by Stax
+     * specification)
+     * that this cursor points to.
+     * Method can only be called if the
+     * cursor is valid (as per {@link #readerAccessible}); if not,
+     * an exception is thrown
+     *
+     * @return Location of the event this cursor points to
+     */
+    public Location getCursorLocation()
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getLocation");
+        }
+        // Let's try to get actual exact location via Stax2 first:
+        LocationInfo li = mStreamReader.getLocationInfo();
+        if (li != null) {
+            Location loc = li.getStartLocation();
+            if (loc != null) {
+                return loc;
+            }
+        }
+        // If not, fall back to regular method
+        return mStreamReader.getLocation();
+    }
+
+    /**
+     * Method to access Location that the underlying stream reader points
+     * to.
+     *
+     * @return Location of the event the underlying stream reader points
+     *   to (independent of whether this cursor points to that event)
+     */
+    public Location getStreamLocation()
+    {
+        // Let's try to get actual exact location via Stax2 first:
+        LocationInfo li = mStreamReader.getLocationInfo();
+        if (li != null) {
+            Location loc = li.getCurrentLocation();
+            if (loc != null) {
+                return loc;
+            }
+        }
+        // If not, fall back to regular method
+        return mStreamReader.getLocation();
+    }
+
+    /**
+     * Same as calling {@link #getCursorLocation}
+     *
+     * @deprecated
+     */
+    @Deprecated
     public Location getLocation()
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getLocation");
-            return null;
+            throw notAccessible("getLocation");
         }
         return mStreamReader.getLocation();
     }
@@ -484,7 +446,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getText");
+            throw notAccessible("getText");
         }
         return mStreamReader.getText();
     }
@@ -505,10 +467,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getText");
+            throw notAccessible("getText");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throwXsEx("Can not call 'getText()' when cursor is not positioned over START_ELEMENT (current event "+currentEventStr()+")"); 
+            throw constructStreamException("Can not call 'getText()' when cursor is not positioned over START_ELEMENT (current event "+currentEventStr()+")"); 
         }
 
         SMFilter f = includeIgnorable
@@ -583,18 +545,17 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getName");
-            return null; // never gets here
+            throw notAccessible("getName");
         }
         return mStreamReader.getName();
     }
 
     /**
      * For events with fully qualified names (START_ELEMENT, END_ELEMENT,
-     * ATTRIBUTE, NAMESPACE), returns the local component of the full
-     * name. For events with only non-qualified name (PROCESSING_INSTRUCTION,
-     * entity and notation declarations, references), returns the name.
-     * For other events, returns null.
+     * ATTRIBUTE, NAMESPACE) returns the local component of the full
+     * name; for events with only non-qualified name (PROCESSING_INSTRUCTION,
+     * entity and notation declarations, references) returns the name, and
+     * for other events, returns null.
      *
      * @return Local component of the name
      */
@@ -602,10 +563,9 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getLocalName");
+            throw notAccessible("getLocalName");
         }
-        int type = getCurrEventCode();
-        switch (type) {
+        switch (getCurrEventCode()) {
         case XMLStreamConstants.START_ELEMENT:
         case XMLStreamConstants.END_ELEMENT:
         case XMLStreamConstants.ENTITY_REFERENCE:
@@ -622,22 +582,44 @@ public abstract class SMInputCursor
         return null;
     }
 
+    /**
+     * Method for accessing namespace prefix of the START_ELEMENT this
+     * cursor points to.
+     *
+     * @return Prefix of currently pointed-to START_ELEMENT,
+     *   if it has one; "" if none
+     *
+     * @throws XMLStreamException if cursor does not point to START_ELEMENT
+     */
     public String getPrefix()
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getPrefix");
+            throw notAccessible("getPrefix");
         }
-        return mStreamReader.getPrefix();
+        String prefix = mStreamReader.getPrefix();
+        // some impls may return null instead, let's convert
+        return (prefix == null) ? "" : prefix;
     }
 
+    /**
+     * Method for accessing namespace URI of the START_ELEMENT this
+     * cursor points to.
+     *
+     * @return Namespace URI of currently pointed-to START_ELEMENT,
+     *   if it has one; "" if none
+     *
+     * @throws XMLStreamException if cursor does not point to START_ELEMENT
+     */
     public String getNsUri()
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getNsUri");
+            throw notAccessible("getNsUri");
         }
-        return mStreamReader.getNamespaceURI();
+        String uri = mStreamReader.getNamespaceURI();
+        // some impls may return null instead, let's convert
+        return (uri == null) ? "" : uri;
     }
 
     /**
@@ -650,54 +632,47 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getPrefixedName");
+            throw notAccessible("getPrefixedName");
         }
         return mStreamReader.getPrefixedName();
     }
 
     /**
-     * @return True if the local name associated with the event
-     *  this
+     * Method for verifying whether current named event (one for which
+     * {@link #getLocalName} can be called)
+     * has the specified local name or not.
+     *
+     * @return True if the local name associated with the event is
+     *   as expected
      */
     public boolean hasLocalName(String expName)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("hasName");
+            throw notAccessible("hasName");
         }
         if (expName == null) {
             throw new IllegalArgumentException("Can not pass null name to method");
         }
-        int type = getCurrEventCode();
-        String name;
-
-        switch (type) {
-        case XMLStreamConstants.START_ELEMENT:
-        case XMLStreamConstants.END_ELEMENT:
-        case XMLStreamConstants.ENTITY_REFERENCE:
-            name = mStreamReader.getLocalName();
-            break;
-        case XMLStreamConstants.PROCESSING_INSTRUCTION:
-            name = mStreamReader.getPITarget();
-            break;
-        case XMLStreamConstants.DTD:
-            {
-                DTDInfo dtd = mStreamReader.getDTDInfo();
-                name = (dtd == null) ? null : dtd.getDTDRootName();
-            }
-            break;
-        default:
-            return false;
-        }
-
+        String name = getLocalName();
         return (name != null) && expName.equals(name);
     }
 
+    /**
+     * Method for verifying whether current named event (one for which
+     * {@link #getLocalName} can be called) has the specified
+     * fully-qualified name or not.
+     * Both namespace URI and local name must match for the result
+     * to be true.
+     *
+     * @return True if the fully-qualified name associated with the event is
+     *   as expected
+     */
     public boolean hasName(String expNsURI, String expLN)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("hasName");
+            throw notAccessible("hasName");
         }
 
         int type = getCurrEventCode();
@@ -747,82 +722,186 @@ public abstract class SMInputCursor
     ////////////////////////////////////////////////////
      */
 
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and which will return number of attributes with values for the
+     * start element. This includes both explicit attribute values and
+     * possible implied default values (when DTD support is enabled
+     * by the underlying stream reader).
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT)
+     */
     public int getAttrCount()
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getAttrCount");
-            return 0; // never gets here
+            throw notAccessible("getAttrCount");
         }
         return mStreamReader.getAttributeCount();
     }
 
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and which will return index of specified attribute, if it
+     * exists for this element. If not, -1 is returned to denote "not found".
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT)
+     */
     public int findAttrIndex(String uri, String localName)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getAttrCount");
-            return -1; // never gets here
+            throw notAccessible("getAttrCount");
         }
-
         return mStreamReader.getAttributeInfo().findAttributeIndex(uri, localName);
     }
 
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and returns fully qualified name
+     * of the attribute at specified index.
+     * Index has to be between [0, {@link #getAttrCount}[; otherwise
+     * {@link IllegalArgumentException} will be thrown.
+     * 
+     * @param index Index of the attribute
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT),
+     *   or if invalid attribute 
+     * @throws IllegalArgumentException if attribute index is invalid
+     *   (less than 0 or greater than the last valid index
+     *   [getAttributeCount()-1])
+     */
     public QName getAttrName(int index)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getAttrName");
-            return null; // never gets here
+            throw notAccessible("getAttrName");
         }
         return mStreamReader.getAttributeName(index);
     }
 
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and returns local name
+     * of the attribute at specified index.
+     * Index has to be between [0, {@link #getAttrCount}[; otherwise
+     * {@link IllegalArgumentException} will be thrown.
+     * 
+     * @param index Index of the attribute
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT),
+     *   or if invalid attribute 
+     * @throws IllegalArgumentException if attribute index is invalid
+     *   (less than 0 or greater than the last valid index
+     *   [getAttributeCount()-1])
+     */
     public String getAttrLocalName(int index)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getAttrLocalName");
+            throw notAccessible("getAttrLocalName");
         }
         return mStreamReader.getAttributeLocalName(index);
     }
 
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and returns namespace prefix
+     * of the attribute at specified index (if it has any), or
+     * empty String if attribute has no prefix (does not belong to
+     * a namespace).
+     * Index has to be between [0, {@link #getAttrCount}[; otherwise
+     * {@link IllegalArgumentException} will be thrown.
+     * 
+     * @param index Index of the attribute
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT),
+     *   or if invalid attribute 
+     * @throws IllegalArgumentException if attribute index is invalid
+     *   (less than 0 or greater than the last valid index
+     *   [getAttributeCount()-1])
+     */
     public String getAttrPrefix(int index)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getAttrPrefix");
+            throw notAccessible("getAttrPrefix");
         }
-        return mStreamReader.getAttributePrefix(index);
+        String prefix = mStreamReader.getAttributePrefix(index);
+        // some impls may return null instead, let's convert
+        return (prefix == null) ? "" : prefix;
     }
 
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and returns namespace URI
+     * of the attribute at specified index (non-empty String if it has
+     * one, and empty String if attribute does not belong to a namespace)
+     * Index has to be between [0, {@link #getAttrCount}[; otherwise
+     * {@link IllegalArgumentException} will be thrown.
+     * 
+     * @param index Index of the attribute
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT),
+     *   or if invalid attribute 
+     * @throws IllegalArgumentException if attribute index is invalid
+     *   (less than 0 or greater than the last valid index
+     *   [getAttributeCount()-1])
+     */
     public String getAttrNsUri(int index)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getAttrNsUri");
+            throw notAccessible("getAttrNsUri");
         }
-        return mStreamReader.getAttributeNamespace(index);
+        String uri = mStreamReader.getAttributeNamespace(index);
+        // some impls may return null instead, let's convert
+        return (uri == null) ? "" : uri;
     }
 
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and returns unmodified textual value
+     * of the attribute at specified index (non-empty String if it has
+     * one, and empty String if attribute does not belong to a namespace)
+     * Index has to be between [0, {@link #getAttrCount}[; otherwise
+     * {@link IllegalArgumentException} will be thrown.
+     * 
+     * @param index Index of the attribute
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT),
+     *   or if invalid attribute 
+     * @throws IllegalArgumentException if attribute index is invalid
+     *   (less than 0 or greater than the last valid index
+     *   [getAttributeCount()-1])
+     */
     public String getAttrValue(int index)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getAttributeValue");
+            throw notAccessible("getAttributeValue");
         }
         return mStreamReader.getAttributeValue(index);
     }
 
     /**
      * Convenience accessor method to access an attribute that is
-     * not in a namespace (has no prefix).
+     * not in a namespace (has no prefix). Equivalent to
+     * calling {@link #getAttrValue(String,String)} with
+     * 'null' for 'namespace URI' argument
      */
     public String getAttrValue(String localName)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getAttributeValue");
+            throw notAccessible("getAttributeValue");
         }
         /* If we are to believe StAX specs, null would mean "do not
          * check namespace" -- that's pretty much never what anyone
@@ -838,79 +917,260 @@ public abstract class SMInputCursor
         return mStreamReader.getAttributeValue(null, localName);
     }
 
-    public String getAttrValue(String uri, String localName)
+    /**
+     * Method that can be called when this cursor points to START_ELEMENT,
+     * and returns unmodified textual value
+     * of the specified attribute (if element has it), or null if
+     * element has no value for such attribute.
+     * 
+     * @param namespaceURI Namespace URI for the attribute, if any;
+     *   empty String or null if none.
+     * @param localName Local name of the attribute to access (in
+     *   namespace-aware mode: in non-namespace-aware mode, needs to
+     *   be the full name)
+     *
+     * @throws XMLStreamException if either the underlying parser has
+     *   problems (cursor not valid or not pointing to START_ELEMENT),
+     *   or if invalid attribute 
+     */
+    public String getAttrValue(String namespaceURI, String localName)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            return notAccessible("getAttrValue");
+            throw notAccessible("getAttrValue");
         }
-        return mStreamReader.getAttributeValue(uri, localName);
+        return mStreamReader.getAttributeValue(namespaceURI, localName);
     }
 
     /*
     ////////////////////////////////////////////////////
-    // Public API, accessing typed attribute value
-    // information
+    // Public API, Typed Access API for attributes
     ////////////////////////////////////////////////////
      */
 
-    public int getAttrIntValue(int index)
+    /**
+     * Method for accessing value of specified attribute as boolean.
+     * Method will only succeed if the attribute value is a valid
+     * boolean, as specified by XML Schema specification (and hence
+     * is accessible via Stax2 Typed Access API).
+     *
+     * @param index Index of attribute to access
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of boolean
+     * @throws IllegalArgumentException If given attribute index is invalid
+     */
+    public boolean getAttrBooleanValue(int index)
         throws NumberFormatException, XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getAttrIntValue");
-            return -1; // never gets here
+            throw notAccessible("getAttrBooleanValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
         String value = mStreamReader.getAttributeValue(index);
-        return doParseInt(value);
+        try {
+            return DataUtil.parseBoolean(value);
+        } catch (IllegalArgumentException iae) {
+            throw constructStreamException("Attribute #"+index+" value not numeric: "+iae.getMessage());
+        }
     }
 
+    /**
+     * Method for accessing value of specified attribute as boolean.
+     * If attribute value is not a valid boolean
+     * (as specified by XML Schema specification), will instead
+     * return specified "default value".
+     *
+     * @param index Index of attribute to access
+     * @param defValue Value to return if attribute value exists but
+     *   is not a valid boolean value
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of boolean.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    public boolean getAttrBooleanValue(int index, boolean defValue)
+        throws NumberFormatException, XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getAttrBooleanValue");
+        }
+        /* For now, let's just get it as String and convert: in future,
+         * may be able to use more efficient access method(s)
+         */
+        return DataUtil.parseBoolean(mStreamReader.getAttributeValue(index), defValue);
+    }
+
+    /**
+     * Method for accessing value of specified attribute as integer.
+     * Method will only succeed if the attribute value is a valid
+     * integer, as specified by XML Schema specification (and hence
+     * is accessible via Stax2 Typed Access API).
+     *
+     * @param index Index of attribute to access
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of integer.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    public int getAttrIntValue(int index)
+        throws NumberFormatException, XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getAttrIntValue");
+        }
+        /* For now, let's just get it as String and convert: in future,
+         * may be able to use more efficient access method(s)
+         */
+        String value = mStreamReader.getAttributeValue(index);
+        try {
+            return DataUtil.parseInt(value);
+        } catch (IllegalArgumentException iae) {
+            throw constructStreamException("Attribute #"+index+" value not numeric: "+iae.getMessage());
+        }
+    }
+
+    /**
+     * Method for accessing value of specified attribute as integer.
+     * If attribute value is not a valid integer
+     * (as specified by XML Schema specification), will instead
+     * return specified "default value".
+     *
+     * @param index Index of attribute to access
+     * @param defValue Value to return if attribute value exists but
+     *   is not a valid integer value
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of integer.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    public int getAttrIntValue(int index, int defValue)
+        throws NumberFormatException, XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getAttrIntValue");
+        }
+        /* For now, let's just get it as String and convert: in future,
+         * may be able to use more efficient access method(s)
+         */
+        return DataUtil.parseInt(mStreamReader.getAttributeValue(index), defValue);
+    }
+
+    /**
+     * Method for accessing value of specified attribute as long.
+     * Method will only succeed if the attribute value is a valid
+     * long, as specified by XML Schema specification (and hence
+     * is accessible via Stax2 Typed Access API).
+     *
+     * @param index Index of attribute to access
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of long.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    public long getAttrLongValue(int index)
+        throws NumberFormatException, XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getAttrLongValue");
+        }
+        /* For now, let's just get it as String and convert: in future,
+         * may be able to use more efficient access method(s)
+         */
+        String value = mStreamReader.getAttributeValue(index);
+        try {
+            return DataUtil.parseLong(value);
+        } catch (IllegalArgumentException iae) {
+            throw constructStreamException("Attribute #"+index+" value not numeric: "+iae.getMessage());
+        }
+    }
+
+    /**
+     * Method for accessing value of specified attribute as long.
+     * If attribute value is not a valid long
+     * (as specified by XML Schema specification), will instead
+     * return specified "default value".
+     *
+     * @param index Index of attribute to access
+     * @param defValue Value to return if attribute value exists but
+     *   is not a valid long value
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of long.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    public long getAttrLongValue(int index, long defValue)
+        throws NumberFormatException, XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getAttrLongValue");
+        }
+        /* For now, let's just get it as String and convert: in future,
+         * may be able to use more efficient access method(s)
+         */
+        return DataUtil.parseLong(mStreamReader.getAttributeValue(index), defValue);
+    }
+
+    /*
+    ////////////////////////////////////////////////////
+    // Deprecated data access
+    ////////////////////////////////////////////////////
+     */
+
+    /**
+     * @deprecated Use combination of {@link #findAttrIndex} and
+     *   {@link #getAttrIntValue(int)} instead.
+     */
+    @Deprecated
     public int getAttrIntValue(String uri, String localName)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getAttrIntValue");
-            return -1; // never gets here
+            throw notAccessible("getAttrIntValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
         String value = mStreamReader.getAttributeValue(uri, localName);
-        return doParseInt(value);
+        return DataUtil.parseInt(value);
     }
 
-    public int getAttrIntValue(int index, int defValue)
-        throws NumberFormatException, XMLStreamException
-    {
-        if (!readerAccessible()) {
-            notAccessible("getAttrIntValue");
-            return -1; // never gets here
-        }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        String valueStr = mStreamReader.getAttributeValue(index);
-        return doParseInt(valueStr, defValue);
-    }
-
+    /**
+     * @deprecated Use combination of {@link #findAttrIndex} and
+     *   {@link #getAttrIntValue(int,int)} instead.
+     */
+    @Deprecated
     public int getAttrIntValue(String uri, String localName, int defValue)
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            notAccessible("getAttrIntValue");
-            return -1; // never gets here
+            throw notAccessible("getAttrIntValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
         String valueStr = mStreamReader.getAttributeValue(uri, localName);
-        /* Also: conversion itself should be trivial to handle faster...
-         */
-        return doParseInt(valueStr, defValue);
+        return DataUtil.parseInt(valueStr, defValue);
     }
+
+    /*
+    ////////////////////////////////////////////////////
+    // Public API, Typed Access API for element values
+    ////////////////////////////////////////////////////
+     */
 
     /*
     ////////////////////////////////////////////////
@@ -918,10 +1178,18 @@ public abstract class SMInputCursor
     ////////////////////////////////////////////////
      */
 
+    /**
+     * Method for accessing application-provided data set previously
+     * by a {@link #setData} call.
+     */
     public Object getData() {
         return mData;
     }
 
+    /**
+     * Method for assigning per-cursor application-managed data,
+     * readable using {@link #getData}.
+     */
     public void setData(Object o) {
         mData = o;
     }
@@ -946,14 +1214,14 @@ public abstract class SMInputCursor
     /**
      * Method that will create a new nested cursor for iterating
      * over all (immediate) child nodes of the start element this cursor
-     * currently points to.
+     * currently points to that are passed by the specified filter.
      * If cursor does not point to a start element,
      * it will throw {@link IllegalStateException}; if it does not support
      * concept of child cursors, it will throw
      * {@link UnsupportedOperationException}
      *
      * @param f Filter child cursor is to use for filtering out
-     *    'unwanted' nodes; may be null for no filtering
+     *    'unwanted' nodes; may be null if no filtering is to be done
      *
      * @throws IllegalStateException If cursor can not be created due
      *   to the state cursor is in.
@@ -978,6 +1246,20 @@ public abstract class SMInputCursor
         return mChildCursor;
     }
 
+    /**
+     * Method that will create a new nested cursor for iterating
+     * over all (immediate) child nodes of the start element this cursor
+     * currently points to.
+     * If cursor does not point to a start element,
+     * it will throw {@link IllegalStateException}; if it does not support
+     * concept of child cursors, it will throw
+     * {@link UnsupportedOperationException}
+     *
+     * @throws IllegalStateException If cursor can not be created due
+     *   to the state cursor is in.
+     * @throws UnsupportedOperationException If cursor does not allow
+     *   creation of child cursors.
+     */
     public final SMInputCursor childCursor()
         throws XMLStreamException
     {
@@ -987,11 +1269,16 @@ public abstract class SMInputCursor
     /**
      * Method that will create a new nested cursor for iterating
      * over all the descendant (children and grandchildren) nodes of
-     * the start element this cursor currently points to.
+     * the start element this cursor currently points to
+     * that are accepted by the specified filter.
      * If cursor does not point to a start element,
      * it will throw {@link IllegalStateException}; if it does not support
      * concept of descendant cursors, it will throw
      * {@link UnsupportedOperationException}
+     *
+     *
+     * @param f Filter child cursor is to use for filtering out
+     *    'unwanted' nodes; may be null if no filtering is to be done
      *
      * @throws IllegalStateException If cursor can not be created due
      *   to the state cursor is in (or for some cursors, if they never
@@ -1017,6 +1304,21 @@ public abstract class SMInputCursor
         return mChildCursor;
     }
 
+    /**
+     * Method that will create a new nested cursor for iterating
+     * over all the descendant (children and grandchildren) nodes of
+     * the start element this cursor currently points to.
+     * If cursor does not point to a start element,
+     * it will throw {@link IllegalStateException}; if it does not support
+     * concept of descendant cursors, it will throw
+     * {@link UnsupportedOperationException}
+     *
+     * @throws IllegalStateException If cursor can not be created due
+     *   to the state cursor is in (or for some cursors, if they never
+     *   allow creating such cursors)
+     * @throws UnsupportedOperationException If cursor does not allow
+     *   creation of descendant cursors.
+     */
     public final SMInputCursor descendantCursor()
         throws XMLStreamException
     {
@@ -1114,79 +1416,41 @@ public abstract class SMInputCursor
     }
 
     /*
+    /////////////////////////////////////////////////////////////
+    // Public API, convenience methods for exception construction
+    /////////////////////////////////////////////////////////////
+     */
+
+    /**
+     * Method for constructing stream exception with given message,
+     * and location that matches that of the underlying stream
+     *<b>regardless of whether this cursor is valid</b> (i.e.
+     * will indicate location of the stream which may differ from
+     * where this cursor was last valid)
+     */
+    public XMLStreamException constructStreamException(String msg)
+    {
+        // !!! TODO: use StaxMate-specific sub-classes of XMLStreamException?
+        return new XMLStreamException(msg, getStreamLocation());
+    }
+
+    /**
+     * Method for constructing and throwing stream exception with given
+     * message. Equivalent to throwing exception that
+     * {@link #constructStreamException} constructs and returns.
+     */
+    public void throwStreamException(String msg)
+        throws XMLStreamException
+    {
+        throw constructStreamException(msg);
+    }
+
+    /*
     ////////////////////////////////////////////
     // Methods sub-classes need or can override
     // to customize behaviour:
     ////////////////////////////////////////////
      */
-
-    /**
-     * This method is needed by flattening cursors when they
-     * have child cursors: if so, they can determine their
-     * depth relative to child cursor's base parent count
-     * (and can not check stream -- as it may have moved --
-     * nor want to have separate field to track this information)
-     */
-    protected final int getBaseParentCount() {
-        return mBaseDepth;
-    }
-
-    /**
-     * Method called to skim through the content that the child
-     * cursor(s) are pointing to, end return once next call to
-     * XMLStreamReader2.next() will return the next event
-     * this cursor should see.
-     */
-    protected final void rewindPastChild()
-        throws XMLStreamException
-    {
-        final SMInputCursor child = mChildCursor;
-        mChildCursor = null;
-
-        child.invalidate();
-
-        /* Base depth to match is always known by the child in question,
-         * so let's ask it (hierarchic cursor parent also knows it)
-         */
-        final int endDepth = child.getBaseParentCount();
-        final XMLStreamReader2 sr = mStreamReader;
-        
-
-        for (int type = sr.getEventType(); true; type = sr.next()) {
-            if (type == XMLStreamConstants.END_ELEMENT) {
-                int depth = sr.getDepth();
-                if (depth > endDepth) {
-                    continue;
-                }
-                if (depth != endDepth) { // sanity check
-                    throwWrongEndElem(endDepth, depth);
-                }
-                break;
-            } else if (type == XMLStreamConstants.END_DOCUMENT) {
-                throwUnexpectedEndDoc();
-            }
-        }
-    }
-
-
-    /**
-     * Method called by the parent cursor, to indicate it has to
-     * traverse over xml content and that child cursor as well
-     * as all of its descendant cursors (if any) are to be
-     * considered invalid.
-     */
-    protected void invalidate()
-        throws XMLStreamException
-    {
-        mState = State.CLOSED;
-        mCurrEvent = null;
-
-        // child cursor(s) to delegate skipping to?
-        if (mChildCursor != null) {
-            mChildCursor.invalidate();
-            mChildCursor = null;
-        }
-    }
 
     /**
      * Method cursor calls when it needs to track element state information;
@@ -1222,86 +1486,12 @@ public abstract class SMInputCursor
 
     /*
     ////////////////////////////////////////////
-    // Internal parsing methods
+    // Other methods
+    // to customize behaviour:
     ////////////////////////////////////////////
      */
 
-    protected int doParseInt(String valueStr)
-        throws NumberFormatException
-    {
-        // !!! Let's optimize once time allows it...
-        return Integer.parseInt(valueStr);
-    }
-
-    protected int doParseInt(String valueStr, int defValue)
-    {
-        if (valueStr == null || valueStr.length() == 0) {
-            return defValue;
-        }
-
-        // !!! Let's optimize once time allows it...
-        try {
-            return Integer.parseInt(valueStr);
-        } catch (NumberFormatException nex) {
-            return defValue;
-        }
-    }
-
-    /*
-    ////////////////////////////////////////////
-    // Package methods
-    ////////////////////////////////////////////
-     */
-
-    protected final boolean isRootCursor() {
-        return (mBaseDepth == 0);
-    }
-
-    protected String notAccessible(String method)
-        throws XMLStreamException
-    {
-        if (mChildCursor != null) {
-            throwXsEx("Can not call '"+method+"(): cursor does not point to a valid node, as it has an active open child cursor.");
-        }
-        throwXsEx("Can not call '"+method+"(): cursor does not point to a valid node (curr event "+getCurrEvent()+"; cursor state "
-                  +getStateDesc());
-        return null;
-    }
-
-    protected String getStateDesc() {
-        return mState.toString();
-    }
-
-    /**
-     * @return Human-readable description of the underlying Stax event
-     *   this cursor points to.
-     */
-    protected String currentEventStr()
-    {
-        return (mCurrEvent == null) ? "null" : mCurrEvent.toString();
-    }
-
-    protected void throwUnexpectedEndDoc()
-        throws XMLStreamException
-    {
-        throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()+")");
-    }
-
-    protected void throwWrongEndElem(int expDepth, int actDepth)
-        throws IllegalStateException
-    {
-        throw new IllegalStateException("Expected to encounter END_ELEMENT with depth >= "+expDepth+", got "+actDepth);
-    }
-
-    protected void throwXsEx(String msg)
-        throws XMLStreamException
-    {
-        // !!! TODO: use StaxMate-specific sub-classes of XMLStreamException?
-        throw new XMLStreamException(msg, mStreamReader.getLocation());
-    }
-
-    public String toString() {
-        return "{" + getClass().getName()+": "+mState+", curr evt: "
-            +mCurrEvent+"}";
+    protected String getCurrEventDesc() {
+        return mCurrEvent.toString();
     }
 }

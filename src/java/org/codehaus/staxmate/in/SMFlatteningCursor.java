@@ -142,7 +142,7 @@ public class SMFlatteningCursor
                 throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()+")");
             }
 
-            SMEvent evt = sEventsByIds[type];
+            SMEvent evt = eventObjectByEventId(type);
             mCurrEvent = evt;
 
             // Ok, are we interested in this event?
