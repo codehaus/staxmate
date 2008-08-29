@@ -173,6 +173,9 @@ public abstract class SMInputCursor
      * Changes tracking mode of this cursor to the new specified
      * mode. Default mode for cursors is the one their parent uses;
      * {@link Tracking#NONE} for root cursors with no parent.
+     *<p>
+     * See also {@link #getPathDesc} for information on how
+     * to display tracked path/element information.
      */
     public final void setElementTracking(Tracking tracking) {
         mElemTracking = tracking;
@@ -225,7 +228,7 @@ public abstract class SMInputCursor
      * @return Number of start elements cursor has traversed
      */
     public int getElementCount() {
-        return mNodeCount;
+        return mElemCount;
     }
 
     /**
@@ -1446,6 +1449,82 @@ public abstract class SMInputCursor
     }
 
     /*
+    /////////////////////////////////////////////////////////////
+    // Public API, dev-readable descs
+    /////////////////////////////////////////////////////////////
+     */
+
+    /**
+     * Method that generates developer-readable description of
+     * the logical path of the event this cursor points to,
+     * assuming that <b>element tracking</b> is enabled.
+     * If it is, a path description will be constructed; if not,
+     * result will be "." ("unspecified current location").
+     *<p>
+     * Note: while results look similar to XPath expressions,
+     * they are not accurate (or even valid) XPath. 
+     * This is partly because of filtering, and partly because
+     * of differences between element/node index calculation.
+     * The idea is to make it easier to get reasonable idea
+     * of logical location, in addition to physical input location.
+     */
+    public String getPathDesc()
+    {
+        /* Need to start with parent, since current element may
+         * or may not exist (depeneding on traversal)?
+         */
+        SMElementInfo parent = getParentTrackedElement();
+        // Not tracking, or not just yet advanced?
+        if (parent == null && getElementTracking() == Tracking.NONE) {
+            return ".";
+        }
+        StringBuilder sb = new StringBuilder(100);
+
+        appendPathDesc(sb, parent, true);
+
+        /* Let's indicate index of the current node; whether to indicate
+         * via element or node index depend on whether it's a start/end
+         * element (and one for which we have info) or not
+         */
+        SMElementInfo curr = getTrackedElement();
+        if (curr != null && getCurrEvent() == SMEvent.START_ELEMENT) {
+            appendPathDesc(sb, mTrackedElement, false);
+        } else {
+            sb.append("/*[n").append(getNodeCount()).append(']');
+        }
+        return sb.toString();
+    }
+
+    private static void appendPathDesc(StringBuilder sb, SMElementInfo info,
+                                       boolean recursive)
+    {
+        if (info == null) {
+            return;
+        }
+        if (recursive) {
+            appendPathDesc(sb, info.getParent(), true);
+        }
+        sb.append('/');
+        String prefix = info.getPrefix();
+        if (prefix != null && prefix.length() > 0) {
+            sb.append(prefix);
+            sb.append(':');
+        }
+        sb.append(info.getLocalName());
+        // and let's indicate relative element-index of the element
+        sb.append("[e").append(info.getElementIndex()).append(']');
+    }
+
+    protected String getCurrEventDesc() {
+        return mCurrEvent.toString();
+    }
+
+    @Override
+        public String toString() {
+        return "[Cursor that point(s/ed) to: "+getCurrEventDesc()+"]";
+    }
+
+    /*
     ////////////////////////////////////////////
     // Methods sub-classes need or can override
     // to customize behaviour:
@@ -1483,15 +1562,4 @@ public abstract class SMInputCursor
 
     protected abstract SMInputCursor constructDescendantCursor(SMFilter f)
         throws XMLStreamException;
-
-    /*
-    ////////////////////////////////////////////
-    // Other methods
-    // to customize behaviour:
-    ////////////////////////////////////////////
-     */
-
-    protected String getCurrEventDesc() {
-        return mCurrEvent.toString();
-    }
 }

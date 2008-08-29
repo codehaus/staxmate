@@ -5,8 +5,8 @@ Release date: xx-Sep-2008
 Description:
   Maintenance release that focuses on:
 
-  * improved documentation (better JavaDocs)
-  * more consistent coverage of existing method (adding missing
+  - improved documentation (better JavaDocs)
+  - more consistent coverage of existing method (adding missing
     output-side methods; typed access methods)
 
 Problems fixed:
@@ -18,10 +18,16 @@ Problems fixed:
 
 New functionality:
 
+* [STAXMATE-13]: StaxMate factories can now be constructed as "stateful",
+  meaning they can contain reference to underlying Stax stream factory
+  to use. This can simplify code for constructing StaxMate objects.
 * [STAXMATE-19]: Add convenience method for accessing current stream
   location (SMInputCursor.getStreamLocation()). Also added matching
   'SMInputCursor.getCursorLocation()', and deprecated older ambiguously
   name 'SMInputCursor.getLocation()'.
+* Added 'SMInputCursor.getPathDesc()' which will produce XPath-like
+  description of where the cursor points to, if element tracking has
+  been enabled (so that information is available)
 
 == History: ==
 

@@ -29,9 +29,11 @@ public class TestInput
     private void readThrough(SMInputCursor crsr, int indent)
         throws XMLStreamException
     {
-        for (SMEvent type = crsr.getCurrEvent(); type != null;
-             type = crsr.getNext()) {
+        crsr.setElementTracking(SMInputCursor.Tracking.PARENTS);
+
+        for (SMEvent type = crsr.getCurrEvent(); type != null; type = crsr.getNext()) {
             System.out.print("["+indent+"] "+type+" ");
+            System.out.print(" (path = \""+crsr.getPathDesc()+"\")");
             String name = type.hasLocalName() ? crsr.getLocalName() : "NO-NAME";
             System.out.println(name);
 

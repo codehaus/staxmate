@@ -1,7 +1,13 @@
 package org.codehaus.staxmate;
 
+import java.io.*;
+import java.net.URL;
+
 import javax.xml.stream.*;
 
+import org.codehaus.stax2.XMLInputFactory2;
+import org.codehaus.stax2.XMLStreamReader2;
+import org.codehaus.stax2.io.Stax2ByteArraySource;
 import org.codehaus.stax2.ri.Stax2ReaderAdapter;
 
 import org.codehaus.staxmate.in.*;
@@ -35,11 +41,35 @@ import org.codehaus.staxmate.in.*;
  */
 public final class SMInputFactory
 {
-    private SMInputFactory() { }
+    /**
+     * Xml input stream factory used for constructing stream readers.
+     */
+    final XMLInputFactory mStaxFactory;
+
+    /**
+     * If the configured stax input factory implements Stax2 API,
+     * will contain upcast factory instance, otherwise null.
+     */
+    final XMLInputFactory2 mStax2Factory;
+
+    public SMInputFactory(XMLInputFactory staxF)
+    {
+        mStaxFactory = staxF;
+        mStax2Factory = (staxF instanceof XMLInputFactory2) ?
+            (XMLInputFactory2) staxF : null;
+    }
 
     /*
     /////////////////////////////////////////////////
-    // Cursor construction
+    // Access to underlying Stax factory
+    /////////////////////////////////////////////////
+     */
+
+    public XMLInputFactory getStaxFactory() { return mStaxFactory; }
+
+    /*
+    /////////////////////////////////////////////////
+    // Cursor construction, underlying methods
     /////////////////////////////////////////////////
      */
 
@@ -54,7 +84,7 @@ public final class SMInputFactory
      *   means that no filtering will be done.
      */
     public static SMHierarchicCursor hierarchicCursor(XMLStreamReader sr, SMFilter f) {
-        return new SMHierarchicCursor(null, Stax2ReaderAdapter.wrapIfNecessary(sr), f);
+        return constructHierarchic(Stax2ReaderAdapter.wrapIfNecessary(sr), f);
     }
 
     /**
@@ -68,7 +98,7 @@ public final class SMInputFactory
      *   means that no filtering will be done.
      */
     public static SMFlatteningCursor flatteningCursor(XMLStreamReader sr, SMFilter f) {
-        return new SMFlatteningCursor(null, Stax2ReaderAdapter.wrapIfNecessary(sr), f);
+        return constructFlattening(Stax2ReaderAdapter.wrapIfNecessary(sr), f);
     }
 
     /**
@@ -98,10 +128,154 @@ public final class SMInputFactory
     }
 
     /*
+    /////////////////////////////////////////////////
+    // Stream reader construction
+    /////////////////////////////////////////////////
+     */
+
+    /**
+     * Method for constructing Stax stream reader to read contents
+     * of specified URL, using Stax input factory
+     * this StaxMate factory was constructed with.
+     */
+    public XMLStreamReader2 createStax2Reader(URL url)
+        throws XMLStreamException
+    {
+        if (mStax2Factory != null) {
+            return mStax2Factory.createXMLStreamReader(url);
+        }
+        try {
+            XMLStreamReader sr = mStaxFactory.createXMLStreamReader(url.toExternalForm(), url.openStream());
+            return Stax2ReaderAdapter.wrapIfNecessary(sr);
+        } catch (IOException ioe) {
+            throw new XMLStreamException(ioe);
+        }
+    }
+
+    /**
+     * Method for constructing Stax stream reader to read contents
+     * of specified file, using Stax input factory
+     * this StaxMate factory was constructed with.
+     */
+    public XMLStreamReader2 createStax2Reader(File f)
+        throws XMLStreamException
+    {
+        if (mStax2Factory != null) {
+            return mStax2Factory.createXMLStreamReader(f);
+        }
+        try {
+            String sysId = f.toURL().toExternalForm();
+            XMLStreamReader sr = mStaxFactory.createXMLStreamReader(sysId, new FileInputStream(f));
+            return Stax2ReaderAdapter.wrapIfNecessary(sr);
+        } catch (IOException ioe) {
+            throw new XMLStreamException(ioe);
+        }
+    }
+
+    /**
+     * Method for constructing Stax stream reader to read contents
+     * of (portion of) specified byte array, using Stax input factory
+     * this StaxMate factory was constructed with.
+     */
+    public XMLStreamReader2 createStax2Reader(byte[] data, int offset, int len)
+        throws XMLStreamException
+    {
+        Stax2ByteArraySource src = new Stax2ByteArraySource(data, offset, len);
+        if (mStax2Factory != null) {
+            return (XMLStreamReader2) mStax2Factory.createXMLStreamReader(src);
+        }
+        try {
+            XMLStreamReader sr = mStaxFactory.createXMLStreamReader(src.constructInputStream());
+            return Stax2ReaderAdapter.wrapIfNecessary(sr);
+        } catch (IOException ioe) {
+            throw new XMLStreamException(ioe);
+        }
+    }
+
+    /*
+    /////////////////////////////////////////////////
+    // Cursor construction, "full service" (non-static)
+    /////////////////////////////////////////////////
+     */
+
+    /**
+     * Method that will construct and return 
+     * a nested cursor that will only ever iterate to one node, that
+     * is, the root element of the document reader is reading.
+     *<p>
+     * Cursor is built based on Stax stream reader constructed to
+     * read contents of resource specified by the URL argument.
+     *<p>
+     * Method uses standard "element-only" filter from
+     *  {@link org.codehaus.staxmate.in.SMFilterFactory}.
+     */
+    public SMHierarchicCursor rootElementCursor(URL url)
+        throws XMLStreamException
+    {
+        return constructHierarchic(createStax2Reader(url), SMFilterFactory.getElementOnlyFilter());
+    }
+
+    /**
+     * Method that will construct and return 
+     * a nested cursor that will only ever iterate to one node, that
+     * is, the root element of the document reader is reading.
+     *<p>
+     * Cursor is built based on Stax stream reader constructed to
+     * read contents of specified File.
+     *<p>
+     * Method uses standard "element-only" filter from
+     *  {@link org.codehaus.staxmate.in.SMFilterFactory}.
+     */
+    public SMHierarchicCursor rootElementCursor(File f)
+        throws XMLStreamException
+    {
+        return constructHierarchic(createStax2Reader(f), SMFilterFactory.getElementOnlyFilter());
+    }
+
+    /**
+     * Method that will construct and return 
+     * a nested cursor that will only ever iterate to one node, that
+     * is, the root element of the document reader is reading.
+     *<p>
+     * Cursor is built based on Stax stream reader constructed to
+     * read contents of the specified byte array.
+     *<p>
+     * Method uses standard "element-only" filter from
+     *  {@link org.codehaus.staxmate.in.SMFilterFactory}.
+     */
+    public SMHierarchicCursor rootElementCursor(byte[] data, int offset, int len)
+        throws XMLStreamException
+    {
+        return constructHierarchic(createStax2Reader(data, offset, len), SMFilterFactory.getElementOnlyFilter());
+    }
+
+    /*
     ///////////////////////////////////////////////////////
     // Convenience methods
     ///////////////////////////////////////////////////////
     */
+
+    /**
+     * Convenience method that will get a lazily constructed shared
+     * {@link SMInputFactory} instance. Instance is built using
+     * similarly shared {@link XMLInputFactory} instance (which
+     * is accessed using {@link #getGlobalXMLInputFactory}).
+     * See notes on  {@link #getGlobalXMLInputFactory} for limitations
+     * on when (if ever) you should use this method.
+     *<p>
+     * Note that this single(ton) instance is global to the class loader
+     * that loaded <code>SMInputFactory</code> (and usually hence
+     * global to a single JVM instance).
+     *
+     * @throws FactoryConfigurationError If there are problems with
+     *   configuration of Stax input factory (most likely because
+     *   there is no implementation available)
+     */
+    public static SMInputFactory getGlobalSMInputFactory()
+        throws FactoryConfigurationError
+    {
+        return SMFactoryAccessor.getFactory();
+    }
 
     /**
      * Convenience method that will get a lazily constructed shared
@@ -117,17 +291,35 @@ public final class SMInputFactory
      *   not for configuration change methods
      *  </li>
      * </ul>
+     *<p>
+     * Note that this single(ton) instance is global to the class loader
+     * that loaded <code>SMInputFactory</code> (and usually hence
+     * global to a single JVM instance).
+     *
+     * @throws FactoryConfigurationError If there are problems with
+     *   configuration of Stax input factory (most likely because
+     *   there is no implementation available)
      */
     public static XMLInputFactory getGlobalXMLInputFactory()
-        throws XMLStreamException
+        throws FactoryConfigurationError
     {
-        try {
-            return XmlFactoryAccessor.getInstance().getFactory();
-        } catch (FactoryConfigurationError err) {
-            // Can we do anything about this? It's an error, need not really catch?
-            //throw new XMLStreamException(err);
-            throw err;
-        }
+        return XmlFactoryAccessor.getFactory();
+    }
+
+    /*
+    ///////////////////////////////////////////////////////
+    // Internal methods
+    ///////////////////////////////////////////////////////
+    */
+
+    private final static SMHierarchicCursor constructHierarchic(XMLStreamReader2 sr, SMFilter f)
+    {
+        return new SMHierarchicCursor(null, sr, f);
+    }
+
+    private final static SMFlatteningCursor constructFlattening(XMLStreamReader2 sr, SMFilter f)
+    {
+        return new SMFlatteningCursor(null, sr, f);
     }
 
     /*
@@ -136,17 +328,22 @@ public final class SMInputFactory
     ///////////////////////////////////////////////////////
     */
 
+    /**
+     * Helper class used for implementing efficient lazy instantiation of
+     * the global xml stream input factory.
+     */
     private final static class XmlFactoryAccessor
     {
         final static XmlFactoryAccessor sInstance = new XmlFactoryAccessor();
-
         XMLInputFactory mFactory = null;
 
-        private XmlFactoryAccessor() { }
+        public static XMLInputFactory getFactory()
+            throws FactoryConfigurationError
+        {
+            return sInstance.get();
+        }
 
-        public static XmlFactoryAccessor getInstance() { return sInstance; }
-
-        public synchronized XMLInputFactory getFactory()
+        private synchronized XMLInputFactory get()
             throws FactoryConfigurationError
         {
             if (mFactory == null) {
@@ -156,126 +353,28 @@ public final class SMInputFactory
         }
     }
 
-    /*
-    /////////////////////////////////////////////////
-    // Simple test driver functionality
-    /////////////////////////////////////////////////
+    /**
+     * Helper class used for implementing efficient lazy instantiation of
+     * the global StaxMate input factory.
      */
-
-    @SuppressWarnings("deprecation")
-	public static void main(String[] args)
-        throws Exception
+    private final static class SMFactoryAccessor
     {
-        if (args.length != 1) {
-            System.err.println("Usage: java "+SMInputFactory.class+" [input file]");
-            System.exit(1);
+        final static SMFactoryAccessor sInstance = new SMFactoryAccessor();
+        SMInputFactory mFactory = null;
+
+        public static SMInputFactory getFactory()
+            throws FactoryConfigurationError
+        {
+            return sInstance.get();
         }
-        XMLInputFactory f = XMLInputFactory.newInstance();
-        java.io.File file = new java.io.File(args[0]);
-        XMLStreamReader r = f.createXMLStreamReader(file.toURL().toExternalForm(),
-                                                    new java.io.FileInputStream(file));
 
-        ///*
-        SMInputCursor it = hierarchicCursor(r, null);
-        it.setElementTracking(SMInputCursor.Tracking.VISIBLE_SIBLINGS);
-        traverseNested(it);
-        //*/
-
-        /*
-        SMInputCursor it = flatCursor(r, null);
-        it.setElementTracking(SMInputCursor.Tracking.VISIBLE_SIBLINGS);
-        traverseFlat(it);
-        */
-
-        r.close();
-    }
-
-    static void traverseNested(SMInputCursor it)
-        throws Exception
-    {
-        SMEvent evt;
-
-        while ((evt = it.getNext()) != null) {
-            System.out.print("["+it.getParentCount()+"] -> "+evt);
-            switch (evt) {
-            case START_ELEMENT:
-                System.out.print(" <"+it.getPrefixedName()+">");
-                System.out.println(" Path: "+getPath(it));
-                System.out.println(" Prev: "+getSiblings(it));
-                traverseNested(it.childCursor(null));
-                break;
-            case END_ELEMENT:
-                System.out.println(" </"+it.getPrefixedName()+">");
-                break;
-            default: 
-                if (evt.isTextualEvent()) {
-                    System.out.println(" Text (trim): '"+it.getText().trim()+"'");
-                } else {
-                    System.out.println();
-                }
+        private synchronized SMInputFactory get()
+            throws FactoryConfigurationError
+        {
+            if (mFactory == null) {
+                mFactory = new SMInputFactory(XmlFactoryAccessor.getFactory());
             }
+            return mFactory;
         }
-
-        System.out.println("["+it.getParentCount()+"] END");
-    }
-
-    static void traverseFlat(SMInputCursor it)
-        throws Exception
-    {
-        SMEvent evt;
-
-        while ((evt = it.getNext()) != null) {
-            System.out.print("["+it.getParentCount()+"] -> "+evt);
-
-            switch (evt) {
-            case START_ELEMENT:
-                System.out.print(" <"+it.getPrefixedName()+">");
-                System.out.println(" Path: "+getPath(it));
-                System.out.println(" Prev: "+getSiblings(it));
-                break;
-
-            case END_ELEMENT:
-                System.out.print(" </"+it.getPrefixedName()+">");
-                System.out.println(" Path: "+getPath(it));
-                System.out.println(" Prev: "+getSiblings(it));
-                break;
-
-            default:
-
-                if (evt.isTextualEvent()) {
-                    System.out.println(" Text (trim): '"+it.getText().trim()+"'");
-                } else {
-                    System.out.println();
-                }
-            }
-        }
-
-        System.out.println("["+it.getParentCount()+"] END");
-    }
-
-    static String getPath(SMInputCursor it)
-    {
-        SMElementInfo curr = it.getTrackedElement();
-        int nodeIndex = curr.getNodeIndex();
-        int elemIndex = curr.getElementIndex();
-
-        StringBuilder sb = new StringBuilder();
-        for (; curr != null; curr = curr.getParent()) {
-            sb.insert(0, '/');
-            sb.insert(0, curr.getLocalName());
-        }
-        sb.insert(0, "["+nodeIndex+" / "+elemIndex+"] ");
-        return sb.toString();
-    }
-
-    static String getSiblings(SMInputCursor it)
-    {
-        SMElementInfo curr = it.getTrackedElement();
-        StringBuilder sb = new StringBuilder();
-        for (; curr != null; curr = curr.getPreviousSibling()) {
-            sb.insert(0, "->");
-            sb.insert(0, curr.getLocalName());
-        }
-        return sb.toString();
     }
 }

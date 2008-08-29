@@ -1,10 +1,15 @@
 package org.codehaus.staxmate;
 
+import java.io.*;
+
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.codehaus.stax2.XMLOutputFactory2;
+import org.codehaus.stax2.XMLStreamWriter2;
+import org.codehaus.stax2.io.Stax2FileResult;
 import org.codehaus.stax2.ri.Stax2WriterAdapter;
 
 import org.codehaus.staxmate.out.SMOutputContext;
@@ -27,7 +32,31 @@ import org.codehaus.staxmate.out.SMRootFragment;
  */
 public final class SMOutputFactory
 {
-    private SMOutputFactory() { }
+    /**
+     * Xml output stream factory used for constructing stream readers.
+     */
+    final XMLOutputFactory mStaxFactory;
+
+    /**
+     * If the configured stax factory implements Stax2 API,
+     * will contain upcast factory instance, otherwise null.
+     */
+    final XMLOutputFactory2 mStax2Factory;
+
+    public SMOutputFactory(XMLOutputFactory staxF)
+    {
+        mStaxFactory = staxF;
+        mStax2Factory = (staxF instanceof XMLOutputFactory2) ?
+            (XMLOutputFactory2) staxF : null;
+    }
+
+    /*
+    /////////////////////////////////////////////////
+    // Access to underlying Stax factory
+    /////////////////////////////////////////////////
+     */
+
+    public XMLOutputFactory getStaxFactory() { return mStaxFactory; }
 
     /*
     ////////////////////////////////////////////////////
@@ -56,9 +85,67 @@ public final class SMOutputFactory
     public static SMOutputDocument createOutputDocument(XMLStreamWriter sw)
         throws XMLStreamException
     {
-        SMOutputContext ctxt = SMOutputContext.createInstance
-            (Stax2WriterAdapter.wrapIfNecessary(sw));
-        return ctxt.createDocument();
+        return SMOutputContext.createInstance(Stax2WriterAdapter.wrapIfNecessary(sw)).createDocument();
+    }
+
+    /**
+     * Factory method for constructing output object that represents
+     * a complete xml document including xml declaration and will
+     * contain root element plus other optional elements (doctype
+     * declaration, comment(s), PI(s)).
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct fragments,
+     * for this purpose check out {@link #createOutputFragment}.
+     */
+    public SMOutputDocument createOutputDocument(File f)
+        throws XMLStreamException
+    {
+        return SMOutputContext.createInstance(createStax2Writer(f)).createDocument();
+    }
+
+    /**
+     * Factory method for constructing output object that represents
+     * a complete xml document including xml declaration and will
+     * contain root element plus other optional elements (doctype
+     * declaration, comment(s), PI(s)).
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct fragments,
+     * for this purpose check out {@link #createOutputFragment}.
+     */
+    public SMOutputDocument createOutputDocument(OutputStream out)
+        throws XMLStreamException
+    {
+        return SMOutputContext.createInstance(createStax2Writer(out)).createDocument();
+    }
+
+    /**
+     * Factory method for constructing output object that represents
+     * a complete xml document including xml declaration and will
+     * contain root element plus other optional elements (doctype
+     * declaration, comment(s), PI(s)).
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct fragments,
+     * for this purpose check out {@link #createOutputFragment}.
+     */
+    public SMOutputDocument createOutputDocument(Writer w)
+        throws XMLStreamException
+    {
+        return SMOutputContext.createInstance(createStax2Writer(w)).createDocument();
     }
 
     /**
@@ -76,9 +163,7 @@ public final class SMOutputFactory
                                                         boolean standAlone)
         throws XMLStreamException
     {
-        SMOutputContext ctxt = SMOutputContext.createInstance
-            (Stax2WriterAdapter.wrapIfNecessary(sw));
-        return ctxt.createDocument(version, encoding, standAlone);
+        return SMOutputContext.createInstance(Stax2WriterAdapter.wrapIfNecessary(sw)).createDocument(version, encoding, standAlone);
     }
 
     /*
@@ -107,9 +192,123 @@ public final class SMOutputFactory
     public static SMRootFragment createOutputFragment(XMLStreamWriter sw)
         throws XMLStreamException
     {
-        SMOutputContext ctxt = SMOutputContext.createInstance
-            (Stax2WriterAdapter.wrapIfNecessary(sw));
-        return ctxt.createRootFragment();
+        return SMOutputContext.createInstance(Stax2WriterAdapter.wrapIfNecessary(sw)).createRootFragment();
+    }
+
+    /**
+     * Factory method for constructing output object that represents
+     * root-level of an xml fragment; container that can contain
+     * non-element markup (comments, PIs), textual data and
+     * zero or more elements.
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct actual documents,
+     * for this purpose check out {@link #createOutputDocument}.
+     *
+     * @param resultFile file xml contents get written to
+     */
+    public SMRootFragment createOutputFragment(File resultFile)
+        throws XMLStreamException
+    {
+        return SMOutputContext.createInstance(createStax2Writer(resultFile)).createRootFragment();
+    }
+
+    /**
+     * Factory method for constructing output object that represents
+     * root-level of an xml fragment; container that can contain
+     * non-element markup (comments, PIs), textual data and
+     * zero or more elements.
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct actual documents,
+     * for this purpose check out {@link #createOutputDocument}.
+     *
+     * @param out Output stream through with xml contents get written
+     */
+    public SMRootFragment createOutputFragment(OutputStream out)
+        throws XMLStreamException
+    {
+        return SMOutputContext.createInstance(createStax2Writer(out)).createRootFragment();
+    }
+
+    /**
+     * Factory method for constructing output object that represents
+     * root-level of an xml fragment; container that can contain
+     * non-element markup (comments, PIs), textual data and
+     * zero or more elements.
+     *<p>
+     * Note that after you have completed output using the
+     * result object (and its children), you must call
+     * {@link SMRootFragment#closeRoot} method to ensure that
+     * all the content is properly output via underlying stream writer.
+     *<p>
+     * Note: you can not use this method to construct actual documents,
+     * for this purpose check out {@link #createOutputDocument}.
+     *
+     * @param w Writer used for writing xml contents
+     */
+    public SMRootFragment createOutputFragment(Writer w)
+        throws XMLStreamException
+    {
+        return SMOutputContext.createInstance(createStax2Writer(w)).createRootFragment();
+    }
+
+    /*
+    /////////////////////////////////////////////////
+    // Stream reader construction
+    /////////////////////////////////////////////////
+     */
+
+    /**
+     * Method for constructing Stax stream writer to write xml content
+     * to specified file.
+     * Underlying stream writer will be constructed using Stax factory
+     * this StaxMate factory was constructed with.
+     *<p>
+     * Encoding used will be UTF-8.
+     */
+    public XMLStreamWriter2 createStax2Writer(File f)
+        throws XMLStreamException
+    {
+        Stax2FileResult res = new Stax2FileResult(f);
+        XMLStreamWriter sw = mStax2Factory.createXMLStreamWriter(res);
+        return Stax2WriterAdapter.wrapIfNecessary(sw);
+    }
+
+    /**
+     * Method for constructing Stax stream writer to write xml content
+     * to specified output stream.
+     * Underlying stream writer will be constructed using Stax factory
+     * this StaxMate factory was constructed with.
+     *<p>
+     * Encoding used will be UTF-8.
+     */
+    public XMLStreamWriter2 createStax2Writer(OutputStream out)
+        throws XMLStreamException
+    {
+        return Stax2WriterAdapter.wrapIfNecessary(mStax2Factory.createXMLStreamWriter(out));
+    }
+
+    /**
+     * Method for constructing Stax stream writer to write xml content
+     * using specified Writer.
+     * Underlying stream writer will be constructed using Stax factory
+     * this StaxMate factory was constructed with.
+     *<p>
+     * Encoding used will be UTF-8.
+     */
+    public XMLStreamWriter2 createStax2Writer(Writer w)
+        throws XMLStreamException
+    {
+        return Stax2WriterAdapter.wrapIfNecessary(mStax2Factory.createXMLStreamWriter(w));
     }
 
     /*
@@ -117,6 +316,28 @@ public final class SMOutputFactory
     // Convenience methods
     ///////////////////////////////////////////////////////
     */
+
+    /**
+     * Convenience method that will get a lazily constructed shared
+     * {@link SMOutputFactory} instance. Instance is built using
+     * similarly shared {@link XMLOutputFactory} instance (which
+     * is accessed using {@link #getGlobalXMLOutputFactory}).
+     * See notes on  {@link #getGlobalXMLOutputFactory} for limitations
+     * on when (if ever) you should use this method.
+     *<p>
+     * Note that this single(ton) instance is global to the class loader
+     * that loaded <code>SMOutputFactory</code> (and usually hence
+     * global to a single JVM instance).
+     *
+     * @throws FactoryConfigurationError If there are problems with
+     *   configuration of Stax output factory (most likely because
+     *   there is no implementation available)
+     */
+    public static SMOutputFactory getGlobalSMOutputFactory()
+        throws FactoryConfigurationError
+    {
+        return SMFactoryAccessor.getFactory();
+    }
 
     /**
      * Convenience method that will get a lazily constructed shared
@@ -135,7 +356,7 @@ public final class SMOutputFactory
         throws XMLStreamException
     {
         try {
-            return XmlFactoryAccessor.getInstance().getFactory();
+            return XmlFactoryAccessor.getFactory();
         } catch (FactoryConfigurationError err) {
             throw new XMLStreamException(err);
         }
@@ -156,17 +377,44 @@ public final class SMOutputFactory
     private final static class XmlFactoryAccessor
     {
         final static XmlFactoryAccessor sInstance = new XmlFactoryAccessor();
-
         XMLOutputFactory mFactory = null;
 
-        private XmlFactoryAccessor() { }
-        public static XmlFactoryAccessor getInstance() { return sInstance; }
+        public static XMLOutputFactory getFactory()
+            throws FactoryConfigurationError
+        {
+            return sInstance.get();
+        }
 
-        public synchronized XMLOutputFactory getFactory()
+        public synchronized XMLOutputFactory get()
             throws FactoryConfigurationError
         {
             if (mFactory == null) {
                 mFactory = XMLOutputFactory.newInstance();
+            }
+            return mFactory;
+        }
+    }
+
+    /**
+     * Helper class used for implementing efficient lazy instantiation of
+     * the global StaxMate output factory.
+     */
+    private final static class SMFactoryAccessor
+    {
+        final static SMFactoryAccessor sInstance = new SMFactoryAccessor();
+        SMOutputFactory mFactory = null;
+
+        public static SMOutputFactory getFactory()
+            throws FactoryConfigurationError
+        {
+            return sInstance.get();
+        }
+
+        private synchronized SMOutputFactory get()
+            throws FactoryConfigurationError
+        {
+            if (mFactory == null) {
+                mFactory = new SMOutputFactory(XmlFactoryAccessor.getFactory());
             }
             return mFactory;
         }

@@ -37,7 +37,6 @@ public abstract class SMElementInfo
      */
     public abstract SMElementInfo getPreviousSibling();
 
-
     public boolean isRoot() { return getParent() == null; }
 
     public boolean isFirstChild() { return getPreviousSibling() == null; }
