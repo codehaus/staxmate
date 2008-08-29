@@ -4,10 +4,8 @@ import java.io.*;
 
 import javax.xml.stream.*;
 
-import junit.framework.TestCase;
-
 class BaseReaderTest
-    extends TestCase
+    extends org.codehaus.staxmate.BaseTest
 {
     protected void assertElem(SMInputCursor crsr, String expURI, String expLN)
         throws XMLStreamException
@@ -26,13 +24,5 @@ class BaseReaderTest
                 fail("Expected element to have non-empty namespace '"+expURI+"', got '"+uri+"'");
             }
         }
-    }
-
-    protected XMLStreamReader getCoalescingReader(String content)
-        throws XMLStreamException
-    {
-        XMLInputFactory f = XMLInputFactory.newInstance();
-        f.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
-        return f.createXMLStreamReader(new StringReader(content));
     }
 }

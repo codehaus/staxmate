@@ -88,11 +88,23 @@ public abstract class SMOutputContainer
     ///////////////////////////////////////////////////////////
     */
 
+    /**
+     * Method to use for getting parent of this container, which
+     * is null for root-level containers (document, fragment).
+     *
+     * @return Parent container of this container, if any; null
+     *   for root-level containers
+     */
     public final SMOutputContainer getParent() {
         return mParent;
     }
 
-
+    /**
+     * Method for accessing output context (which encloses
+     * actual output stream).
+     *
+     * @return Output context for this container
+     */
     public final SMOutputContext getContext() {
         return mContext;
     }
@@ -111,11 +123,26 @@ public abstract class SMOutputContainer
      * comparison is enough to check for equality of two namespaces).
      * Calls {@link SMOutputContext} to find the actual namespace
      * instance.
+     *
+     * @return Namespace object which is bound to given namespace URI
+     *    for scope of this container
      */
     public final SMNamespace getNamespace(String uri) {
         return mContext.getNamespace(uri);
     }
 
+    /**
+     * Method for getting namespace instance that
+     * represents the specified URI, and if it is not yet bound,
+     * tries to bind it to given prefix. Note however that actual
+     * prefix used may be different due to conflicts: most important
+     * thing is that the specified URI will be bound to a valid
+     * prefix. Actual prefix can be checked by looking at returned
+     * namespace object
+     *
+     * @return Namespace object which is bound to given namespace URI
+     *    for scope of this container
+     */
     public final SMNamespace getNamespace(String uri, String prefPrefix) {
         return mContext.getNamespace(uri, prefPrefix);
     }
@@ -127,6 +154,16 @@ public abstract class SMOutputContainer
     ///////////////////////////////////////////////////////////
     */
 
+    /**
+     * Method for adding simple textual content to the xml output
+     * stream. Content added will be escaped by the underlying
+     * stream, as necessary.
+     *<p>
+     * Will buffer content in cases where necessary (when content
+     * gets added to buffered container that has not yet been
+     * released: the purposes of which is to allow out-of-order
+     * addition of content).
+     */
     public void addCharacters(String text)
         throws XMLStreamException
     {
@@ -137,6 +174,16 @@ public abstract class SMOutputContainer
         }
     }
 
+    /**
+     * Method for adding simple textual content to the xml output
+     * stream. Content added will be escaped by the underlying
+     * stream, as necessary.
+     *<p>
+     * Will buffer content in cases where necessary (when content
+     * gets added to buffered container that has not yet been
+     * released: the purposes of which is to allow out-of-order
+     * addition of content).
+     */
     public void addCharacters(char[] buf, int offset, int len)
         throws XMLStreamException
     {
@@ -148,16 +195,12 @@ public abstract class SMOutputContainer
     }
 
     /**
-     * Convenience method for adding value of an int as text
+     * @deprecated Use {@link #addValue(int)} instead.
      */
     public void addCharacters(int value)
         throws XMLStreamException
     {
-        /* Should/could optimize (use local char array etc), for
-         * performance boost...
-         */
-        String strValue = String.valueOf(value);
-        addCharacters(strValue);
+        addValue(value);
     }
 
     public void addCData(String text)
@@ -208,6 +251,61 @@ public abstract class SMOutputContainer
         } else {
             linkNewChild(mContext.createProcessingInstruction(target, data));
         }
+    }
+
+    /*
+    ///////////////////////////////////////////////////////////
+    // Typed Access output methods for adding typed
+    // (boolean, int, long) content as character data
+    ///////////////////////////////////////////////////////////
+    */
+
+    /**
+     * Typed output method for outputting
+     * boolean value
+     * as (textual) xml content.
+     * Equivalent to calling
+     * <code>addCharacters(String.valueOf(value))</code>
+     * but likely more efficient (with streams that support Typed Access API)
+     * as well as more explicit semantically.
+     */
+    public void addValue(boolean value)
+        throws XMLStreamException
+    {
+        // Before Stax2 v3.0, have to explicitly convert:
+        addCharacters(value ? "true" : "false");
+    }
+
+    /**
+     * Typed output method for outputting
+     * integer value
+     * as (textual) xml content.
+     * Equivalent to calling
+     * <code>addCharacters(String.valueOf(value))</code>
+     * but likely more efficient (with streams that support Typed Access API)
+     * as well as more explicit semantically.
+     */
+    public void addValue(int value)
+        throws XMLStreamException
+    {
+        // Before Stax2 v3.0, have to explicitly convert:
+        addCharacters(String.valueOf(value));
+    }
+
+    /**
+     * Typed output method for outputting
+     * long integer value
+     * as (textual) xml content.
+     * Equivalent to calling
+     * <code>addCharacters(String.valueOf(value))</code>
+     * but likely more efficient (with streams that support Typed Access API)
+     * as well as more explicit semantically.
+     */
+    public void addValue(long value)
+        throws XMLStreamException
+    {
+        // Before Stax2 v3.0, have to explicitly convert:
+        addCharacters(String.valueOf(value));
     }
 
     /*

@@ -107,17 +107,7 @@ public class SMOutputElement
     public void addAttribute(SMNamespace ns, String localName, String value)
         throws XMLStreamException
     {
-        final SMOutputContext ctxt = mContext;
-        
-        // Let's make sure NS declaration is good, first:
-        if (ns == null) {
-            ns = SMOutputContext.getEmptyNamespace();
-        } else if (!ns.isValidIn(ctxt)) { // shouldn't happen, but...
-            /* Let's find instance from our current context, instead of the
-             * one from some other context
-             */
-            ns = getNamespace(ns.getURI());
-        }
+        ns = verifyAttrNS(ns);
         
         // Ok, what can we do, then?
         switch (mOutputState) {
@@ -125,7 +115,7 @@ public class SMOutputElement
             // !!! TBI: buffer attribute to this element
             break;
         case OUTPUT_ATTRS: // perfect
-            ctxt.writeAttribute(localName, ns, value);
+            mContext.writeAttribute(localName, ns, value);
             break;
         default:
             throwClosedForAttrs();
@@ -136,20 +126,39 @@ public class SMOutputElement
      * Convenience method for attributes that do not belong to a
      * namespace (no prefix)
      */
-    public void addAttribute(String localName, String value)
+    public final void addAttribute(String localName, String value)
         throws XMLStreamException
     {
         addAttribute(null, localName, value);
     }
 
     /**
-     * Convenience method to use for adding attributes with integer
-     * values
+     * Typed Access write method to use for adding attribute with
+     * boolean value.
+     */
+    public void addAttribute(SMNamespace ns, String localName, boolean value)
+        throws XMLStreamException
+    {
+        addAttribute(ns, localName, value ? "true" : "false");
+    }
+
+    /**
+     * Typed Access write method to use for adding attribute with
+     * integer value.
      */
     public void addAttribute(SMNamespace ns, String localName, int value)
         throws XMLStreamException
     {
-        // !!! Should optimize (use local or shared char array buffer etc)
+        addAttribute(ns, localName, String.valueOf(value));
+    }
+
+    /**
+     * Typed Access write method to use for adding attribute with
+     * long value.
+     */
+    public void addAttribute(SMNamespace ns, String localName, long value)
+        throws XMLStreamException
+    {
         addAttribute(ns, localName, String.valueOf(value));
     }
 
@@ -310,6 +319,10 @@ public class SMOutputElement
         mContext.writeEndElement(mParentNsCount, mParentDefaultNs);
     }
 
+    /**
+     * Method for indicating illegal call to add attributes, when
+     * the underlying stream state prevents addition.
+     */
     protected void throwClosedForAttrs()
     {
         String desc = (mOutputState == OUTPUT_CLOSED) ?
@@ -317,5 +330,26 @@ public class SMOutputElement
         throw new IllegalStateException
             ("Can't add attributes for an element (path = '"
              +getPath()+"'), element state '"+desc+"'");
+    }
+
+    /**
+     * Method called to ensure that the passed-in namespace can be
+     * used for actual output operation. It converts nulls to
+     * the proper "no namespace" instance, and ensures that (so far)
+     * unbound namespaces are properly bound (including declaring
+     * them as needed).
+     */
+    protected SMNamespace verifyAttrNS(SMNamespace ns)
+    {
+        if (ns == null) {
+            return SMOutputContext.getEmptyNamespace();
+        }
+        if (!ns.isValidIn(mContext)) { // shouldn't happen, but...
+            /* Let's find instance from our current context, instead of the
+             * one from some other context
+             */
+            ns = getNamespace(ns.getURI());
+        }
+        return ns;
     }
 }
