@@ -16,11 +16,15 @@ Problems fixed:
   * Added more Typed Access methods to input cursors (only had int
     accessors for attributes)
 
-New functionality:
+New/improved functionality:
 
+* [STAXMATE-12]: Upgrade sample web app to use later jars (woodstox,
+  jetty, staxmate)
 * [STAXMATE-13]: StaxMate factories can now be constructed as "stateful",
   meaning they can contain reference to underlying Stax stream factory
   to use. This can simplify code for constructing StaxMate objects.
+* [STAXMATE-15]: Added Typed Access methods to writer side (write
+  boolean/int/long attributes, character content).
 * [STAXMATE-19]: Add convenience method for accessing current stream
   location (SMInputCursor.getStreamLocation()). Also added matching
   'SMInputCursor.getCursorLocation()', and deprecated older ambiguously

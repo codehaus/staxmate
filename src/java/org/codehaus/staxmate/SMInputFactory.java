@@ -192,6 +192,24 @@ public final class SMInputFactory
         }
     }
 
+    /**
+     * Method for constructing Stax stream reader to read contents
+     * accessible through Inputstream provided.
+     * Underlying stream reader is constucted using Stax factory
+     * this StaxMate factory was constructed with.
+     *<p>
+     * NOTE: this method should only be used if no other overloaded
+     * methods matches input source. For example, if input comes from
+     * a file, then the method that takes File argument should be used
+     * instead. This because more specific methods can provide better
+     * error reporting and entity resolution support.
+     */
+    public XMLStreamReader2 createStax2Reader(InputStream in)
+        throws XMLStreamException
+    {
+        return Stax2ReaderAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamReader(in));
+    }
+
     /*
     /////////////////////////////////////////////////
     // Cursor construction, "full service" (non-static)
@@ -247,6 +265,29 @@ public final class SMInputFactory
         throws XMLStreamException
     {
         return constructHierarchic(createStax2Reader(data, offset, len), SMFilterFactory.getElementOnlyFilter());
+    }
+
+    /**
+     * Method that will construct and return 
+     * a nested cursor that will only ever iterate to one node, that
+     * is, the root element of the document reader is reading.
+     *<p>
+     * Cursor is built based on Stax stream reader constructed to
+     * read contents of specified File.
+     *<p>
+     * Method uses standard "element-only" filter from
+     *  {@link org.codehaus.staxmate.in.SMFilterFactory}.
+     *<p>
+     * NOTE: this method should only be used if no other overloaded
+     * methods matches input source. For example, if input comes from
+     * a file, then the method that takes File argument should be used
+     * instead. This because more specific methods can provide better
+     * error reporting and entity resolution support.
+     */
+    public SMHierarchicCursor rootElementCursor(InputStream in)
+        throws XMLStreamException
+    {
+        return constructHierarchic(createStax2Reader(in), SMFilterFactory.getElementOnlyFilter());
     }
 
     /*
