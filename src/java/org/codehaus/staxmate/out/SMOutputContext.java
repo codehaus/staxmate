@@ -34,6 +34,7 @@ public final class SMOutputContext
     */
 
     /* Any documents really use more than 16 explicit namespaces?
+     * Probably not; those that do can expand the stack as needed
      */
     final static int DEF_NS_STACK_SIZE = 16;
 
@@ -550,8 +551,7 @@ public final class SMOutputContext
                     prefix = generateUnboundPrefix();
                 }
                 // Ok, can bind now...
-                ns.bindAs(prefix);
-                mStreamWriter.writeNamespace(prefix, ns.getURI());
+                bindAndWriteNs(ns, prefix);
             }
         }
 
@@ -656,8 +656,7 @@ public final class SMOutputContext
                 mDefaultNs = ns;
                 mStreamWriter.writeDefaultNamespace(ns.getURI());
             } else {
-                ns.bindAs(prefix);
-                mStreamWriter.writeNamespace(prefix, ns.getURI());
+                bindAndWriteNs(ns, prefix);
             }
         }
         return oldDefaultNs;
@@ -684,7 +683,7 @@ public final class SMOutputContext
         /* Ok, if we are not in repairing mode, may need to unbind namespace
          * bindings for namespaces bound with matching start element
          */
-        if (mRepairing) {
+        if (!mRepairing) {
             if (mBoundNsCount > parentNsCount) {
                 int i = mBoundNsCount;
                 mBoundNsCount = parentNsCount;
@@ -814,9 +813,15 @@ public final class SMOutputContext
     //////////////////////////////////////////////////////
     */
 
-    /*
-    private void bindNs(SMNamespace ns)
+    /**
+     * Method for establishing binding between given namespace and
+     * a non-empty prefix, as well as writing resulting namespace
+     * declaration out.
+     */
+    private void bindAndWriteNs(SMNamespace ns, String prefix)
+        throws XMLStreamException
     {
+        // First, mark locally the fact that it's now bound
         SMNamespace[] stack = mNsStack;
         if (stack == null) {
             mNsStack = stack = new SMNamespace[DEF_NS_STACK_SIZE];
@@ -826,8 +831,11 @@ public final class SMOutputContext
             stack = mNsStack;
         }
         stack[mBoundNsCount++] = ns;
+
+        // And then write it out
+        ns.bindAs(prefix);
+        mStreamWriter.writeNamespace(prefix, ns.getURI());
     }
-    */
 
     private void outputIndentation()
         throws XMLStreamException

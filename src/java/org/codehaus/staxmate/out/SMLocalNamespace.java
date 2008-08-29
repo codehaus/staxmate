@@ -105,7 +105,8 @@ public final class SMLocalNamespace
      * allow it). So let's allow transitions to and from null, but not
      * between two non-empty prefixes.
      */
-    protected void bindAs(String prefix) {
+    protected void bindAs(String prefix)
+    {
         if (mCurrPrefix != null) {
             /* Let's not bother checking for equality -- any calls to re-bind
              * are errors in implementation, and are never called by the
@@ -129,7 +130,8 @@ public final class SMLocalNamespace
         mIsPermanent = true;
     }
 
-    protected void unbind() {
+    protected void unbind()
+    {
         // Sanity check:
         if (mCurrPrefix == null) {
             throw new IllegalStateException("Trying to unbind an unbound namespace (URI '"+mURI+"')");

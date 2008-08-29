@@ -10,6 +10,8 @@ Description:
     output-side methods; typed access methods)
 
 Problems fixed:
+  * [STAXMATE-20]: Binding of non-default namespaces was buggy; scoping
+    was not properly handled, leading to missing declarations
   * Vastly improved Javadocs.
   * Added more Typed Access methods to input cursors (only had int
     accessors for attributes)
