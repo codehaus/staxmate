@@ -290,7 +290,13 @@ abstract class CursorBase
             return constructStreamException("Can not call '"+method+"(): cursor does not point to a valid node, as it has an active open child cursor.");
         }
         return constructStreamException("Can not call '"+method+"(): cursor does not point to a valid node (curr event "+getCurrEventDesc()+"; cursor state "
-                  +getStateDesc());
+                                        +getStateDesc()+")");
+    }
+
+    protected XMLStreamException wrongState(String method, SMEvent expState)
+        throws XMLStreamException
+    {
+        return constructStreamException("Can not call '"+method+"()' when cursor is not positioned over "+expState+" but "+currentEventStr()); 
     }
 
     protected String getStateDesc() {

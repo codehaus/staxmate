@@ -475,7 +475,6 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw constructStreamException("Can not call 'getText()' when cursor is not positioned over START_ELEMENT (current event "+currentEventStr()+")"); 
         }
-
         SMFilter f = includeIgnorable
             ? SMFilterFactory.getTextOnlyFilter()
             : SMFilterFactory.getNonIgnorableTextFilter();
@@ -494,10 +493,10 @@ public abstract class SMInputCursor
             return text;
         }
 
-        int size = text.length();
-        StringBuffer sb = new StringBuffer((size < 500) ? 500 : size);
-        sb.append(text);
         XMLStreamReader2 sr = childIt.getStreamReader();
+        int size = text.length() + sr.getTextLength()+ 20;
+        StringBuffer sb = new StringBuffer(Math.max(size, 100));
+        sb.append(text);
         do {
             // Let's assume char array access is more efficient...
             sb.append(sr.getTextCharacters(), sr.getTextStart(),
@@ -1174,6 +1173,238 @@ public abstract class SMInputCursor
     // Public API, Typed Access API for element values
     ////////////////////////////////////////////////////
      */
+
+    /**
+     * Method that can collect text <b>directly</b> contained within
+     * START_ELEMENT currently pointed by this cursor.
+     * This is different from {@link #collectDescendantText} in that
+     * it does NOT work for mixed content
+     * (child elements are not allowed:
+     * comments and processing instructions are allowed and ignored
+     * if encountered).
+     * If any ignorable white space (as per schema, dtd or so) is encountered,
+     * it will be ignored.
+     *<p>
+     * The main technical difference to  {@link #collectDescendantText} is
+     * that this method tries to make use of Stax2 v3.0 Typed Access API,
+     * if available, and can thus be more efficient.
+     *
+     * @throws XMLStreamException if content is not accessible; may also
+     *  be thrown if child elements are encountered.
+     */
+    public String getElemStringValue()
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getElemStringValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw wrongState("getElemStringValue", SMEvent.START_ELEMENT);
+        }
+        /* !!! 02-Sep-2008, tatus: In future, should convert to using
+         *    Stax2 v3.0 Typed Access API. But that's only available
+         *    for StaxMate 2.0 and above.
+         */
+        SMInputCursor childIt = childCursor(SMFilterFactory.getNonIgnorableTextFilter());
+        if (childIt.getNext() == null) {
+            return "";
+        }
+        String text = childIt.getText(); // has to be a text event
+        if (childIt.getNext() == null) {
+            return text;
+        }
+        XMLStreamReader2 sr = childIt.getStreamReader();
+        int size = text.length() + sr.getTextLength()+ 20;
+        StringBuffer sb = new StringBuffer(Math.max(size, 100));
+        sb.append(text);
+        do {
+            // Let's assume char array access is more efficient...
+            sb.append(sr.getTextCharacters(), sr.getTextStart(),
+                      sr.getTextLength());
+        } while (childIt.getNext() != null);
+
+        return sb.toString();
+    }
+
+    /**
+     * Method that can collect text <b>directly</b> contained within
+     * START_ELEMENT currently pointed by this cursor and convert
+     * it to a boolean value.
+     * For method to work, the value must be legal textual representation of
+     *<b>boolean</b>
+     * data type as specified by W3C Schema (as well as Stax2 Typed
+     * Access API).
+     * Element also can not contain mixed content (child elements;
+     * comments and processing instructions are allowed and ignored
+     * if encountered).
+     *
+     * @throws XMLStreamException if content is not accessible or
+     *    convertible to required return type
+     */
+    public boolean getElemBooleanValue()
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getElemBooleanValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
+        }
+        /* !!! 02-Sep-2008, tatus: In future, should convert to using
+         *    Stax2 v3.0 Typed Access API. But that's only available
+         *    for StaxMate 2.0 and above.
+         */
+        try {
+            return DataUtil.parseBoolean(getElemStringValue());
+        } catch (IllegalArgumentException iae) {
+            throw constructStreamException("Element value not boolean: "+iae.getMessage());
+        }
+    }
+
+    /**
+     * Similar to {@link #getElemBooleanValue()}, but instead of failing
+     * on invalid value, returns given default value.
+     */
+    public boolean getElemBooleanValue(boolean defValue)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getElemBooleanValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
+        }
+        String value = getElemStringValue();
+        if (value.length() > 0) {
+            value = value.trim();
+            if (value.length() > 0) {
+                try {
+                    return DataUtil.parseBoolean(value);
+                } catch (IllegalArgumentException iae) { }
+            }
+        }
+        return defValue;
+    }
+
+    /**
+     * Method that can collect text <b>directly</b> contained within
+     * START_ELEMENT currently pointed by this cursor and convert
+     * it to a int value.
+     * For method to work, the value must be legal textual representation of
+     *<b>int</b>
+     * data type as specified by W3C Schema (as well as Stax2 Typed
+     * Access API).
+     * Element also can not contain mixed content (child elements;
+     * comments and processing instructions are allowed and ignored
+     * if encountered).
+     *
+     * @throws XMLStreamException if content is not accessible or
+     *    convertible to required return type
+     */
+    public int getElemIntValue()
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getElemIntValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw wrongState("getElemIntValue", SMEvent.START_ELEMENT);
+        }
+        /* !!! 02-Sep-2008, tatus: In future, should convert to using
+         *    Stax2 v3.0 Typed Access API. But that's only available
+         *    for StaxMate 2.0 and above.
+         */
+        try {
+            return DataUtil.parseInt(getElemStringValue());
+        } catch (IllegalArgumentException iae) {
+            throw constructStreamException("Element value not int: "+iae.getMessage());
+        }
+    }
+
+    /**
+     * Similar to {@link #getElemIntValue()}, but instead of failing
+     * on invalid value, returns given default value.
+     */
+    public int getElemIntValue(int defValue)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getElemIntValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw wrongState("getElemIntValue", SMEvent.START_ELEMENT);
+        }
+        String value = getElemStringValue();
+        if (value.length() > 0) {
+            value = value.trim();
+            if (value.length() > 0) {
+                try {
+                    return DataUtil.parseInt(value);
+                } catch (IllegalArgumentException iae) { }
+            }
+        }
+        return defValue;
+    }
+
+    /**
+     * Method that can collect text <b>directly</b> contained within
+     * START_ELEMENT currently pointed by this cursor and convert
+     * it to a long value.
+     * For method to work, the value must be legal textual representation of
+     *<b>long</b>
+     * data type as specified by W3C Schema (as well as Stax2 Typed
+     * Access API).
+     * Element also can not contain mixed content (child elements;
+     * comments and processing instructions are allowed and ignored
+     * if encountered).
+     *
+     * @throws XMLStreamException if content is not accessible or
+     *    convertible to required return type
+     */
+    public long getElemLongValue()
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getElemLongValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw wrongState("getElemLongValue", SMEvent.START_ELEMENT);
+        }
+        /* !!! 02-Sep-2008, tatus: In future, should convert to using
+         *    Stax2 v3.0 Typed Access API. But that's only available
+         *    for StaxMate 2.0 and above.
+         */
+        try {
+            return DataUtil.parseLong(getElemStringValue());
+        } catch (IllegalArgumentException iae) {
+            throw constructStreamException("Element value not long: "+iae.getMessage());
+        }
+    }
+
+    /**
+     * Similar to {@link #getElemLongValue()}, but instead of failing
+     * on invalid value, returns given default value.
+     */
+    public long getElemLongValue(long defValue)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw notAccessible("getElemLongValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw wrongState("getElemLongValue", SMEvent.START_ELEMENT);
+        }
+        String value = getElemStringValue();
+        if (value.length() > 0) {
+            value = value.trim();
+            if (value.length() > 0) {
+                try {
+                    return DataUtil.parseLong(value);
+                } catch (IllegalArgumentException iae) { }
+            }
+        }
+        return defValue;
+    }
 
     /*
     ////////////////////////////////////////////////
