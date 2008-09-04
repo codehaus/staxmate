@@ -165,6 +165,11 @@ public abstract class SMInputCursor
         }
     }
 
+    /**
+     * Method for setting filter used for selecting which events
+     * are to be returned to the caller when {@link #getNext}
+     * is called.
+     */
     public final void setFilter(SMFilter f) {
         mFilter = f;
     }
@@ -351,14 +356,20 @@ public abstract class SMInputCursor
 
     /**
      * Method that can be used to get direct access to the underlying
-     * stream reader. This is usually needed to access some of less
-     * often needed accessors for which there is no convenience method
-     * in StaxMate API.
+     * stream reader. Custom sub-classed versions (which can be constructed
+     * by overriding this classes factory methods) can choose to block
+     * such access, but the default implementation does allow access
+     * to it.
+     *<p>
+     * Note that this method should not be needed (or extensively used)
+     * for regular StaxMate usage, because direct access to the stream
+     * may cause cursor's understanding of stream reader state to be
+     * incompatible with its actual state.
      *
      * @return Stream reader the cursor uses for getting XML events
      */
-    public final XMLStreamReader2 getStreamReader() {
-        return mStreamReader;
+    public XMLStreamReader2 getStreamReader() {
+        return _getStreamReader();
     }
 
     /**
@@ -375,7 +386,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getLocation");
+            throw _notAccessible("getLocation");
         }
         // Let's try to get actual exact location via Stax2 first:
         LocationInfo li = mStreamReader.getLocationInfo();
@@ -420,7 +431,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getLocation");
+            throw _notAccessible("getLocation");
         }
         return mStreamReader.getLocation();
     }
@@ -449,7 +460,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getText");
+            throw _notAccessible("getText");
         }
         return mStreamReader.getText();
     }
@@ -470,7 +481,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getText");
+            throw _notAccessible("getText");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw constructStreamException("Can not call 'getText()' when cursor is not positioned over START_ELEMENT (current event "+currentEventStr()+")"); 
@@ -493,7 +504,7 @@ public abstract class SMInputCursor
             return text;
         }
 
-        XMLStreamReader2 sr = childIt.getStreamReader();
+        XMLStreamReader2 sr = childIt._getStreamReader();
         int size = text.length() + sr.getTextLength()+ 20;
         StringBuffer sb = new StringBuffer(Math.max(size, 100));
         sb.append(text);
@@ -525,7 +536,7 @@ public abstract class SMInputCursor
         SMInputCursor childIt = descendantCursor(f);
 
         // Any text in there?
-        XMLStreamReader2 sr = childIt.getStreamReader();
+        XMLStreamReader2 sr = childIt._getStreamReader();
         while (childIt.getNext() != null) {
             /* 'true' indicates that we are not to lose the text contained
              * (can call getText() multiple times, idempotency). While this
@@ -547,7 +558,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getName");
+            throw _notAccessible("getName");
         }
         return mStreamReader.getName();
     }
@@ -565,7 +576,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getLocalName");
+            throw _notAccessible("getLocalName");
         }
         switch (getCurrEventCode()) {
         case XMLStreamConstants.START_ELEMENT:
@@ -597,7 +608,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getPrefix");
+            throw _notAccessible("getPrefix");
         }
         String prefix = mStreamReader.getPrefix();
         // some impls may return null instead, let's convert
@@ -617,7 +628,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getNsUri");
+            throw _notAccessible("getNsUri");
         }
         String uri = mStreamReader.getNamespaceURI();
         // some impls may return null instead, let's convert
@@ -634,7 +645,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getPrefixedName");
+            throw _notAccessible("getPrefixedName");
         }
         return mStreamReader.getPrefixedName();
     }
@@ -651,7 +662,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("hasName");
+            throw _notAccessible("hasName");
         }
         if (expName == null) {
             throw new IllegalArgumentException("Can not pass null name to method");
@@ -674,7 +685,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("hasName");
+            throw _notAccessible("hasName");
         }
 
         int type = getCurrEventCode();
@@ -738,7 +749,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrCount");
+            throw _notAccessible("getAttrCount");
         }
         return mStreamReader.getAttributeCount();
     }
@@ -755,7 +766,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrCount");
+            throw _notAccessible("getAttrCount");
         }
         return mStreamReader.getAttributeInfo().findAttributeIndex(uri, localName);
     }
@@ -780,7 +791,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrName");
+            throw _notAccessible("getAttrName");
         }
         return mStreamReader.getAttributeName(index);
     }
@@ -805,7 +816,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrLocalName");
+            throw _notAccessible("getAttrLocalName");
         }
         return mStreamReader.getAttributeLocalName(index);
     }
@@ -832,7 +843,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrPrefix");
+            throw _notAccessible("getAttrPrefix");
         }
         String prefix = mStreamReader.getAttributePrefix(index);
         // some impls may return null instead, let's convert
@@ -860,7 +871,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrNsUri");
+            throw _notAccessible("getAttrNsUri");
         }
         String uri = mStreamReader.getAttributeNamespace(index);
         // some impls may return null instead, let's convert
@@ -888,7 +899,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttributeValue");
+            throw _notAccessible("getAttributeValue");
         }
         return mStreamReader.getAttributeValue(index);
     }
@@ -903,7 +914,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttributeValue");
+            throw _notAccessible("getAttributeValue");
         }
         /* If we are to believe StAX specs, null would mean "do not
          * check namespace" -- that's pretty much never what anyone
@@ -939,7 +950,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrValue");
+            throw _notAccessible("getAttrValue");
         }
         return mStreamReader.getAttributeValue(namespaceURI, localName);
     }
@@ -967,7 +978,7 @@ public abstract class SMInputCursor
         throws NumberFormatException, XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrBooleanValue");
+            throw _notAccessible("getAttrBooleanValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1000,7 +1011,7 @@ public abstract class SMInputCursor
         throws NumberFormatException, XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrBooleanValue");
+            throw _notAccessible("getAttrBooleanValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1026,7 +1037,7 @@ public abstract class SMInputCursor
         throws NumberFormatException, XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrIntValue");
+            throw _notAccessible("getAttrIntValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1059,7 +1070,7 @@ public abstract class SMInputCursor
         throws NumberFormatException, XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrIntValue");
+            throw _notAccessible("getAttrIntValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1085,7 +1096,7 @@ public abstract class SMInputCursor
         throws NumberFormatException, XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrLongValue");
+            throw _notAccessible("getAttrLongValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1118,7 +1129,7 @@ public abstract class SMInputCursor
         throws NumberFormatException, XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrLongValue");
+            throw _notAccessible("getAttrLongValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1141,7 +1152,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrIntValue");
+            throw _notAccessible("getAttrIntValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1159,7 +1170,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getAttrIntValue");
+            throw _notAccessible("getAttrIntValue");
         }
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
@@ -1196,10 +1207,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getElemStringValue");
+            throw _notAccessible("getElemStringValue");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw wrongState("getElemStringValue", SMEvent.START_ELEMENT);
+            throw _wrongState("getElemStringValue", SMEvent.START_ELEMENT);
         }
         /* !!! 02-Sep-2008, tatus: In future, should convert to using
          *    Stax2 v3.0 Typed Access API. But that's only available
@@ -1213,7 +1224,7 @@ public abstract class SMInputCursor
         if (childIt.getNext() == null) {
             return text;
         }
-        XMLStreamReader2 sr = childIt.getStreamReader();
+        XMLStreamReader2 sr = childIt._getStreamReader();
         int size = text.length() + sr.getTextLength()+ 20;
         StringBuffer sb = new StringBuffer(Math.max(size, 100));
         sb.append(text);
@@ -1245,10 +1256,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getElemBooleanValue");
+            throw _notAccessible("getElemBooleanValue");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
+            throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
         }
         /* !!! 02-Sep-2008, tatus: In future, should convert to using
          *    Stax2 v3.0 Typed Access API. But that's only available
@@ -1269,10 +1280,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getElemBooleanValue");
+            throw _notAccessible("getElemBooleanValue");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
+            throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
         }
         String value = getElemStringValue();
         if (value.length() > 0) {
@@ -1305,10 +1316,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getElemIntValue");
+            throw _notAccessible("getElemIntValue");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw wrongState("getElemIntValue", SMEvent.START_ELEMENT);
+            throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
         }
         /* !!! 02-Sep-2008, tatus: In future, should convert to using
          *    Stax2 v3.0 Typed Access API. But that's only available
@@ -1329,10 +1340,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getElemIntValue");
+            throw _notAccessible("getElemIntValue");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw wrongState("getElemIntValue", SMEvent.START_ELEMENT);
+            throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
         }
         String value = getElemStringValue();
         if (value.length() > 0) {
@@ -1365,10 +1376,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getElemLongValue");
+            throw _notAccessible("getElemLongValue");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw wrongState("getElemLongValue", SMEvent.START_ELEMENT);
+            throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
         }
         /* !!! 02-Sep-2008, tatus: In future, should convert to using
          *    Stax2 v3.0 Typed Access API. But that's only available
@@ -1389,10 +1400,10 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw notAccessible("getElemLongValue");
+            throw _notAccessible("getElemLongValue");
         }
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw wrongState("getElemLongValue", SMEvent.START_ELEMENT);
+            throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
         }
         String value = getElemStringValue();
         if (value.length() > 0) {
@@ -1658,7 +1669,7 @@ public abstract class SMInputCursor
     /**
      * Method for constructing stream exception with given message,
      * and location that matches that of the underlying stream
-     *<b>regardless of whether this cursor is valid</b> (i.e.
+     *<b>regardless of whether this cursor is valid</b> (that is,
      * will indicate location of the stream which may differ from
      * where this cursor was last valid)
      */
@@ -1750,6 +1761,11 @@ public abstract class SMInputCursor
         return mCurrEvent.toString();
     }
 
+    /**
+     * Overridden implementation will just display description of
+     * the event this cursor points to (or last pointed to, if not
+     * valid)
+     */
     @Override
         public String toString() {
         return "[Cursor that point(s/ed) to: "+getCurrEventDesc()+"]";
@@ -1788,9 +1804,23 @@ public abstract class SMInputCursor
                                       mNodeCount-1, mElemCount-1, getDepth());
     }
 
+    /**
+     * Abstract method that concrete sub-classes implement, and is used
+     * for all instantiation of child cursors by this cursor instance.
+     *<p>
+     * Note that custom cursor implementations can be used by overriding
+     * this method.
+     */
     protected abstract SMInputCursor constructChildCursor(SMFilter f)
         throws XMLStreamException;
 
+    /**
+     * Abstract method that concrete sub-classes implement, and is used
+     * for all instantiation of descendant cursors by this cursor instance.
+     *<p>
+     * Note that custom cursor implementations can be used by overriding
+     * this method.
+     */
     protected abstract SMInputCursor constructDescendantCursor(SMFilter f)
         throws XMLStreamException;
 }

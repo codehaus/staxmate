@@ -127,7 +127,7 @@ public class SMFlatteningCursor
                 int depth = mStreamReader.getDepth();
                 if (depth <= mBaseDepth) {
                     if (depth != mBaseDepth) {
-                        throwWrongEndElem(mBaseDepth, depth);
+                        _throwWrongEndElem(mBaseDepth, depth);
                     }
                     break;
                 }

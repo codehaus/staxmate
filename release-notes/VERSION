@@ -1,13 +1,15 @@
 Version: 1.3.0
 
-Release date: xx-Sep-2008
+Release date: 03-Sep-2008
 
 Description:
-  Maintenance release that focuses on:
+  Minor version that focuses on:
 
   - improved documentation (better JavaDocs)
   - more consistent coverage of existing method (adding missing
     output-side methods; typed access methods)
+  - more convenient methods for constructing cursor and output element
+    instances from factories.
 
 Problems fixed:
   * [STAXMATE-20]: Binding of non-default namespaces was buggy; scoping

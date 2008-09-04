@@ -87,7 +87,7 @@ public class SMHierarchicCursor
                 ++mElemCount;
             } else if (type == XMLStreamConstants.END_DOCUMENT) {
                 // just a sanity check; shouldn't really be needed
-                throwUnexpectedEndDoc();
+                _throwUnexpectedEndDoc();
             }
             SMEvent evt = eventObjectByEventId(type);
             mCurrEvent = evt;
@@ -161,14 +161,14 @@ public class SMHierarchicCursor
                     continue;
                 }
                 if (depth != endDepth) { // sanity check
-                    throwWrongEndElem(endDepth, depth);
+                    _throwWrongEndElem(endDepth, depth);
                 }
                 break;
             } else if (type == XMLStreamConstants.END_DOCUMENT) {
                 /* This is just a sanity check, to give more meaningful
                  * error messages in case something weird happens
                  */
-                throwUnexpectedEndDoc();
+                _throwUnexpectedEndDoc();
             }
         }
     }

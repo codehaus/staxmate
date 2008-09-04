@@ -228,11 +228,11 @@ abstract class CursorBase
                     continue;
                 }
                 if (depth != endDepth) { // sanity check
-                    throwWrongEndElem(endDepth, depth);
+                    _throwWrongEndElem(endDepth, depth);
                 }
                 break;
             } else if (type == XMLStreamConstants.END_DOCUMENT) {
-                throwUnexpectedEndDoc();
+                _throwUnexpectedEndDoc();
             }
         }
     }
@@ -264,6 +264,14 @@ abstract class CursorBase
      */
 
     /**
+     * Internal method (but available to sub-classes) that allows
+     * access to the underlying stream reader.
+     */
+    protected final XMLStreamReader2 _getStreamReader() {
+        return mStreamReader;
+    }
+
+    /**
      *<p>
      * Note: no checks are done regarding validity of passed-in
      * type.
@@ -283,7 +291,7 @@ abstract class CursorBase
      * it points to "wrong" event type. Distinction is reflected
      * in the exception message.
      */
-    protected XMLStreamException notAccessible(String method)
+    protected XMLStreamException _notAccessible(String method)
         throws XMLStreamException
     {
         if (mChildCursor != null) {
@@ -293,7 +301,7 @@ abstract class CursorBase
                                         +getStateDesc()+")");
     }
 
-    protected XMLStreamException wrongState(String method, SMEvent expState)
+    protected XMLStreamException _wrongState(String method, SMEvent expState)
         throws XMLStreamException
     {
         return constructStreamException("Can not call '"+method+"()' when cursor is not positioned over "+expState+" but "+currentEventStr()); 
@@ -316,13 +324,13 @@ abstract class CursorBase
         return (mCurrEvent == null) ? "null" : mCurrEvent.toString();
     }
 
-    void throwUnexpectedEndDoc()
+    void _throwUnexpectedEndDoc()
         throws XMLStreamException
     {
         throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()+")");
     }
 
-    void throwWrongEndElem(int expDepth, int actDepth)
+    void _throwWrongEndElem(int expDepth, int actDepth)
         throws IllegalStateException
     {
         throw new IllegalStateException("Expected to encounter END_ELEMENT with depth >= "+expDepth+", got "+actDepth);
