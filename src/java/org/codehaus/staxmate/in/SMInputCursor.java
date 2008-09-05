@@ -16,16 +16,25 @@ import org.codehaus.stax2.XMLStreamReader2;
 import org.codehaus.staxmate.util.DataUtil;
 
 /**
- * Base class for reader-side cursors that form the main input-side
- * abstraction offered by StaxMate.
+ * Base class for reader-side cursors that form the main input side
+ * abstraction offered by StaxMate. This class offers the main API
+ * for applications to use: sub-classes generally just implement
+ * abstract methods or override default behavior, but do not offer
+ * new public methods. As a result, up-casts are usually not
+ * necessary.
  *<p>
- * Implementation Note: since cursors are thin wrappers around
+ * Implementation Note: as cursors are thin wrappers around
  * {@link XMLStreamReader2},
  * and since not all Stax implementations implement
- * {@link XMLStreamReader2}, some wrapping may be involved in exposing
- * basic Stax 1.0 stream readers as Stax2 stream readers.
- * Without native support, not all stax2 features may be available,
- * but cursors will try to limit their usage to known working subset.
+ * {@link XMLStreamReader2}, some wrapping may be needed to expose
+ * basic Stax 1.0 {@link XMLStreamReader}s as Stax2
+ * {@link XMLStreamReader2} readers.
+ * But without native support, not all stax2 features may be available
+ * for such stream readers.
+ * This should usuall not be a problem with cursor functionality,
+ * as cursors will try to limit their usage to known working subset,
+ * but care must be taken if application code wants to directly
+ * access underlying stream reader.
  *
  * @author Tatu Saloranta
  */
@@ -294,13 +303,19 @@ public abstract class SMInputCursor
     }
 
     /**
-     * Convenience method doing 
+     * Convenience method for accessing type of the current event
+     * (as would be returned by {@link #getCurrEvent}) as
+     * one of event types defined in {@link XMLStreamConstants}
+     * (like {@link XMLStreamConstants#START_ELEMENT}).
      */
     public int getCurrEventCode() {
         return (mCurrEvent == null) ? 0 : mCurrEvent.getEventCode();
     }
 
     /**
+     * Method for determining whether this cursor iterates over root level of
+     *   the underlying stream reader
+     *
      * @return True if this cursor iterates over root level of
      *   the underlying stream reader
      */
@@ -726,6 +741,21 @@ public abstract class SMInputCursor
         }
 
         return (uri != null) && expNsURI.equals(uri);
+    }
+
+    /**
+     * Equivalent to calling {@link #hasName(String, String)} with
+     * namespace URI and local name contained in the argument QName
+     *
+     * @param qname Name to compare name of current event (if any)
+     *   against.
+     * 
+     * @since 1.4
+     */
+    public boolean hasName(QName qname)
+        throws XMLStreamException
+    {
+        return hasName(qname.getNamespaceURI(), qname.getLocalPart());
     }
 
     /*
@@ -1212,9 +1242,9 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemStringValue", SMEvent.START_ELEMENT);
         }
-        /* !!! 02-Sep-2008, tatus: In future, should convert to using
-         *    Stax2 v3.0 Typed Access API. But that's only available
-         *    for StaxMate 2.0 and above.
+        /* !!! 02-Sep-2008, tatus: Should really just use
+         *   XMLStreamReader.getElementText(). Just need to take care
+         *   to leave the cursor in a valid state
          */
         SMInputCursor childIt = childCursor(SMFilterFactory.getNonIgnorableTextFilter());
         if (childIt.getNext() == null) {
@@ -1446,15 +1476,48 @@ public abstract class SMInputCursor
      */
 
     /**
-     * Main iterating method.
+     * Main iterating method. Will try to advance the cursor to the
+     * next visible event (visibility defined by the filter cursor
+     * is configured with, if any), and return event type.
+     * If no such events are available, will return null.
+     *<p>
+     * Note that one side-effect of calling this method is to invalidate
+     * the child cursor, if one was active. This is done by iterating over
+     * any events child cursor (and its descendants if any) might
+     * expose.
      *
      * @return Type of event (from {@link XMLStreamConstants}, such as
      *   {@link XMLStreamConstants#START_ELEMENT}, if a new node was
      *   iterated over; <code>null</code> when there are no more
      *   nodes this cursor can iterate over.
+     *
+     * @throws XMLStreamException If there are underlying parsing
+     *   problems.
      */
     public abstract SMEvent getNext()
         throws XMLStreamException;
+
+    /**
+     * Method that does what {@link #getNext()} does, but instead of
+     * returning resulting event type, returns <b>this</b> cursor.
+     * The main purpose of this method is to allow for chaining
+     * calls. This is especially useful right after constructing
+     * a root level cursor, and needing to advance it to point to
+     * the root element. As such, a common idiom is:
+     *<pre>
+     * SMInputCursor positionedRoot = smFactory.rootElementCursor(file).advance();
+     *</pre>
+     * which both constructs the root element cursor, and positions it
+     * over the root element.
+     *
+     * @since 1.4
+     */
+    public final SMInputCursor advance()
+        throws XMLStreamException
+    {
+        getNext();
+        return this;
+    }
 
     /**
      * Method that will create a new nested cursor for iterating

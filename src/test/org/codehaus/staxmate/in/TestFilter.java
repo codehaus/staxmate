@@ -143,5 +143,21 @@ public class TestFilter
         assertEquals("root", crsr.getLocalName());
         assertNull(crsr.getNext());
     }
+
+    public void testFlatteningFilterWithAdvance()
+        throws Exception
+    {
+        String XML = "<?pi data?><root />";
+        XMLStreamReader sr = getCoalescingReader(XML);
+
+        SMInputCursor crsr = SMInputFactory.flatteningCursor(sr, SMFilterFactory.getElementOnlyFilter()).advance();
+
+        assertEquals(SMEvent.START_ELEMENT, crsr.getCurrEvent());
+        assertEquals("root", crsr.getLocalName());
+        // with flattening cursor, will get end-element too:
+        assertEquals(SMEvent.END_ELEMENT, crsr.getNext());
+
+        sr.close();
+    }
 }
 

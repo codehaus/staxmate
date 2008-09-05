@@ -152,4 +152,16 @@ public class TestNested
         }
         sr.close();
     }
+
+    public void testAdvance()
+        throws Exception
+    {
+        String XML = "<?xml version='1.0'?><!-- xxx -->\n<root>...</root>";
+        XMLStreamReader sr = XMLInputFactory.newInstance().createXMLStreamReader(new StringReader(XML));
+        SMInputCursor crsr = SMInputFactory.rootElementCursor(sr).advance();
+        assertEquals(SMEvent.START_ELEMENT, crsr.getCurrEvent());
+        assertEquals("root", crsr.getLocalName());
+        assertNull(crsr.getNext());
+        sr.close();
+    }
 }

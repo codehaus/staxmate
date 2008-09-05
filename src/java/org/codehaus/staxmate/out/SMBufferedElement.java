@@ -70,8 +70,18 @@ public final class SMBufferedElement
         throws XMLStreamException
     {
         if (mIsBuffered) {
-            throwBuffered();
+            _throwBuffered();
         }
         return super.doOutput(ctxt, canClose);
+    }
+
+    /*
+    ///////////////////////////////////////////////////////////
+    // Internal/helper methods
+    ///////////////////////////////////////////////////////////
+     */
+
+    protected void _throwBuffered() {
+        throw new IllegalStateException("Illegal call when container (of type "+getClass()+") is still buffered");
     }
 }

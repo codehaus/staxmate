@@ -34,7 +34,7 @@ public abstract class SMOutputtable
         return mNext;
     }
 
-    protected void linkNext(SMOutputtable next) {
+    protected void _linkNext(SMOutputtable next) {
         if (mNext != null) {
             throw new IllegalStateException("Can not re-set next once it has been set once");
         }

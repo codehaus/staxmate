@@ -59,7 +59,7 @@ public final class SMBufferedFragment
         throws XMLStreamException
     {
         if (mParent != null) {
-            throwRelinking();
+            _throwRelinking();
         }
         mParent = parent;
 
@@ -135,7 +135,7 @@ public final class SMBufferedFragment
         }
         // And it's an error to get it called after being closed
         if (mState == STATE_CLOSED) {
-            throwClosed();
+            _throwClosed();
         }
         // Should we try to fully close?
         if (canClose) {
@@ -167,7 +167,7 @@ public final class SMBufferedFragment
          * add anything:
          */
         if (mState == STATE_CLOSED) {
-            throwClosed();
+            _throwClosed();
         }
         return closeAndOutputChildren();
     }

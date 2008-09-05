@@ -1,15 +1,21 @@
-Version: 1.3.0
+Version: 1.4.0
 
-Release date: 03-Sep-2008
+Release date: -Sep-2008
 
 Description:
-  Minor version that focuses on:
+  Minor version.
 
-  - improved documentation (better JavaDocs)
-  - more consistent coverage of existing method (adding missing
-    output-side methods; typed access methods)
-  - more convenient methods for constructing cursor and output element
-    instances from factories.
+
+Problems fixed:
+
+New/improved functionality:
+
+* [STAXMATE-22]: Added "SMInputCursor.advance()" to support more
+  convenient creation of positioned root cursors.
+
+== History: ==
+
+1.3.0: [03-Sep-2008]
 
 Problems fixed:
   * [STAXMATE-20]: Binding of non-default namespaces was buggy; scoping
@@ -34,8 +40,6 @@ New/improved functionality:
 * Added 'SMInputCursor.getPathDesc()' which will produce XPath-like
   description of where the cursor points to, if element tracking has
   been enabled (so that information is available)
-
-== History: ==
 
 1.2.0: [01-Aug-2008]
 

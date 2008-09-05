@@ -56,6 +56,11 @@ public final class SMOutputFactory
     /////////////////////////////////////////////////
      */
 
+    /**
+     * Method for accessing Stax output factory this StaxMate
+     * output factory was constructed with. Factory can be configured
+     * using normal property-based configuration methods.
+     */
     public XMLOutputFactory getStaxFactory() { return mStaxFactory; }
 
     /*

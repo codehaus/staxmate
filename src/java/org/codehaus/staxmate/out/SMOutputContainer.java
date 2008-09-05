@@ -170,7 +170,7 @@ public abstract class SMOutputContainer
         if (canOutputNewChild()) {
             mContext.writeCharacters(text);
         } else {
-            linkNewChild(mContext.createCharacters(text));
+            _linkNewChild(mContext.createCharacters(text));
         }
     }
 
@@ -190,7 +190,7 @@ public abstract class SMOutputContainer
         if (canOutputNewChild()) {
             mContext.writeCharacters(buf, offset, len);
         } else {
-            linkNewChild(mContext.createCharacters(buf, offset, len));
+            _linkNewChild(mContext.createCharacters(buf, offset, len));
         }
     }
 
@@ -203,53 +203,92 @@ public abstract class SMOutputContainer
         addValue(value);
     }
 
+    /**
+     * Method for appending specified text as CDATA within
+     * this output container.
+     *<p>
+     * Note: for buffered (and not-yet-released) containers, will
+     * hold contents buffered until release of container.
+     */
     public void addCData(String text)
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
             mContext.writeCData(text);
         } else {
-            linkNewChild(mContext.createCData(text));
+            _linkNewChild(mContext.createCData(text));
         }
     }
 
+    /**
+     * Method for appending specified text as CDATA within
+     * this output container.
+     *<p>
+     * Note: for buffered (and not-yet-released) containers, will
+     * hold contents buffered until release of container.
+     */
     public void addCData(char[] buf, int offset, int len)
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
             mContext.writeCData(buf, offset, len);
         } else {
-            linkNewChild(mContext.createCData(buf, offset, len));
+            _linkNewChild(mContext.createCData(buf, offset, len));
         }
     }
 
+    /**
+     * Method for appending specified comment within
+     * this output container.
+     *<p>
+     * Note: for buffered (and not-yet-released) containers, will
+     * hold contents buffered until release of container.
+     */
     public void addComment(String text)
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
             mContext.writeComment(text);
         } else {
-            linkNewChild(mContext.createComment(text));
+            _linkNewChild(mContext.createComment(text));
         }
     }
 
+    /**
+     * Method for appending specified entity reference
+     * this output container.
+     *<p>
+     * Note: for buffered (and not-yet-released) containers, will
+     * hold contents buffered until release of container.
+     *
+     * @param name Name of the entity to reference: should <b>not</b>
+     *   contain the leading '&amp;' character (which will get
+     *   properly prepended by the stream writer)
+     */
     public void addEntityRef(String name)
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
             mContext.writeEntityRef(name);
         } else {
-            linkNewChild(mContext.createEntityRef(name));
+            _linkNewChild(mContext.createEntityRef(name));
         }
     }
 
+    /**
+     * Method for appending specified processing instruction within
+     * this output container.
+     *<p>
+     * Note: for buffered (and not-yet-released) containers, will
+     * hold contents buffered until release of container.
+     */
     public void addProcessingInstruction(String target, String data)
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
             mContext.writeProcessingInstruction(target, data);
         } else {
-            linkNewChild(mContext.createProcessingInstruction(target, data));
+            _linkNewChild(mContext.createProcessingInstruction(target, data));
         }
     }
 
@@ -315,6 +354,15 @@ public abstract class SMOutputContainer
     ////////////////////////////////////////////////////////
     */
 
+    /**
+     * Method for adding specified element as a child of this
+     * container.
+     *
+     * @param ns Namespace for the element (may be null if element
+     *   is not to belong to a namespace)
+     * @param localName Local name part of the element name; may
+     *   not be null or empty
+     */
     public SMOutputElement addElement(SMNamespace ns, String localName)
         throws XMLStreamException
     {
@@ -339,7 +387,7 @@ public abstract class SMOutputContainer
         // Ok, let's see if we are blocked already
         boolean blocked = !canOutputNewChild();
         SMOutputElement newElem = new SMOutputElement(ctxt, localName, ns);
-        linkNewChild(newElem);
+        _linkNewChild(newElem);
         newElem.linkParent(this, blocked);
 
         return newElem;
@@ -360,16 +408,53 @@ public abstract class SMOutputContainer
         return addElement(null, localName);
     }
 
+    /**
+     * Convenience method for adding a child element (that has no 
+     * attributes) to this container, and adding specified text
+     * as child of that child element. This is functionally equivalent
+     * to calling:
+     *<pre>
+     *   container.addElement(ns, localName).addCharacters(text);
+     *</pre>
+     *<p>
+     * Note: no attributes can be added to the returned child
+     * element, because textual content has already been added.
+     *
+     * @since 1.4
+     */
+    public SMOutputElement addElementWithCharacters(SMNamespace ns, String localName,
+                                                    String text)
+        throws XMLStreamException
+    {
+        SMOutputElement child = addElement(ns, localName);
+        child.addCharacters(text);
+        return child;
+    }
+
     public SMBufferable addBuffered(SMBufferable buffered)
         throws XMLStreamException
     {
         // Ok; first, let's see if we are blocked already
         boolean blocked = !canOutputNewChild();
-        linkNewChild((SMOutputtable) buffered);
+        _linkNewChild((SMOutputtable) buffered);
         buffered.linkParent(this, blocked);
         return buffered;
     }
 
+    /**
+     * Method for appending specified buffered output element as 
+     * child of this container, and releasing it if it is still
+     * buffered. This allows for its contents to be output to
+     * the underlying stream unless there are preceding buffered
+     * containers that are not yet released.
+     * This is functionally equivalent
+     * to calling:
+     *<pre>
+     *   container.addBuffered(buffered).release();
+     *</pre>
+     *
+     * @param buffered Buffered container to append and release
+     */
     public SMBufferable addAndReleaseBuffered(SMBufferable buffered)
         throws XMLStreamException
     {
@@ -390,11 +475,27 @@ public abstract class SMOutputContainer
     ////////////////////////////////////////////////////////
     */
 
+    /**
+     * Method constructing a fragment ("invisible" container
+     * that is not directly represented by any xml construct
+     * and that can contain other output objects) that is
+     * buffered: that is, contents of which are not immediately output
+     * to the underlying stream. This allows for buffered fragments
+     * to be appended out-of-order, and only output when released
+     * (by calling {@link SMBufferable#release} method).
+     */
     public SMBufferedFragment createBufferedFragment()
     {
         return new SMBufferedFragment(getContext());
     }
 
+    /**
+     * Method constructing a buffer element
+     * Contents of buffered elements are not immediately output
+     * to the underlying stream. This allows for buffered elements
+     * to be appended out-of-order, and only output when released
+     * (by calling {@link SMBufferable#release} method).
+     */
     public SMBufferedElement createBufferedElement(SMNamespace ns, String localName)
     {
         return new SMBufferedElement(getContext(), localName, ns);
@@ -466,18 +567,18 @@ public abstract class SMOutputContainer
 
     /*
     ////////////////////////////////////////////////////////
-    // Internal/package methods
+    // Internal/package methods, linking
     ////////////////////////////////////////////////////////
     */
 
-    protected void linkNewChild(SMOutputtable n)
+    protected void _linkNewChild(SMOutputtable n)
     {
         SMOutputtable last = mLastChild;
         if (last == null) {
             mLastChild = n;
             mFirstChild = n;
         } else {
-            last.linkNext(n);
+            last._linkNext(n);
             mLastChild = n;
         }
     }
@@ -540,17 +641,20 @@ public abstract class SMOutputContainer
         }
     }
 
-    protected void throwClosed() {
+    /*
+    ////////////////////////////////////////////////////////
+    // Internal/package methods, error reporting
+    ////////////////////////////////////////////////////////
+    */
+
+
+    protected void _throwRelinking() {
+            throw new IllegalStateException("Can not re-set parent (for instance of "+getClass()+") once it has been set once");
+    }
+
+    protected void _throwClosed() {
         throw new IllegalStateException("Illegal call when container (of type "
                                         +getClass()+") was closed");
     }
 
-    protected void throwRelinking() {
-            throw new IllegalStateException("Can not re-set parent (for instance of "+getClass()+") once it has been set once");
-    }
-
-    protected void throwBuffered() {
-        throw new IllegalStateException("Illegal call when container (of type "
-                                        +getClass()+") is still buffered");
-    }
 }

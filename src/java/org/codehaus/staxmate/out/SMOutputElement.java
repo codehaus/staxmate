@@ -90,7 +90,7 @@ public class SMOutputElement
         throws XMLStreamException
     {
         if (mParent != null) {
-            throwRelinking();
+            _throwRelinking();
         }
         mParent = parent;
         if (!blocked) { // can output start element right away?
@@ -107,7 +107,7 @@ public class SMOutputElement
     public void addAttribute(SMNamespace ns, String localName, String value)
         throws XMLStreamException
     {
-        ns = verifyAttrNS(ns);
+        ns = _verifyAttrNS(ns);
         
         // Ok, what can we do, then?
         switch (mOutputState) {
@@ -118,7 +118,7 @@ public class SMOutputElement
             mContext.writeAttribute(localName, ns, value);
             break;
         default:
-            throwClosedForAttrs();
+            _throwClosedForAttrs();
         } 
     }
 
@@ -180,7 +180,7 @@ public class SMOutputElement
                  */
                 return;
             case OUTPUT_CLOSED: // error
-                throwClosed();
+                _throwClosed();
             case OUTPUT_ATTRS: // should never happen!
                 throw new IllegalStateException("Internal error: illegal state (OUTPUT_ATTRS) on receiving 'childReleased' notification");
             }
@@ -205,7 +205,7 @@ public class SMOutputElement
             break;
         case OUTPUT_CLOSED:
             // If we are closed, let's report a problem
-            throwClosed();
+            _throwClosed();
         case OUTPUT_ATTRS: // can just "close" attribute writing scope
             mOutputState = OUTPUT_CHILDREN;
         }
@@ -254,7 +254,7 @@ public class SMOutputElement
         case OUTPUT_NONE: // output blocked, no go:
             return false;
         case OUTPUT_CLOSED: // error
-            throwClosed();
+            _throwClosed();
         case OUTPUT_ATTRS: // can just "close" attribute writing scope
             mOutputState = OUTPUT_CHILDREN;
             break;
@@ -323,7 +323,7 @@ public class SMOutputElement
      * Method for indicating illegal call to add attributes, when
      * the underlying stream state prevents addition.
      */
-    protected void throwClosedForAttrs()
+    protected void _throwClosedForAttrs()
     {
         String desc = (mOutputState == OUTPUT_CLOSED) ?
             "ELEMENT-CLOSED" : "CHILDREN-ADDED";
@@ -339,7 +339,7 @@ public class SMOutputElement
      * unbound namespaces are properly bound (including declaring
      * them as needed).
      */
-    protected SMNamespace verifyAttrNS(SMNamespace ns)
+    protected SMNamespace _verifyAttrNS(SMNamespace ns)
     {
         if (ns == null) {
             return SMOutputContext.getEmptyNamespace();
