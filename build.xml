@@ -12,8 +12,8 @@
     <property name="ProjectName" value="StaxMate library" />
     <!-- Source directories -->
     <property name="SrcDir" location="${basedir}/src" />
-    <property name="JavaSrcDir" location="${SrcDir}/java" />
-    <property name="TestSrcDir" location="${SrcDir}/test" />
+    <property name="JavaSrcDir" location="${SrcDir}/main/java" />
+    <property name="TestSrcDir" location="${SrcDir}/test/java" />
     <!-- Libs -->
     <property name="LibDir" location="${basedir}/lib" />
     <!-- Build-related -->
