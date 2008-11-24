@@ -234,7 +234,7 @@
     <!-- Tasks from here down are in support of junit tests.                 -->
     <!--*********************************************************************-->
     <target name="test.compile" depends="jars">
-        <javac dir.src="${dir.src.test}" destdir="${TestClassesDir}" debug="true"
+        <javac srcdir="${dir.src.test}" destdir="${TestClassesDir}" debug="true"
          source="1.5" target="1.5"
         >
             <include name="**/*.java" />

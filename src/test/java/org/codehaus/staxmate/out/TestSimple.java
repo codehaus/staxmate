@@ -247,4 +247,37 @@ public class TestSimple
 
         sr.close();
    }
+
+    /**
+     * Even simpler unit test that verifies that it is ok to pass
+     * null namespaces
+     */
+    public void testBufferedNoNs()
+        throws Exception
+    {
+        StringWriter sw = new StringWriter();
+        XMLStreamWriter xw = getSimpleWriter(sw);
+        SMOutputDocument doc = SMOutputFactory.createOutputDocument(xw);
+
+        SMOutputElement elem = doc.addElement("root");
+        SMBufferedElement leafFrag = elem.createBufferedElement(null, "leaf");
+        elem.addAndReleaseBuffered(leafFrag);
+        doc.closeRoot();
+
+        // Ok let's verify, then:
+        XMLStreamReader sr = getCoalescingReader(sw.toString());
+        // but just using plain old Stax...
+        assertTokenType(START_ELEMENT, sr.next());
+        assertElem(sr, null, "root");
+        assertEquals(0, sr.getAttributeCount());
+        assertEquals(0, sr.getNamespaceCount());
+        assertTokenType(START_ELEMENT, sr.next());
+        assertEquals(0, sr.getAttributeCount());
+        assertEquals(0, sr.getNamespaceCount());
+        assertElem(sr, null, "leaf");
+        assertTokenType(END_ELEMENT, sr.next());
+        assertTokenType(END_ELEMENT, sr.next());
+        assertTokenType(END_DOCUMENT, sr.next());
+        sr.close();
+    }
 }
