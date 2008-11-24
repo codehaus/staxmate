@@ -397,6 +397,15 @@ public abstract class SMOutputContainer
 
     public SMBufferedElement createBufferedElement(SMNamespace ns, String localName)
     {
+        // [STAXMATE-26] fix:
+        if (ns == null) {
+            ns = SMOutputContext.getEmptyNamespace();
+        } else if (!ns.isValidIn(mContext)) { // as with addElement, let's fix "ns from wrong doc" problem too
+            /* Let's find instance from our current context, instead of the
+             * one from some other context
+             */
+            ns = getNamespace(ns.getURI());
+        }
         return new SMBufferedElement(getContext(), localName, ns);
     }
 
