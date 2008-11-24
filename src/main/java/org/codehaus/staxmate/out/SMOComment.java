@@ -2,6 +2,10 @@ package org.codehaus.staxmate.out;
 
 import javax.xml.stream.XMLStreamException;
 
+/**
+ * Simple container class for storing definition of a buffered
+ * comment node.
+ */
 public class SMOComment
     extends SMSimpleOutput
 {

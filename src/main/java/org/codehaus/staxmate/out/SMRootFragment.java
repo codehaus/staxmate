@@ -17,7 +17,7 @@ public class SMRootFragment
      * Simple state flag; children can only be added when root container
      * is still active.
      */
-    protected boolean mActive = true;
+    protected boolean _active = true;
 
     public SMRootFragment(SMOutputContext ctxt)
     {
@@ -34,7 +34,7 @@ public class SMRootFragment
         throws XMLStreamException
     {
         // Should never get called if not active...
-        if (!mActive) {
+        if (!_active) {
             throwIfClosed();
         }
         if (canClose) {
@@ -47,7 +47,7 @@ public class SMRootFragment
         throws XMLStreamException
     {
         // Should never get called if not active...
-        if (!mActive) {
+        if (!_active) {
             throwIfClosed();
         }
         forceChildOutput();
@@ -57,7 +57,7 @@ public class SMRootFragment
         throws XMLStreamException
     {
         // Should never get called if not active...
-        if (!mActive) {
+        if (!_active) {
             throwIfClosed();
         }
 
@@ -66,7 +66,7 @@ public class SMRootFragment
          * Note that since there's never parent (this is the root fragment),
          * there's no need to try to inform anyone else.
          */
-        if (child == mFirstChild) {
+        if (child == _firstChild) {
             closeAllButLastChild();
         }
 
@@ -77,16 +77,16 @@ public class SMRootFragment
         throws XMLStreamException
     {
         // Should never get called if not active...
-        if (!mActive) {
+        if (!_active) {
             throwIfClosed();
         }
-        return (mFirstChild == null) || closeAndOutputChildren();
+        return (_firstChild == null) || closeAndOutputChildren();
     }
 
     public void getPath(StringBuilder sb)
     {
-        if (mParent != null) {
-            mParent.getPath(sb);
+        if (_parent != null) {
+            _parent.getPath(sb);
         }
         /* Although fragments are "invisible", let's add an indicator
          * of some sort, since this path is used for trouble-shooting
@@ -102,23 +102,32 @@ public class SMRootFragment
      *<p>
      * Note that the underlying stream is <b>NOT</b> closed as part of
      * this call, just this logical outputter object.
+     * If you do want the underlying writer to be closed too, call
+     * {@link #closeRootAndWriter()} instead.
      */
     public void closeRoot()
         throws XMLStreamException
     {
         // Hmmh. Should we complain about duplicate closes?
-        if (!mActive) {
+        if (!_active) {
             return;
         }
         // Let's first try to close them nicely:
-        if (!doOutput(mContext, true)) {
+        if (!doOutput(_context, true)) {
             // but if that doesn't work, should just unbuffer all children...
-            forceOutput(mContext);
+            forceOutput(_context);
         }
         // Either way, we are now closed:
-        mActive = false;
+        _active = false;
         // And this may also be a good idea:
         getContext().flushWriter();
+    }
+
+    public void closeRootAndWriter()
+        throws XMLStreamException
+    {
+        closeRoot();
+        getContext().closeWriterCompletely();
     }
 
     /*

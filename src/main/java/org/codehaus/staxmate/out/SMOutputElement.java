@@ -8,7 +8,7 @@ import javax.xml.stream.XMLStreamException;
 public class SMOutputElement
     extends SMOutputContainer
 {
-    // No output done, due to blocking:
+    // No output done, due to blocking (element or ancestor buffered and not-yet-released)
     protected final static int OUTPUT_NONE = 0;
     // Element name and prefix output, possibly some attributes
     protected final static int OUTPUT_ATTRS = 1;
@@ -27,7 +27,7 @@ public class SMOutputElement
      * Local name of the element, name without preceding prefix or colon
      * (in namespace mode). In non-namespace mode fully-qualified name.
      */
-    protected final String mLocalName;
+    protected final String _localName;
 
     /**
      * Namespace of this element.
@@ -35,7 +35,7 @@ public class SMOutputElement
      * Note: can never be null -- event the default (empty) namespace
      * is presented by a global shared namespace instance.
      */
-    protected final SMNamespace mNs;
+    protected final SMNamespace _namespace;
 
     /*
     /////////////////////////////////////////////
@@ -43,7 +43,7 @@ public class SMOutputElement
     /////////////////////////////////////////////
     */
 
-    protected int mOutputState = OUTPUT_NONE;
+    protected int _outputState = OUTPUT_NONE;
 
     /**
      * Namespace that was bound as the default namespace in the context
@@ -59,7 +59,7 @@ public class SMOutputElement
      * Note: can never be null -- event the default (empty) namespace
      * is presented by a global shared namespace instance.
      */
-    protected SMNamespace mParentDefaultNs;
+    protected SMNamespace _parentDefaultNs;
 
     /**
      * Number of explicitly bound namespaces parent element has (or
@@ -67,32 +67,32 @@ public class SMOutputElement
      * time element is open; needed for closing namespace scopes
      * appropriately.
      */
-    protected int mParentNsCount;
+    protected int _parentNsCount;
 
     protected SMOutputElement(SMOutputContext ctxt,
                               String localName, SMNamespace ns)
     {
         super(ctxt);
-        mParent = null;
-        mLocalName = localName;
-        mNs = ns;
+        _parent = null;
+        _localName = localName;
+        _namespace = ns;
     }
     
     public String getLocalName() {
-        return mLocalName;
+        return _localName;
     }
     
     public SMNamespace getNamespace() {
-        return mNs;
+        return _namespace;
     }
 
     public void linkParent(SMOutputContainer parent, boolean blocked)
         throws XMLStreamException
     {
-        if (mParent != null) {
+        if (_parent != null) {
             _throwRelinking();
         }
-        mParent = parent;
+        _parent = parent;
         if (!blocked) { // can output start element right away?
             doWriteStartElement();
         }
@@ -104,18 +104,24 @@ public class SMOutputElement
     ///////////////////////////////////////////////////////////
      */
 
+    /**
+     * Method for adding an attribute to this element. For regular (non-buffered)
+     * output elements, attribute is written right away; for buffered variants
+     * output will be postponed until buffered element is completely released
+     * (including its ancestors if they are unreleased buffered elements)
+     */
     public void addAttribute(SMNamespace ns, String localName, String value)
         throws XMLStreamException
     {
-        ns = _verifyAttrNS(ns);
+        ns = _verifyNamespaceArg(ns);
         
         // Ok, what can we do, then?
-        switch (mOutputState) {
+        switch (_outputState) {
         case OUTPUT_NONE: // blocked
-            // !!! TBI: buffer attribute to this element
+            _linkNewChild(_context.createAttribute(ns, localName, value));
             break;
         case OUTPUT_ATTRS: // perfect
-            mContext.writeAttribute(localName, ns, value);
+            _context.writeAttribute(ns, localName, value);
             break;
         default:
             _throwClosedForAttrs();
@@ -172,8 +178,8 @@ public class SMOutputElement
         throws XMLStreamException
     {
         // Ok; first of all, only first child matters:
-        if (child == mFirstChild) {
-            switch (mOutputState) {
+        if (child == _firstChild) {
+            switch (_outputState) {
             case OUTPUT_NONE:
                 /* output blocked by parent (or lack of parent), can't output,
                  * nothing for parent to do either
@@ -192,14 +198,14 @@ public class SMOutputElement
              * but it is necessary to do since children are not to handle
              * how preceding buffered siblings should be dealt with.
              */
-            mParent.childReleased(this);
+            _parent.childReleased(this);
         }
     }
     
     protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
-        switch (mOutputState) {
+        switch (_outputState) {
         case OUTPUT_NONE: // was blocked, need to output element
             doWriteStartElement();
             break;
@@ -207,11 +213,11 @@ public class SMOutputElement
             // If we are closed, let's report a problem
             _throwClosed();
         case OUTPUT_ATTRS: // can just "close" attribute writing scope
-            mOutputState = OUTPUT_CHILDREN;
+            _outputState = OUTPUT_CHILDREN;
         }
 
         // Any children? Need to try to close them too
-        if (mFirstChild != null) {
+        if (_firstChild != null) {
             if (canClose) {
                 closeAndOutputChildren();
             } else {
@@ -220,7 +226,7 @@ public class SMOutputElement
         }
 
         // Can we fully close this element?
-        if (!canClose || mFirstChild != null) {
+        if (!canClose || _firstChild != null) {
             return false;
         }
 
@@ -233,7 +239,7 @@ public class SMOutputElement
         throws XMLStreamException
     {
         // Let's first ask nicely:
-        if (doOutput(mContext, true)) {
+        if (doOutput(_context, true)) {
             ; // all done (including outputting end element)
         } else {
             // ... but if that doesn't work, let's negotiate bit more:
@@ -250,17 +256,17 @@ public class SMOutputElement
          * one; if more than one, can't (first one is blocking, or
          * parent is blocking); if just one, need to try to close it first.
          */
-        switch (mOutputState) {
+        switch (_outputState) {
         case OUTPUT_NONE: // output blocked, no go:
             return false;
         case OUTPUT_CLOSED: // error
             _throwClosed();
         case OUTPUT_ATTRS: // can just "close" attribute writing scope
-            mOutputState = OUTPUT_CHILDREN;
+            _outputState = OUTPUT_CHILDREN;
             break;
         }
 
-        if (mFirstChild == null) { // no children -> ok
+        if (_firstChild == null) { // no children -> ok
             return true;
         }
         return closeAndOutputChildren();
@@ -268,8 +274,8 @@ public class SMOutputElement
 
     public void getPath(StringBuilder sb)
     {
-        if (mParent != null) {
-            mParent.getPath(sb);
+        if (_parent != null) {
+            _parent.getPath(sb);
         }
         sb.append('/');
         /* Figuring out namespace prefix is bit trickier, since it may
@@ -278,11 +284,11 @@ public class SMOutputElement
          * a prefix for non-empty namespace URI (but that doesn't yet
          * guarantee a prefix)
          */
-        String uri = mNs.getURI();
+        String uri = _namespace.getURI();
         if (uri != null && uri.length() > 0) {
             // Default ns?
-            if (!mContext.isDefaultNs(mNs)) { // not the current one, no
-                String prefix = mNs.getBoundPrefix();
+            if (!_context.isDefaultNs(_namespace)) { // not the current one, no
+                String prefix = _namespace.getBoundPrefix();
                 if (prefix == null) { // not yet bound? (or masked default ns?)
                     prefix = "{unknown-prefix}";
                 } else if (prefix.length() == 0) { // def. NS, no prefix
@@ -294,7 +300,7 @@ public class SMOutputElement
                 }
             }
         }
-        sb.append(mLocalName);
+        sb.append(_localName);
     }
 
     /*
@@ -306,17 +312,17 @@ public class SMOutputElement
     protected void doWriteStartElement()
         throws XMLStreamException
     {
-        mOutputState = OUTPUT_ATTRS;
-        SMOutputContext ctxt = mContext;
-        mParentNsCount = ctxt.getNamespaceCount();
-        mParentDefaultNs = ctxt.writeStartElement(mNs, mLocalName);
+        _outputState = OUTPUT_ATTRS;
+        SMOutputContext ctxt = _context;
+        _parentNsCount = ctxt.getNamespaceCount();
+        _parentDefaultNs = ctxt.writeStartElement(_namespace, _localName);
     }
 
     protected void doWriteEndElement()
         throws XMLStreamException
     {
-        mOutputState = OUTPUT_CLOSED;
-        mContext.writeEndElement(mParentNsCount, mParentDefaultNs);
+        _outputState = OUTPUT_CLOSED;
+        _context.writeEndElement(_parentNsCount, _parentDefaultNs);
     }
 
     /**
@@ -325,31 +331,10 @@ public class SMOutputElement
      */
     protected void _throwClosedForAttrs()
     {
-        String desc = (mOutputState == OUTPUT_CLOSED) ?
+        String desc = (_outputState == OUTPUT_CLOSED) ?
             "ELEMENT-CLOSED" : "CHILDREN-ADDED";
         throw new IllegalStateException
             ("Can't add attributes for an element (path = '"
              +getPath()+"'), element state '"+desc+"'");
-    }
-
-    /**
-     * Method called to ensure that the passed-in namespace can be
-     * used for actual output operation. It converts nulls to
-     * the proper "no namespace" instance, and ensures that (so far)
-     * unbound namespaces are properly bound (including declaring
-     * them as needed).
-     */
-    protected SMNamespace _verifyAttrNS(SMNamespace ns)
-    {
-        if (ns == null) {
-            return SMOutputContext.getEmptyNamespace();
-        }
-        if (!ns.isValidIn(mContext)) { // shouldn't happen, but...
-            /* Let's find instance from our current context, instead of the
-             * one from some other context
-             */
-            ns = getNamespace(ns.getURI());
-        }
-        return ns;
     }
 }

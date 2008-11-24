@@ -17,19 +17,19 @@
     <property name="dir.lib" location="${basedir}/lib" />
     <!-- Build-related -->
     <property name="dir.build" location="${basedir}/build" />
-    <property name="dir.build.classes" location="${dir.build}/classes" />
+    <property name="dir.classes.main" location="${dir.build}/classes" />
     <!-- Documentation -->
     <property name="dir.javadoc" location="${dir.build}/javadoc" />
     <!-- Test suite -->
     <property name="dir.test" location="${basedir}/test" />
-    <property name="TestClassesDir" location="${dir.test}/classes" />
-    <property name="TestResultsDir" location="${dir.test}/results" />
-    <property name="TestXmlResultsDir" location="${TestResultsDir}/xml" />
+    <property name="dir.classes.test" location="${dir.test}/classes" />
+    <property name="dir.test.results" location="${dir.test}/results" />
+    <property name="dir.test.xmlresults" location="${dir.test.results}/xml" />
     <!-- Distribution -->
     <property name="dir.dist" location="${basedir}/dist" />
 
     <!-- jars needed for compilation -->
-    <path id="compile-classpath">
+    <path id="classpath.compile">
         <fileset dir="${dir.lib}" includes="*.jar" />
     </path>
 
@@ -90,16 +90,16 @@
     <target name="prepare">
         <!-- make build directories -->
         <mkdir dir="${dir.build}" />
-        <mkdir dir="${dir.build.classes}" />
+        <mkdir dir="${dir.classes.main}" />
 
         <!-- make docs directories -->
         <mkdir dir="${dir.javadoc}" />
 
         <!-- make test output directories -->
         <mkdir dir="${dir.test}" />
-        <mkdir dir="${TestClassesDir}" />
-        <mkdir dir="${TestResultsDir}" />
-        <mkdir dir="${TestXmlResultsDir}" />
+        <mkdir dir="${dir.classes.test}" />
+        <mkdir dir="${dir.test.results}" />
+        <mkdir dir="${dir.test.xmlresults}" />
 
         <!-- and finally distribution dir -->
         <mkdir dir="${dir.dist}" />
@@ -116,6 +116,7 @@
         <delete dir="${dir.build}"/>
         <delete dir="${dir.test}"/>
         <delete dir="${dir.dist}"/>
+        <delete file="cobertura.ser" />
     </target>
 
     <!--*********************************************************-->
@@ -125,12 +126,12 @@
     <target name="compile" depends="prepare">
         <!-- 02-Sep-2008, tatu: Baseline is 1.5 for now (StaxMate 1.x)
           -->
-        <javac srcdir="${dir.src.java}" destdir="${dir.build.classes}" debug="true"
+        <javac srcdir="${dir.src.java}" destdir="${dir.classes.main}" debug="true"
          source="1.5" target="1.5"
         >
             <include name="org/codehaus/staxmate/**/*.java" />
             <include name="test/**/*.java" />
-            <classpath refid="compile-classpath" />
+            <classpath refid="classpath.compile" />
         </javac>
     </target>
 
@@ -208,7 +209,7 @@
             <attribute name="Implementation-Version" value="${IMPL_VERSION}"/>
             <attribute name="Implementation-Vendor"  value="${IMPL_VENDOR}"/>
           </manifest>
-          <fileset dir="${dir.build.classes}">
+          <fileset dir="${dir.classes.main}">
              <include name="org/codehaus/staxmate/**/*.class" />
              <exclude name="org/codehaus/staxmate/samples/*.class" />
           </fileset>
@@ -226,21 +227,22 @@
                 <include name="org/codehaus/staxmate/**" />
                 <exclude name="org/codehaus/staxmate/samples/**" />
             </packageset>
-            <classpath refid="compile-classpath" />
+            <classpath refid="classpath.compile" />
         </javadoc>
     </target> 
 
     <!--*********************************************************************-->
     <!-- Tasks from here down are in support of junit tests.                 -->
     <!--*********************************************************************-->
+
     <target name="test.compile" depends="jars">
-        <javac srcdir="${dir.src.test}" destdir="${TestClassesDir}" debug="true"
+        <javac srcdir="${dir.src.test}" destdir="${dir.classes.test}" debug="true"
          source="1.5" target="1.5"
         >
             <include name="**/*.java" />
-            <classpath refid="compile-classpath" />
+            <classpath refid="classpath.compile" />
             <classpath>
-                <pathelement path="${dir.build.classes}"/>  
+                <pathelement path="${dir.classes.main}"/>  
                 <path refid="junit-libs"/>
             </classpath>
         </javac>
@@ -250,26 +252,26 @@
         <!-- showoutput 'yes' to allow outputting debug msgs... -->
         <junit fork="no" printsummary="yes" haltonfailure="no"
          showoutput="yes">
-            <batchtest fork="no" todir="${TestXmlResultsDir}">
-                <fileset dir="${TestClassesDir}">
+            <batchtest fork="no" todir="${dir.test.xmlresults}">
+                <fileset dir="${dir.classes.test}">
                     <include name="**/Test*.class"/>
                 </fileset>
             </batchtest>
             <formatter type="xml" />
-            <classpath refid="compile-classpath" />
+            <classpath refid="classpath.compile" />
             <classpath>
-                <pathelement path="${dir.build.classes}" />
-                <pathelement location="${TestClassesDir}" /> 
+                <pathelement path="${dir.classes.main}" />
+                <pathelement location="${dir.classes.test}" /> 
                 <path refid="junit-libs"/>
                 <path refid="woodstox-libs"/>
             </classpath>
         </junit>
 
-        <junitreport todir="${TestResultsDir}">
-            <fileset dir="${TestXmlResultsDir}">
+        <junitreport todir="${dir.test.results}">
+            <fileset dir="${dir.test.xmlresults}">
                 <include name="TEST-*.xml" />
             </fileset>
-            <report todir="${TestResultsDir}" />
+            <report todir="${dir.test.results}" />
         </junitreport>
    </target>
 
@@ -278,25 +280,25 @@
       -->
     <target name="test-sjsxp" depends="test.compile">
         <junit fork="no" printsummary="yes" haltonfailure="no" showoutput="yes">
-            <batchtest fork="no" todir="${TestXmlResultsDir}">
-                <fileset dir="${TestClassesDir}">
+            <batchtest fork="no" todir="${dir.test.xmlresults}">
+                <fileset dir="${dir.classes.test}">
                     <include name="**/Test*.class"/>
                 </fileset>
             </batchtest>
             <formatter type="xml" />
-            <classpath refid="compile-classpath" />
+            <classpath refid="classpath.compile" />
             <classpath>
-                <pathelement path="${dir.build.classes}" />
-                <pathelement location="${TestClassesDir}" /> 
+                <pathelement path="${dir.classes.main}" />
+                <pathelement location="${dir.classes.test}" /> 
                 <path refid="junit-libs"/>
                 <path refid="sjsxp-libs"/>
             </classpath>     
         </junit>
-        <junitreport todir="${TestResultsDir}">
-            <fileset dir="${TestXmlResultsDir}">
+        <junitreport todir="${dir.test.results}">
+            <fileset dir="${dir.test.xmlresults}">
                 <include name="TEST-*.xml" />
             </fileset>
-            <report todir="${TestResultsDir}" />
+            <report todir="${dir.test.results}" />
         </junitreport>
    </target>
 
@@ -305,25 +307,95 @@
       -->
     <target name="test-aalto" depends="test.compile">
         <junit fork="no" printsummary="yes" haltonfailure="no" showoutput="yes">
-            <batchtest fork="no" todir="${TestXmlResultsDir}">
-                <fileset dir="${TestClassesDir}">
+            <batchtest fork="no" todir="${dir.test.xmlresults}">
+                <fileset dir="${dir.classes.test}">
                     <include name="**/Test*.class"/>
                 </fileset>
             </batchtest>
             <formatter type="xml" />
-            <classpath refid="compile-classpath" />
+            <classpath refid="classpath.compile" />
             <classpath>
-                <pathelement path="${dir.build.classes}" />
-                <pathelement location="${TestClassesDir}" /> 
+                <pathelement path="${dir.classes.main}" />
+                <pathelement location="${dir.classes.test}" /> 
                 <path refid="junit-libs"/>
                 <path refid="aalto-libs"/>
             </classpath>     
         </junit>
-        <junitreport todir="${TestResultsDir}">
-            <fileset dir="${TestXmlResultsDir}">
+        <junitreport todir="${dir.test.results}">
+            <fileset dir="${dir.test.xmlresults}">
                 <include name="TEST-*.xml" />
             </fileset>
-            <report todir="${TestResultsDir}" />
+            <report todir="${dir.test.results}" />
         </junitreport>
    </target>
+
+    <!--*********************************************************************-->
+    <!-- Tasks for Code coverage analysis (using Cobertura) -->
+    <!--*********************************************************************-->
+
+    <!-- And/or support for Cobertura code coverage tool -->
+    <property name="cobertura.coverage.dir" value="${dir.build}/coverage" />
+    <path id="cobertura-libs">
+      <fileset dir="${dir.lib}/cobertura" includes="*.jar" />
+    </path>
+    <taskdef classpathref="cobertura-libs" resource="tasks.properties" />
+
+    <target name="build.coverage" depends="test.compile">
+      <!-- First, need to instrument classes -->
+      <property name="cobertura.instr.dir" value="${dir.build}/cobertura-instr" />
+      <mkdir dir="${cobertura.coverage.dir}" />
+      <cobertura-instrument todir="${cobertura.instr.dir}">
+        <fileset dir="${dir.classes.main}">
+          <include name="org/codehaus/staxmate/**/*.class"/>
+        </fileset>
+      </cobertura-instrument>
+
+      <junit fork="once" printsummary="yes" haltonfailure="no" showoutput="yes"
+        maxmemory="100M"
+      >
+        <sysproperty key="net.sourceforge.cobertura.datafile" file="${basedir}/cobertura.ser" />
+            <batchtest fork="no" todir="${dir.test.xmlresults}">
+                <fileset dir="${dir.classes.test}">
+                    <exclude name="**/*$*.class"/>
+                    <include name="**/Test*.class"/>
+                </fileset>
+            </batchtest>
+            <formatter type="xml" />
+            <!-- Order is important: must first have instrumented classes -->
+            <classpath location="${cobertura.instr.dir}" />
+
+            <!-- Stax, Stax2 APIs: -->
+            <classpath refid="classpath.compile" />
+            <!-- Actual tests: -->
+            <classpath path="${dir.classes.test}" />
+            <!-- And run them against Woodstox (known good impl) -->
+            <classpath refid="woodstox-libs" />
+            <!-- Cobertura support: -->
+            <classpath refid="cobertura-libs" />
+            <classpath>
+                <!-- Note: while this may seem superfluous, it is actually
+                     needed because Cobertura does not instrument things
+                     like interfaces. So some of the class files are
+                     needed from non-instrumented location
+                  -->
+                <pathelement path="${dir.classes.main}" />
+                <path refid="junit-libs"/>
+            </classpath>     
+        </junit>
+        <!-- and then reporting -->
+        <cobertura-report format="html" destdir="${cobertura.coverage.dir}" >
+          <fileset dir="${dir.src.java}">
+            <include name="**/*.java" />
+          </fileset>
+        </cobertura-report>
+
+        <!-- Let's also report junit results? (at least if they fail) -->
+        <junitreport todir="${dir.test.results}">
+            <fileset dir="${dir.test.xmlresults}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report todir="${dir.test.results}" />
+        </junitreport>
+    </target>
+
 </project>

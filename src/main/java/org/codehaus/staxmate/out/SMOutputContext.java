@@ -305,6 +305,10 @@ public final class SMOutputContext
     //////////////////////////////////////////////////////
     */
 
+    public SMOutputtable createAttribute(SMNamespace ns, String localName, String value) {
+        return new SMOAttribute(ns, localName, value);
+    }
+
     public SMOutputtable createCharacters(String text) {
         return SMOCharacters.create(text);
     }
@@ -429,12 +433,6 @@ public final class SMOutputContext
     //////////////////////////////////////////////////////
     */
 
-    public void flushWriter()
-        throws XMLStreamException
-    {
-        mStreamWriter.flush();
-    }
-
     public void writeCharacters(String text)
         throws XMLStreamException
     {
@@ -505,8 +503,7 @@ public final class SMOutputContext
         }
     }
 
-    public void writeAttribute(String localName, SMNamespace ns,
-                               String value)
+    public void writeAttribute(SMNamespace ns, String localName, String value)
         throws XMLStreamException
     {
         /* First things first: in repairing mode this is specifically
@@ -735,6 +732,30 @@ public final class SMOutputContext
             outputIndentation();
         }
         mStreamWriter.writeDTD(rootName, systemId, publicId, intSubset);
+    }
+
+    /*
+    //////////////////////////////////////////////////////
+    // Methods for dealing with buffering and stream state
+    //////////////////////////////////////////////////////
+    */
+
+    public void flushWriter() throws XMLStreamException
+    {
+        mStreamWriter.flush();
+    }
+
+    /**
+     * Method that can be called to force full closing of the
+     * underlying stream writer as well as output target it
+     * uses (usually a {@link java.io.OutputStream} or
+     * {@link java.io.Writer}). Latter is done by calling
+     * {@link org.codehaus.stax2.XMLStreamWriter2#closeCompletely}
+     * on stream writer.
+     */
+    public void closeWriterCompletely() throws XMLStreamException
+    {
+        mStreamWriter.closeCompletely();
     }
 
     /*

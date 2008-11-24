@@ -18,7 +18,7 @@ public final class SMBufferedElement
      * All instances are initially buffered; state will be changed when
      * instance is released.
      */
-    protected boolean mIsBuffered = true;
+    protected boolean _isBuffered = true;
 
     /**
      *<p>
@@ -39,7 +39,7 @@ public final class SMBufferedElement
      */
 
     public boolean isBuffered() {
-        return mIsBuffered;
+        return _isBuffered;
     }
     
     // Base class implementation is ok for this:
@@ -48,9 +48,9 @@ public final class SMBufferedElement
     public void release()
         throws XMLStreamException
     {
-        mIsBuffered = false;
-        if (mParent != null) {
-            mParent.childReleased(this);
+        _isBuffered = false;
+        if (_parent != null) {
+            _parent.childReleased(this);
         }
     }
 
@@ -69,7 +69,7 @@ public final class SMBufferedElement
     protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
-        if (mIsBuffered) {
+        if (_isBuffered) {
             _throwBuffered();
         }
         return super.doOutput(ctxt, canClose);

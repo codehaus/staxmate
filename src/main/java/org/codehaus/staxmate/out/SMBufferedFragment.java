@@ -37,7 +37,7 @@ public final class SMBufferedFragment
      * All instances are initially buffered; state will be changed when
      * instance is released (and further on with other changes)
      */
-    protected int mState = STATE_BUFFERED;
+    protected int _state = STATE_BUFFERED;
 
     protected SMBufferedFragment(SMOutputContext ctxt)
     {
@@ -52,31 +52,31 @@ public final class SMBufferedFragment
     */
 
     public boolean isBuffered() {
-        return (mState <= LAST_BUFFERED);
+        return (_state <= LAST_BUFFERED);
     }
 
     public void linkParent(SMOutputContainer parent, boolean blocked)
         throws XMLStreamException
     {
-        if (mParent != null) {
+        if (_parent != null) {
             _throwRelinking();
         }
-        mParent = parent;
+        _parent = parent;
 
         // Ok, which state should we move to?
         if (isBuffered()) { // still buffered
-            mState = blocked ? STATE_BUFFERED_AND_BLOCKED : STATE_BUFFERED;
+            _state = blocked ? STATE_BUFFERED_AND_BLOCKED : STATE_BUFFERED;
         } else {
             if (blocked) {
-                mState = STATE_BLOCKED;
+                _state = STATE_BLOCKED;
             } else {
-                mState = STATE_OPEN;
+                _state = STATE_OPEN;
                 /* Ok; now, we also need to try to output as much as we can,
                  * since we are neither buffered nor blocked by parent (may
                  * still be blocked by a child). However, we are not to be
                  * closed as of yet.
                  */
-                doOutput(mContext, false);
+                doOutput(_context, false);
             }
         }
     }
@@ -89,16 +89,16 @@ public final class SMBufferedFragment
             return;
         }
 
-        if (mParent != null) {
+        if (_parent != null) {
             /* May need to update the state first, as parent is likely
              * to call doOutput() when being notified
              */
-            mState = (mState == STATE_BUFFERED_AND_BLOCKED) ?
+            _state = (_state == STATE_BUFFERED_AND_BLOCKED) ?
                 STATE_BLOCKED : STATE_OPEN;
-            mParent.childReleased(this);
+            _parent.childReleased(this);
         } else {
             // Will be blocked by the fact we haven't yet been linked...
-            mState = STATE_BLOCKED;
+            _state = STATE_BLOCKED;
         }
     }
 
@@ -112,16 +112,16 @@ public final class SMBufferedFragment
         throws XMLStreamException
     {
         // First, if we are buffered, no need to do anything more...
-        if (mState <= LAST_BLOCKED) {
+        if (_state <= LAST_BLOCKED) {
             return;
         }
         /* Otherwise, the only significant child is the first one, as it's
          * the only one that may have blocked output:
          */
-        if (child == mFirstChild) {
+        if (child == _firstChild) {
             // If so, parent can (and should) deal with it... if we have one
-            if (mParent != null) {
-                mParent.childReleased(this);
+            if (_parent != null) {
+                _parent.childReleased(this);
             }
         }
     }
@@ -130,18 +130,18 @@ public final class SMBufferedFragment
         throws XMLStreamException
     {
         // No outputting if still buffered...
-        if (mState <= LAST_BLOCKED) {
+        if (_state <= LAST_BLOCKED) {
             return false;
         }
         // And it's an error to get it called after being closed
-        if (mState == STATE_CLOSED) {
+        if (_state == STATE_CLOSED) {
             _throwClosed();
         }
         // Should we try to fully close?
         if (canClose) {
             boolean success = closeAndOutputChildren();
             if (success) { // yup, can indeed fully close
-                mState = STATE_CLOSED;
+                _state = STATE_CLOSED;
             }
             return success;
         }
@@ -151,22 +151,22 @@ public final class SMBufferedFragment
     protected void forceOutput(SMOutputContext ctxt)
         throws XMLStreamException
     {
-        mState = STATE_OPEN; // just in case we get a callback from children
+        _state = STATE_OPEN; // just in case we get a callback from children
         forceChildOutput();
-        mState = STATE_CLOSED;
+        _state = STATE_CLOSED;
     }
 
     public boolean canOutputNewChild()
         throws XMLStreamException
     {
         // Can not just output if we are buffered...
-        if (mState <= LAST_BLOCKED) {
+        if (_state <= LAST_BLOCKED) {
             return false;
         }
         /* Plus, if we are fully closed, we are not to allow even trying to
          * add anything:
          */
-        if (mState == STATE_CLOSED) {
+        if (_state == STATE_CLOSED) {
             _throwClosed();
         }
         return closeAndOutputChildren();
@@ -174,8 +174,8 @@ public final class SMBufferedFragment
 
     public void getPath(StringBuilder sb)
     {
-        if (mParent != null) {
-            mParent.getPath(sb);
+        if (_parent != null) {
+            _parent.getPath(sb);
         }
         /* Although fragments are "invisible", let's add an indicator
          * of some sort, since this path is used for trouble-shooting

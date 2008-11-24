@@ -22,13 +22,13 @@ public abstract class SMOutputContainer
      * Context of this node; defines things like the underlying stream
      * writer and known namespaces.
      */
-    final SMOutputContext mContext;
+    final SMOutputContext _context;
 
     /**
      * Parent of this container; null for root-level entities, as well
      * as not-yet-linked buffered containers.
      */
-    SMOutputContainer mParent = null;
+    SMOutputContainer _parent = null;
 
     /**
      * First child node that has not yet been completely output to the
@@ -37,12 +37,12 @@ public abstract class SMOutputContainer
      * or the child itself being buffered). May be null if no children
      * have been added, or if all have been completely output.
      */
-    SMOutputtable mFirstChild = null;
+    SMOutputtable _firstChild = null;
 
     /**
      * Last child node that has not been output to the underlying stream.
      */
-    SMOutputtable mLastChild = null;
+    SMOutputtable _lastChild = null;
 
     /*
     ///////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ public abstract class SMOutputContainer
     protected SMOutputContainer(SMOutputContext ctxt)
     {
         super();
-        mContext = ctxt;
+        _context = ctxt;
     }
 
     /**
@@ -79,7 +79,7 @@ public abstract class SMOutputContainer
      */
     public void setIndentation(String indentStr, int startOffset, int step)
     {
-        mContext.setIndentation(indentStr, startOffset, step);
+        _context.setIndentation(indentStr, startOffset, step);
     }
 
     /*
@@ -96,7 +96,7 @@ public abstract class SMOutputContainer
      *   for root-level containers
      */
     public final SMOutputContainer getParent() {
-        return mParent;
+        return _parent;
     }
 
     /**
@@ -106,7 +106,7 @@ public abstract class SMOutputContainer
      * @return Output context for this container
      */
     public final SMOutputContext getContext() {
-        return mContext;
+        return _context;
     }
 
     /*
@@ -128,7 +128,7 @@ public abstract class SMOutputContainer
      *    for scope of this container
      */
     public final SMNamespace getNamespace(String uri) {
-        return mContext.getNamespace(uri);
+        return _context.getNamespace(uri);
     }
 
     /**
@@ -144,7 +144,7 @@ public abstract class SMOutputContainer
      *    for scope of this container
      */
     public final SMNamespace getNamespace(String uri, String prefPrefix) {
-        return mContext.getNamespace(uri, prefPrefix);
+        return _context.getNamespace(uri, prefPrefix);
     }
 
     /*
@@ -168,9 +168,9 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
-            mContext.writeCharacters(text);
+            _context.writeCharacters(text);
         } else {
-            _linkNewChild(mContext.createCharacters(text));
+            _linkNewChild(_context.createCharacters(text));
         }
     }
 
@@ -188,9 +188,9 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
-            mContext.writeCharacters(buf, offset, len);
+            _context.writeCharacters(buf, offset, len);
         } else {
-            _linkNewChild(mContext.createCharacters(buf, offset, len));
+            _linkNewChild(_context.createCharacters(buf, offset, len));
         }
     }
 
@@ -214,9 +214,9 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
-            mContext.writeCData(text);
+            _context.writeCData(text);
         } else {
-            _linkNewChild(mContext.createCData(text));
+            _linkNewChild(_context.createCData(text));
         }
     }
 
@@ -231,9 +231,9 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
-            mContext.writeCData(buf, offset, len);
+            _context.writeCData(buf, offset, len);
         } else {
-            _linkNewChild(mContext.createCData(buf, offset, len));
+            _linkNewChild(_context.createCData(buf, offset, len));
         }
     }
 
@@ -248,9 +248,9 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
-            mContext.writeComment(text);
+            _context.writeComment(text);
         } else {
-            _linkNewChild(mContext.createComment(text));
+            _linkNewChild(_context.createComment(text));
         }
     }
 
@@ -269,9 +269,9 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
-            mContext.writeEntityRef(name);
+            _context.writeEntityRef(name);
         } else {
-            _linkNewChild(mContext.createEntityRef(name));
+            _linkNewChild(_context.createEntityRef(name));
         }
     }
 
@@ -286,9 +286,9 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         if (canOutputNewChild()) {
-            mContext.writeProcessingInstruction(target, data);
+            _context.writeProcessingInstruction(target, data);
         } else {
-            _linkNewChild(mContext.createProcessingInstruction(target, data));
+            _linkNewChild(_context.createProcessingInstruction(target, data));
         }
     }
 
@@ -366,23 +366,12 @@ public abstract class SMOutputContainer
     public SMOutputElement addElement(SMNamespace ns, String localName)
         throws XMLStreamException
     {
-        final SMOutputContext ctxt = mContext;
+        final SMOutputContext ctxt = _context;
 
         /* First, need to make sure namespace declaration is appropriate
          * for this context
          */
-        if (ns == null) {
-            ns = SMOutputContext.getEmptyNamespace();
-            /* Hmmh. Callers should know better than to share namespace
-             * instances... but then again, we can easily fix the problem
-             * even if they are shared:
-             */
-        } else if (!ns.isValidIn(ctxt)) {
-            /* Let's find instance from our current context, instead of the
-             * one from some other context
-             */
-            ns = getNamespace(ns.getURI());
-        }
+        ns = _verifyNamespaceArg(ns);
 
         // Ok, let's see if we are blocked already
         boolean blocked = !canOutputNewChild();
@@ -499,14 +488,7 @@ public abstract class SMOutputContainer
     public SMBufferedElement createBufferedElement(SMNamespace ns, String localName)
     {
         // [STAXMATE-26] fix:
-        if (ns == null) {
-            ns = SMOutputContext.getEmptyNamespace();
-        } else if (!ns.isValidIn(mContext)) { // as with addElement, let's fix "ns from wrong doc" problem too
-            /* Let's find instance from our current context, instead of the
-             * one from some other context
-             */
-            ns = getNamespace(ns.getURI());
-        }
+        ns = _verifyNamespaceArg(ns);
         return new SMBufferedElement(getContext(), localName, ns);
     }
 
@@ -582,13 +564,13 @@ public abstract class SMOutputContainer
 
     protected void _linkNewChild(SMOutputtable n)
     {
-        SMOutputtable last = mLastChild;
+        SMOutputtable last = _lastChild;
         if (last == null) {
-            mLastChild = n;
-            mFirstChild = n;
+            _lastChild = n;
+            _firstChild = n;
         } else {
             last._linkNext(n);
-            mLastChild = n;
+            _lastChild = n;
         }
     }
 
@@ -603,14 +585,14 @@ public abstract class SMOutputContainer
     protected final boolean closeAndOutputChildren()
         throws XMLStreamException
     {
-        while (mFirstChild != null) {
-            if (!mFirstChild.doOutput(mContext, true)) {
+        while (_firstChild != null) {
+            if (!_firstChild.doOutput(_context, true)) {
                 // Nope, node was buffered or had buffered child(ren)
                 return false;
             }
-            mFirstChild = mFirstChild.mNext;
+            _firstChild = _firstChild.mNext;
         }
-        mLastChild = null;
+        _lastChild = null;
         return true;
     }
 
@@ -622,40 +604,61 @@ public abstract class SMOutputContainer
     protected final boolean closeAllButLastChild()
         throws XMLStreamException
     {
-        SMOutputtable child = mFirstChild;
+        SMOutputtable child = _firstChild;
         while (child != null) {
             SMOutputtable next = child.mNext;
             /* Need/can not force closing of the last child, but all
              * previous can and should be closed:
              */
             boolean notLast = (next != null);
-            if (!mFirstChild.doOutput(mContext, notLast)) {
+            if (!_firstChild.doOutput(_context, notLast)) {
                 // Nope, node was buffered or had buffered child(ren)
                 return false;
             }
-            mFirstChild = child = next;
+            _firstChild = child = next;
         }
-        mLastChild = null;
+        _lastChild = null;
         return true;
     }
 
     protected final void forceChildOutput()
         throws XMLStreamException
     {
-        SMOutputtable child = mFirstChild;
-        mFirstChild = null;
-        mLastChild = null;
+        SMOutputtable child = _firstChild;
+        _firstChild = null;
+        _lastChild = null;
         for (; child != null; child = child.mNext) {
-            child.forceOutput(mContext);
+            child.forceOutput(_context);
         }
     }
 
     /*
     ////////////////////////////////////////////////////////
-    // Internal/package methods, error reporting
+    // Internal/package methods
     ////////////////////////////////////////////////////////
     */
 
+    /**
+     * Method called to ensure that the passed-in namespace can be
+     * used for actual output operation. It converts nulls to
+     * the proper "no namespace" instance, and ensures that (so far)
+     * unbound namespaces are properly bound (including declaring
+     * them as needed).
+     */
+    protected final SMNamespace _verifyNamespaceArg(SMNamespace ns)
+    {
+        if (ns == null) {
+            return SMOutputContext.getEmptyNamespace();
+        }
+        if (ns.isValidIn(_context)) { // hunky dory
+            return ns;
+        }
+        /* Hmmh. Callers should know better than to share namespace
+         * instances... but then again, we can easily fix the problem
+         * even if they are shared:
+         */
+        return getNamespace(ns.getURI());
+    }
 
     protected void _throwRelinking() {
             throw new IllegalStateException("Can not re-set parent (for instance of "+getClass()+") once it has been set once");

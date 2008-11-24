@@ -12,6 +12,7 @@ Compatibility changes:
 Problems fixed:
 
 * [STAXMATE-26]: NPE when passing null namespace to SMOutputContainer.createBufferedElement()
+* [STAXMATE-27]: Attributes were not retained for buffered elements.
 
 New/improved functionality:
 
