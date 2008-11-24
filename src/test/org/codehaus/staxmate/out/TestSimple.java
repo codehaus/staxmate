@@ -280,4 +280,34 @@ public class TestSimple
         assertTokenType(END_DOCUMENT, sr.next());
         sr.close();
     }
+
+    public void testBufferedWithAttr()
+        throws Exception
+    {
+        StringWriter sw = new StringWriter();
+        XMLStreamWriter xw = getSimpleWriter(sw);
+        SMOutputDocument doc = SMOutputFactory.createOutputDocument(xw);
+
+        SMOutputElement elem = doc.addElement("root");
+        SMBufferedElement leafFrag = elem.createBufferedElement(null, "leaf");
+        leafFrag.addAttribute("attr", "value");
+        elem.addAndReleaseBuffered(leafFrag);
+        doc.closeRoot();
+
+        // Ok let's verify, then:
+        XMLStreamReader sr = getCoalescingReader(sw.toString());
+        // but just using plain old Stax...
+        assertTokenType(START_ELEMENT, sr.next());
+        assertElem(sr, null, "root");
+        assertTokenType(START_ELEMENT, sr.next());
+        assertEquals(1, sr.getAttributeCount());
+        assertEquals(0, sr.getNamespaceCount());
+        assertElem(sr, null, "leaf");
+        assertEquals("attr", sr.getAttributeLocalName(0));
+        assertEquals("value", sr.getAttributeValue(0));
+        assertTokenType(END_ELEMENT, sr.next());
+        assertTokenType(END_ELEMENT, sr.next());
+        assertTokenType(END_DOCUMENT, sr.next());
+        sr.close();
+    }
 }
