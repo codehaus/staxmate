@@ -305,6 +305,10 @@ public final class SMOutputContext
     //////////////////////////////////////////////////////
     */
 
+    public SMOutputtable createAttribute(SMNamespace ns, String localName, String value) {
+        return new SMOAttribute(ns, localName, value);
+    }
+
     public SMOutputtable createCharacters(String text) {
         return SMOCharacters.create(text);
     }

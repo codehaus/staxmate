@@ -112,7 +112,7 @@ public class SMOutputElement
         // Ok, what can we do, then?
         switch (mOutputState) {
         case OUTPUT_NONE: // blocked
-            // !!! TBI: buffer attribute to this element
+            linkNewChild(mContext.createAttribute(ns, localName, value));
             break;
         case OUTPUT_ATTRS: // perfect
             mContext.writeAttribute(localName, ns, value);
