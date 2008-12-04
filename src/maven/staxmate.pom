@@ -42,7 +42,7 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
     <dependency>
       <groupId>org.codehaus.woodstox</groupId>
       <artifactId>stax2-api</artifactId>
-      <version>[3.0,3.5)</version>
+      <version>@REQ_STAX2_VERSION@</version>
     </dependency>
 
   </dependencies>

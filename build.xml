@@ -4,8 +4,16 @@
 
     <!-- Version information -->
     <property name="IMPL_TITLE" value="StaxMate" />
-    <property name="IMPL_VERSION" value="2.0.0" />
+    <property name="IMPL_VERSION" value="1.9.9-1" />
     <property name="IMPL_VENDOR" value="http://staxmate.codehaus.org" />
+
+    <!-- 04-Dec-2008, tatu: during Woodstox4.0/Stax2-api-3.0
+        finalization, we need to use weird+strict version numbers...
+     -->
+    <property name="REQ_STAX2_VERSION" value="2.9.9-2" />
+<!--
+    <property name="REQ_STAX2_VERSION" value="[3.0,3.5)" />
+-->
 
     <property name="BASENAME" value="staxmate-${IMPL_VERSION}" />
 
@@ -164,6 +172,7 @@
             <globmapper from="*.pom" to="*-${IMPL_VERSION}.pom" />
             <filterset>
               <filter token="VERSION" value="${IMPL_VERSION}" />
+              <filter token="REQ_STAX2_VERSION" value="${REQ_STAX2_VERSION}" />
             </filterset>
        </copy>
         <xmlvalidate lenient="true">

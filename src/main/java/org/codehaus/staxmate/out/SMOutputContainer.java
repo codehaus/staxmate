@@ -195,15 +195,6 @@ public abstract class SMOutputContainer
     }
 
     /**
-     * @deprecated Use {@link #addValue(int)} instead.
-     */
-    public void addCharacters(int value)
-        throws XMLStreamException
-    {
-        addValue(value);
-    }
-
-    /**
      * Method for appending specified text as CDATA within
      * this output container.
      *<p>
@@ -308,11 +299,13 @@ public abstract class SMOutputContainer
      * but likely more efficient (with streams that support Typed Access API)
      * as well as more explicit semantically.
      */
-    public void addValue(boolean value)
-        throws XMLStreamException
+    public void addValue(boolean value) throws XMLStreamException
     {
-        // Before Stax2 v3.0, have to explicitly convert:
-        addCharacters(value ? "true" : "false");
+        if (canOutputNewChild()) {
+            _context.writeValue(value);
+        } else {
+            _linkNewChild(_context.createValue(value));
+        }
     }
 
     /**
@@ -327,8 +320,11 @@ public abstract class SMOutputContainer
     public void addValue(int value)
         throws XMLStreamException
     {
-        // Before Stax2 v3.0, have to explicitly convert:
-        addCharacters(String.valueOf(value));
+        if (canOutputNewChild()) {
+            _context.writeValue(value);
+        } else {
+            _linkNewChild(_context.createValue(value));
+        }
     }
 
     /**
@@ -343,8 +339,11 @@ public abstract class SMOutputContainer
     public void addValue(long value)
         throws XMLStreamException
     {
-        // Before Stax2 v3.0, have to explicitly convert:
-        addCharacters(String.valueOf(value));
+        if (canOutputNewChild()) {
+            _context.writeValue(value);
+        } else {
+            _linkNewChild(_context.createValue(value));
+        }
     }
 
     /*

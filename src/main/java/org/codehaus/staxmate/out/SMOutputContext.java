@@ -54,6 +54,11 @@ public final class SMOutputContext
         sGlobalNsMap.put(sNsXmlns.getURI(), sNsXmlns);
     }
 
+    // // // We can use canonical values for some types...
+
+    final static SMOTypedValue sFalseValue = SMOTypedValue.create(false);
+    final static SMOTypedValue sTrueValue = SMOTypedValue.create(true);
+
     /*
     //////////////////////////////////////////////////////
     // Configuration settings
@@ -355,6 +360,21 @@ public final class SMOutputContext
 
     public SMOutputtable createProcessingInstruction(String target, String data) {
         return new SMOProcInstr(target, data);
+    }
+
+    // // // Typed value nodes
+
+    public SMOutputtable createValue(boolean value) {
+        // only 2 canonical immutable values...
+        return value ? sTrueValue : sFalseValue;
+    }
+
+    public SMOutputtable createValue(int value) {
+        return SMOTypedValue.create(value);
+    }
+
+    public SMOutputtable createValue(long value) {
+        return SMOTypedValue.create(value);
     }
 
     /*
@@ -732,6 +752,24 @@ public final class SMOutputContext
             outputIndentation();
         }
         mStreamWriter.writeDTD(rootName, systemId, publicId, intSubset);
+    }
+
+    /*
+    //////////////////////////////////////////////////////
+    // Typed Access API (Stax2 v3+) output methods
+    //////////////////////////////////////////////////////
+    */
+
+    public void writeValue(boolean v) throws XMLStreamException {
+        mStreamWriter.writeBoolean(v);
+    }
+
+    public void writeValue(int v) throws XMLStreamException {
+        mStreamWriter.writeInt(v);
+    }
+
+    public void writeValue(long v) throws XMLStreamException {
+        mStreamWriter.writeLong(v);
     }
 
     /*
