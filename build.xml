@@ -159,12 +159,19 @@
             <fileset dir="." includes="release-notes/*" />
        </copy>
        <copy todir="${DistDir}">
-            <fileset dir="${SrcDir}/maven" includes="*.pom" />
+            <fileset dir="${SrcDir}/maven" includes="staxmate*.pom" />
             <globmapper from="*.pom" to="*-${IMPL_VERSION}.pom" />
             <filterset>
               <filter token="VERSION" value="${IMPL_VERSION}" />
             </filterset>
        </copy>
+       <!-- 03-Dec-2008, tatu: temporarily also copy stax2-2.1 jar and pom -->
+       <copy file="${SrcDir}/maven/stax2.pom" tofile="${DistDir}/maven/stax2-2.1.pom" />
+       <copy file="${LibDir}/stax2-2.1.jar" tofile="${DistDir}/stax2-2.1.jar" />
+        <xmlvalidate lenient="true">
+        <!-- lenient: check only well-formedness, no dtd/schema (yet) -->
+            <fileset dir="${SrcDir}/maven" includes="*.pom" />
+        </xmlvalidate>
     </target>
 
     <target name="src-dist">
@@ -179,7 +186,7 @@
        </zip>
       <!-- And create source jar for IDE support -->
        <jar jarfile="${DistDir}/staxmate-${IMPL_VERSION}-sources.jar" filesonly
-="true" >
+="true" compress="true" >
          <fileset dir="${basedir}">
            <patternset refid="dist-src-files" />
          </fileset>
