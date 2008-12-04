@@ -164,6 +164,10 @@
               <filter token="VERSION" value="${IMPL_VERSION}" />
             </filterset>
        </copy>
+        <xmlvalidate lenient="true">
+        <!-- lenient: check only well-formedness, no dtd/schema (yet) -->
+            <fileset dir="${dir.src}/maven" includes="*.pom" />
+        </xmlvalidate>
     </target>
 
     <target name="src-dist">
@@ -177,8 +181,7 @@
          <patternset refid="dist-src-files" />
        </zip>
       <!-- And create source jar for IDE support -->
-       <jar jarfile="${dir.dist}/staxmate-${IMPL_VERSION}-sources.jar" filesonly
-="true" >
+       <jar jarfile="${dir.dist}/staxmate-${IMPL_VERSION}-sources.jar" filesonly="true" compress="true" >
          <fileset dir="${basedir}">
            <patternset refid="dist-src-files" />
          </fileset>
