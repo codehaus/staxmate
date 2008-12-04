@@ -16,7 +16,9 @@
     <!-- Libs -->
     <property name="dir.lib" location="${basedir}/lib" />
     <!-- Build-related -->
-    <property name="dir.build" location="${basedir}/build" />
+    <property name="dir.build" location="${basedir}/target" />
+    <!-- 03-Dec-2008, tatu: Let's use same dir as what Maven uses...
+      -->
     <property name="dir.classes.main" location="${dir.build}/classes" />
     <!-- Documentation -->
     <property name="dir.javadoc" location="${dir.build}/javadoc" />
