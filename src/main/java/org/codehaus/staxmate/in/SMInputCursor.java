@@ -401,7 +401,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw _notAccessible("getLocation");
+            throw _notAccessible("getCursorLocation");
         }
         // Let's try to get actual exact location via Stax2 first:
         LocationInfo li = mStreamReader.getLocationInfo();

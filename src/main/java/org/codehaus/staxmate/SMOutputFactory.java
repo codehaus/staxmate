@@ -6,6 +6,7 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.stream.StreamResult;
 
 import org.codehaus.stax2.XMLOutputFactory2;
 import org.codehaus.stax2.XMLStreamWriter2;
@@ -283,9 +284,23 @@ public final class SMOutputFactory
     public XMLStreamWriter2 createStax2Writer(File f)
         throws XMLStreamException
     {
-        Stax2FileResult res = new Stax2FileResult(f);
-        XMLStreamWriter sw = mStax2Factory.createXMLStreamWriter(res);
-        return Stax2WriterAdapter.wrapIfNecessary(sw);
+        if (mStax2Factory != null) {
+            /* have real stax2 factory; can create more optimal writer
+             * (most importantly: one that automatically closes the writer)
+             */
+            Stax2FileResult res = new Stax2FileResult(f);
+            return (XMLStreamWriter2) mStax2Factory.createXMLStreamWriter(res);
+        }
+        /* No, just stax1 factory. Could use StreamResult; but some
+         * impls might not recognize it... immediate problem here:
+         * auto-closing won't work.
+         */
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            return Stax2WriterAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamWriter(out));
+        } catch (FileNotFoundException fex) {
+            throw new XMLStreamException(fex);
+        }
     }
 
     /**
@@ -299,7 +314,7 @@ public final class SMOutputFactory
     public XMLStreamWriter2 createStax2Writer(OutputStream out)
         throws XMLStreamException
     {
-        return Stax2WriterAdapter.wrapIfNecessary(mStax2Factory.createXMLStreamWriter(out));
+        return Stax2WriterAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamWriter(out));
     }
 
     /**
@@ -313,7 +328,7 @@ public final class SMOutputFactory
     public XMLStreamWriter2 createStax2Writer(Writer w)
         throws XMLStreamException
     {
-        return Stax2WriterAdapter.wrapIfNecessary(mStax2Factory.createXMLStreamWriter(w));
+        return Stax2WriterAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamWriter(w));
     }
 
     /*

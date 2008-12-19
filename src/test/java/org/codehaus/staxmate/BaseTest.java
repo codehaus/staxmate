@@ -41,4 +41,24 @@ public abstract class BaseTest
         f.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
         return f.createXMLStreamReader(new StringReader(content));
     }
+
+    /**
+     * Note: calling this method will move stream to the next
+     * non-textual event.
+     */
+    protected String collectAllText(XMLStreamReader sr)
+        throws XMLStreamException
+    {
+        StringBuilder sb = new StringBuilder(100);
+        while (true) {
+            int type = sr.getEventType();
+            if (type == CHARACTERS || type == SPACE || type == CDATA) {
+                sb.append(sr.getText());
+                sr.next();
+            } else {
+                break;
+            }
+        }
+        return sb.toString();
+    }
 }

@@ -160,8 +160,14 @@ public class TestBuffered
         assertTokenType(START_ELEMENT, sr.next());
         assertElem(sr, null, "x");
         assertTokenType(CHARACTERS, sr.next());
-        assertEquals(TEXT1+TEXT2+TEXT2+TEXT1, sr.getText());
-        assertTokenType(END_ELEMENT, sr.next());
+        /* Just in case the underlying parser does not implement
+         * coalescing (... an early version of Aalto, for example),
+         * let's collect all text.
+         */
+        assertEquals(TEXT1+TEXT2+TEXT2+TEXT1, collectAllText(sr));
+        // note: above moves cursor...
+        assertTokenType(END_ELEMENT, sr.getEventType());
+
         assertTokenType(END_DOCUMENT, sr.next());
         sr.close();
     }
