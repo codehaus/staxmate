@@ -8,9 +8,9 @@ import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader; // for javadocs
+import javax.xml.stream.events.XMLEvent; 
 
 import org.codehaus.stax2.DTDInfo;
-import org.codehaus.stax2.LocationInfo;
 import org.codehaus.stax2.XMLStreamReader2;
 
 import org.codehaus.staxmate.util.DataUtil;
@@ -156,9 +156,9 @@ public abstract class SMInputCursor
     ////////////////////////////////////////////
      */
 
-    public SMInputCursor(SMInputCursor parent, XMLStreamReader2 sr, SMFilter filter)
+    public SMInputCursor(SMInputContext ctxt, SMInputCursor parent, SMFilter filter)
     {
-        super(sr, (parent == null) ? 0 : sr.getDepth());
+        super(ctxt, (parent == null) ? 0 : ctxt.getDepth());
         mFilter = filter;
         /* By default, we use parent cursor's element tracking setting;
          * or "no tracking" if we have no parent
@@ -320,7 +320,7 @@ public abstract class SMInputCursor
      *   the underlying stream reader
      */
     public final boolean isRootCursor() {
-        return (mBaseDepth == 0);
+        return (_baseDepth == 0);
     }
 
     /*
@@ -403,16 +403,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getCursorLocation");
         }
-        // Let's try to get actual exact location via Stax2 first:
-        LocationInfo li = mStreamReader.getLocationInfo();
-        if (li != null) {
-            Location loc = li.getStartLocation();
-            if (loc != null) {
-                return loc;
-            }
-        }
-        // If not, fall back to regular method
-        return mStreamReader.getLocation();
+        return _context.getEventLocation();
     }
 
     /**
@@ -424,16 +415,7 @@ public abstract class SMInputCursor
      */
     public Location getStreamLocation()
     {
-        // Let's try to get actual exact location via Stax2 first:
-        LocationInfo li = mStreamReader.getLocationInfo();
-        if (li != null) {
-            Location loc = li.getCurrentLocation();
-            if (loc != null) {
-                return loc;
-            }
-        }
-        // If not, fall back to regular method
-        return mStreamReader.getLocation();
+        return _context.getStreamLocation();
     }
 
     /**
@@ -448,7 +430,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getLocation");
         }
-        return mStreamReader.getLocation();
+        return _context.getStreamLocation();
     }
 
     /*
@@ -477,7 +459,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getText");
         }
-        return mStreamReader.getText();
+        return _streamReader.getText();
     }
 
     /**
@@ -575,7 +557,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getName");
         }
-        return mStreamReader.getName();
+        return _streamReader.getName();
     }
 
     /**
@@ -597,12 +579,12 @@ public abstract class SMInputCursor
         case XMLStreamConstants.START_ELEMENT:
         case XMLStreamConstants.END_ELEMENT:
         case XMLStreamConstants.ENTITY_REFERENCE:
-            return mStreamReader.getLocalName();
+            return _streamReader.getLocalName();
         case XMLStreamConstants.PROCESSING_INSTRUCTION:
-            return mStreamReader.getPITarget();
+            return _streamReader.getPITarget();
         case XMLStreamConstants.DTD:
             {
-                DTDInfo dtd = mStreamReader.getDTDInfo();
+                DTDInfo dtd = _streamReader.getDTDInfo();
                 return (dtd == null) ? null : dtd.getDTDRootName();
             }
         }
@@ -625,7 +607,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getPrefix");
         }
-        String prefix = mStreamReader.getPrefix();
+        String prefix = _streamReader.getPrefix();
         // some impls may return null instead, let's convert
         return (prefix == null) ? "" : prefix;
     }
@@ -645,7 +627,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getNsUri");
         }
-        String uri = mStreamReader.getNamespaceURI();
+        String uri = _streamReader.getNamespaceURI();
         // some impls may return null instead, let's convert
         return (uri == null) ? "" : uri;
     }
@@ -662,7 +644,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getPrefixedName");
         }
-        return mStreamReader.getPrefixedName();
+        return _streamReader.getPrefixedName();
     }
 
     /**
@@ -710,21 +692,21 @@ public abstract class SMInputCursor
         switch (type) {
         case XMLStreamConstants.START_ELEMENT:
         case XMLStreamConstants.END_ELEMENT:
-            ln = mStreamReader.getLocalName();
-            uri = mStreamReader.getNamespaceURI();
+            ln = _streamReader.getLocalName();
+            uri = _streamReader.getNamespaceURI();
             break;
 
         case XMLStreamConstants.ENTITY_REFERENCE:
-            ln = mStreamReader.getLocalName();
+            ln = _streamReader.getLocalName();
             uri = null;
             break;
         case XMLStreamConstants.PROCESSING_INSTRUCTION:
-            ln = mStreamReader.getPITarget();
+            ln = _streamReader.getPITarget();
             uri = null;
             break;
         case XMLStreamConstants.DTD:
             {
-                DTDInfo dtd = mStreamReader.getDTDInfo();
+                DTDInfo dtd = _streamReader.getDTDInfo();
                 ln = (dtd == null) ? null : dtd.getDTDRootName();
             }
             uri = null;
@@ -758,6 +740,36 @@ public abstract class SMInputCursor
         return hasName(qname.getNamespaceURI(), qname.getLocalPart());
     }
 
+    /**
+     * Method for accessing information regarding event this
+     * cursor points to, as an instance of {@link XMLEvent}.
+     * Depending on underlying input source this may be constructed
+     * from scratch (for example, if the input cursor was not
+     *  constructed from
+     * {@link javax.xml.stream.XMLEventReader}), or accessed
+     * from the underlying event reader.
+     *<p>
+     * Calling this method does not advance the underlying stream
+     * or cursor itself.
+     *<p>
+     * Note, too, that it is ok to call this method at any time:
+     * if the cursor is not in valid state for accessing information
+     * null will be returned.
+     *
+     * @return Information about currently pointed-to input stream
+     *   event, if we are pointing to one; null otherwise
+     *
+     * @since 2.0
+     */
+    public XMLEvent asEvent()
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            return null;
+        }
+        return _context.currentAsEvent();
+    }
+
     /*
     ////////////////////////////////////////////////////
     // Public API, accessing current element's attribute
@@ -781,7 +793,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrCount");
         }
-        return mStreamReader.getAttributeCount();
+        return _streamReader.getAttributeCount();
     }
 
     /**
@@ -798,7 +810,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrCount");
         }
-        return mStreamReader.getAttributeInfo().findAttributeIndex(uri, localName);
+        return _streamReader.getAttributeInfo().findAttributeIndex(uri, localName);
     }
 
     /**
@@ -823,7 +835,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrName");
         }
-        return mStreamReader.getAttributeName(index);
+        return _streamReader.getAttributeName(index);
     }
 
     /**
@@ -848,7 +860,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrLocalName");
         }
-        return mStreamReader.getAttributeLocalName(index);
+        return _streamReader.getAttributeLocalName(index);
     }
 
     /**
@@ -875,7 +887,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrPrefix");
         }
-        String prefix = mStreamReader.getAttributePrefix(index);
+        String prefix = _streamReader.getAttributePrefix(index);
         // some impls may return null instead, let's convert
         return (prefix == null) ? "" : prefix;
     }
@@ -903,7 +915,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrNsUri");
         }
-        String uri = mStreamReader.getAttributeNamespace(index);
+        String uri = _streamReader.getAttributeNamespace(index);
         // some impls may return null instead, let's convert
         return (uri == null) ? "" : uri;
     }
@@ -931,7 +943,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttributeValue");
         }
-        return mStreamReader.getAttributeValue(index);
+        return _streamReader.getAttributeValue(index);
     }
 
     /**
@@ -956,8 +968,8 @@ public abstract class SMInputCursor
          *   works ok with both, let's use null -- specs are irrelevant
          *   if no implementation follows this particular quirk.
          */
-        //return mStreamReader.getAttributeValue("", localName);
-        return mStreamReader.getAttributeValue(null, localName);
+        //return _streamReader.getAttributeValue("", localName);
+        return _streamReader.getAttributeValue(null, localName);
     }
 
     /**
@@ -982,7 +994,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrValue");
         }
-        return mStreamReader.getAttributeValue(namespaceURI, localName);
+        return _streamReader.getAttributeValue(namespaceURI, localName);
     }
 
     /*
@@ -1013,7 +1025,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        String value = mStreamReader.getAttributeValue(index);
+        String value = _streamReader.getAttributeValue(index);
         try {
             return DataUtil.parseBoolean(value);
         } catch (IllegalArgumentException iae) {
@@ -1046,7 +1058,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        return DataUtil.parseBoolean(mStreamReader.getAttributeValue(index), defValue);
+        return DataUtil.parseBoolean(_streamReader.getAttributeValue(index), defValue);
     }
 
     /**
@@ -1072,7 +1084,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        String value = mStreamReader.getAttributeValue(index);
+        String value = _streamReader.getAttributeValue(index);
         try {
             return DataUtil.parseInt(value);
         } catch (IllegalArgumentException iae) {
@@ -1105,7 +1117,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        return DataUtil.parseInt(mStreamReader.getAttributeValue(index), defValue);
+        return DataUtil.parseInt(_streamReader.getAttributeValue(index), defValue);
     }
 
     /**
@@ -1131,7 +1143,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        String value = mStreamReader.getAttributeValue(index);
+        String value = _streamReader.getAttributeValue(index);
         try {
             return DataUtil.parseLong(value);
         } catch (IllegalArgumentException iae) {
@@ -1164,7 +1176,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        return DataUtil.parseLong(mStreamReader.getAttributeValue(index), defValue);
+        return DataUtil.parseLong(_streamReader.getAttributeValue(index), defValue);
     }
 
     /*
@@ -1187,7 +1199,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        String value = mStreamReader.getAttributeValue(uri, localName);
+        String value = _streamReader.getAttributeValue(uri, localName);
         return DataUtil.parseInt(value);
     }
 
@@ -1205,7 +1217,7 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        String valueStr = mStreamReader.getAttributeValue(uri, localName);
+        String valueStr = _streamReader.getAttributeValue(uri, localName);
         return DataUtil.parseInt(valueStr, defValue);
     }
 
@@ -1821,7 +1833,7 @@ public abstract class SMInputCursor
     }
 
     protected String getCurrEventDesc() {
-        return mCurrEvent.toString();
+        return (mCurrEvent == null) ? "[null]" : mCurrEvent.toString();
     }
 
     /**
@@ -1861,7 +1873,7 @@ public abstract class SMInputCursor
         if (mElemInfoFactory != null) {
             return mElemInfoFactory.constructElementInfo(this, parent, prevSibling);
         }
-        XMLStreamReader2 sr = mStreamReader;
+        XMLStreamReader2 sr = _streamReader;
         return new DefaultElementInfo(parent, prevSibling,
                                       sr.getPrefix(), sr.getNamespaceURI(), sr.getLocalName(),
                                       mNodeCount-1, mElemCount-1, getDepth());

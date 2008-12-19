@@ -1,6 +1,6 @@
 Version: 2.0.0
 
-Release date: xx-Dec-2008
+Release date: xx-Jan-2008
 
 Description:
   Major upgrade, based on new functionality offered Stax2-api version 3.0.
@@ -16,6 +16,9 @@ Problems fixed:
 
 New/improved functionality:
 
+* [STAXMATE-7]: Added "SMInputCursor.asEvent()" to allow for
+  accessing stream information in a more convenient form and retaining
+  it if need be.
 * [STAXMATE-22]: Added "SMInputCursor.advance()" to support more
   convenient creation of positioned root cursors.
 

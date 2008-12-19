@@ -20,9 +20,9 @@ public class SMHierarchicCursor
     ////////////////////////////////////////////
      */
 
-    public SMHierarchicCursor(SMInputCursor parent, XMLStreamReader2 sr, SMFilter f)
+    public SMHierarchicCursor(SMInputContext ctxt, SMInputCursor parent, SMFilter f)
     {
-        super(parent, sr, f);
+        super(ctxt, parent, f);
     }
 
     /*
@@ -32,7 +32,7 @@ public class SMHierarchicCursor
      */
 
     public int getParentCount() {
-        return mBaseDepth;
+        return _baseDepth;
     }
 
     /*
@@ -66,10 +66,10 @@ public class SMHierarchicCursor
             
             // Root level has no end element...
             if (isRootCursor()) {
-                if (!mStreamReader.hasNext()) {
+                if (!_streamReader.hasNext()) {
                     break;
                 }
-                type = mStreamReader.next();
+                type = _streamReader.next();
                 /* Document end marker at root level is same as end element
                  * at inner levels...
                  */
@@ -77,7 +77,7 @@ public class SMHierarchicCursor
                     break;
                 }
             } else {
-                type = mStreamReader.next();
+                type = _streamReader.next();
             }
             ++mNodeCount;
             if (type == XMLStreamConstants.END_ELEMENT) {
@@ -122,12 +122,12 @@ public class SMHierarchicCursor
 
     public SMInputCursor constructChildCursor(SMFilter f)
     {
-        return new SMHierarchicCursor(this, mStreamReader, f);
+        return new SMHierarchicCursor(_context, this, f);
     }
 
     public SMInputCursor constructDescendantCursor(SMFilter f)
     {
-        return new SMFlatteningCursor(this, mStreamReader, f);
+        return new SMFlatteningCursor(_context, this, f);
     }
 
     /*
@@ -145,13 +145,13 @@ public class SMHierarchicCursor
     protected void skipToEndElement()
         throws XMLStreamException
     {
-        XMLStreamReader2 sr = mStreamReader;
+        XMLStreamReader2 sr = _streamReader;
         /* Here we have two choices: first, depth of current START_ELEMENT should
          * match that of matching END_ELEMENT. Additionally, START_ELEMENT's depth
          * for hierarchic cursors must be baseDepth+1.
          */
         //int endDepth = sr.getDepth();
-        int endDepth = mBaseDepth+1;
+        int endDepth = _baseDepth+1;
 
         while (true) {
             int type = sr.next();

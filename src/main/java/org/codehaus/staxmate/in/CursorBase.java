@@ -81,20 +81,22 @@ abstract class CursorBase
     ////////////////////////////////////////////
      */
 
+    protected final SMInputContext _context;
+
     /**
      * Underlying stream reader used. It will either be a native
      * {@link XMLStreamReader2} instance, or a regular (Stax 1.0)
      * {@link javax.xml.stream.XMLStreamReader} wrapped in an
      * adapter.
      */
-    protected final XMLStreamReader2 mStreamReader;
+    protected final XMLStreamReader2 _streamReader;
 
     /**
      * Depth the underlying stream reader had when this cursor was
      * created (which is the number of currently open parent elements).
      * 0 only for root cursor.
      */
-    protected final int mBaseDepth;
+    protected final int _baseDepth;
 
     /**
      * Current state of the cursor.
@@ -154,10 +156,11 @@ abstract class CursorBase
      * @param baseDepth Base depth (number of enclosing open start elements)
      *   of the underlying stream at point when this cursor was instantiated
      */
-    protected CursorBase(XMLStreamReader2 sr, int baseDepth)
+    protected CursorBase(SMInputContext ctxt, int baseDepth)
     {
-        mStreamReader = sr;
-        mBaseDepth = baseDepth;
+        _context = ctxt;
+        _streamReader = ctxt.getStreamReader();
+        _baseDepth = baseDepth;
     }
 
     /*
@@ -198,7 +201,7 @@ abstract class CursorBase
      * nor want to have separate field to track this information)
      */
     protected final int getBaseParentCount() {
-        return mBaseDepth;
+        return _baseDepth;
     }
 
     /**
@@ -219,7 +222,7 @@ abstract class CursorBase
          * so let's ask it (hierarchic cursor parent also knows it)
          */
         final int endDepth = child.getBaseParentCount();
-        final XMLStreamReader2 sr = mStreamReader;
+        final XMLStreamReader2 sr = _streamReader;
 
         for (int type = sr.getEventType(); true; type = sr.next()) {
             if (type == XMLStreamConstants.END_ELEMENT) {
@@ -268,7 +271,7 @@ abstract class CursorBase
      * access to the underlying stream reader.
      */
     protected final XMLStreamReader2 _getStreamReader() {
-        return mStreamReader;
+        return _streamReader;
     }
 
     /**

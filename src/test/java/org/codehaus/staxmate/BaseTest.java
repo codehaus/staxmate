@@ -5,9 +5,41 @@ import java.io.*;
 import javax.xml.stream.*;
 import static javax.xml.stream.XMLStreamConstants.*;
 
+import org.codehaus.staxmate.in.SMInputCursor;
+
 public abstract class BaseTest
     extends junit.framework.TestCase
 {
+    protected SMInputFactory _inputFactory;
+
+    /*
+    ////////////////////////////////////////////////////////
+    // Factory methods
+    ////////////////////////////////////////////////////////
+     */
+
+    protected SMInputFactory getInputFactory()
+    {
+        if (_inputFactory == null) {
+            _inputFactory = new SMInputFactory(XMLInputFactory.newInstance());
+        }
+        return _inputFactory;
+    }
+
+    protected XMLStreamReader getCoalescingReader(String content)
+        throws XMLStreamException
+    {
+        XMLInputFactory f = XMLInputFactory.newInstance();
+        f.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
+        return f.createXMLStreamReader(new StringReader(content));
+    }
+
+    /*
+    ////////////////////////////////////////////////////////
+    // Assertion support
+    ////////////////////////////////////////////////////////
+     */
+
     protected void assertTokenType(int expType, int actType)
         throws XMLStreamException
     {
@@ -18,6 +50,12 @@ public abstract class BaseTest
         throws XMLStreamException
     {
         assertTokenType(expType, sr.getEventType());
+    }
+
+    protected void assertTokenType(int expType, SMInputCursor crsr)
+        throws XMLStreamException
+    {
+        assertTokenType(expType, crsr.getCurrEventCode());
     }
 
     protected void assertElem(XMLStreamReader sr, String expURI, String expLN)
@@ -34,13 +72,11 @@ public abstract class BaseTest
         }
     }
 
-    protected XMLStreamReader getCoalescingReader(String content)
-        throws XMLStreamException
-    {
-        XMLInputFactory f = XMLInputFactory.newInstance();
-        f.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
-        return f.createXMLStreamReader(new StringReader(content));
-    }
+    /*
+    ////////////////////////////////////////////////////////
+    // Other accessors
+    ////////////////////////////////////////////////////////
+     */
 
     /**
      * Note: calling this method will move stream to the next

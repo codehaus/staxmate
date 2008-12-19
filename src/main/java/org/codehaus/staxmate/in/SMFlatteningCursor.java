@@ -33,9 +33,9 @@ public class SMFlatteningCursor
     ////////////////////////////////////////////
      */
 
-    public SMFlatteningCursor(SMInputCursor parent, XMLStreamReader2 sr, SMFilter f)
+    public SMFlatteningCursor(SMInputContext ctxt,SMInputCursor parent, SMFilter f)
     {
-        super(parent, sr, f);
+        super(ctxt, parent, f);
     }
 
     /*
@@ -58,13 +58,13 @@ public class SMFlatteningCursor
         }
         // No event yet, or we are closed? base depth is ok then
         if (mCurrEvent == null) {
-            return mBaseDepth;
+            return _baseDepth;
         }
 
         /* Otherwise, stream's count can be used. However, it'll be
          * off by one for both START_ELEMENT and END_ELEMENT.
          */
-        int depth = mStreamReader.getDepth();
+        int depth = _streamReader.getDepth();
         if (mCurrEvent == SMEvent.START_ELEMENT
             || mCurrEvent == SMEvent.END_ELEMENT) {
             --depth;
@@ -103,10 +103,10 @@ public class SMFlatteningCursor
              * cursors later on)
              */
             if (isRootCursor()) {
-                if (!mStreamReader.hasNext()) {
+                if (!_streamReader.hasNext()) {
                     break;
                 }
-                type = mStreamReader.next();
+                type = _streamReader.next();
                 /* Document end marker at root level is same as end
                  * element at inner levels...
                  */
@@ -114,7 +114,7 @@ public class SMFlatteningCursor
                     break;
                 }
             } else {
-                type = mStreamReader.next();
+                type = _streamReader.next();
             }
 
             ++mNodeCount;
@@ -124,10 +124,10 @@ public class SMFlatteningCursor
                  * will return identical value for END_ELEMENT (and
                  * <= used instead of < just for sanity checking)
                  */
-                int depth = mStreamReader.getDepth();
-                if (depth <= mBaseDepth) {
-                    if (depth != mBaseDepth) {
-                        _throwWrongEndElem(mBaseDepth, depth);
+                int depth = _streamReader.getDepth();
+                if (depth <= _baseDepth) {
+                    if (depth != _baseDepth) {
+                        _throwWrongEndElem(_baseDepth, depth);
                     }
                     break;
                 }
@@ -177,16 +177,10 @@ public class SMFlatteningCursor
     }
 
     public SMInputCursor constructChildCursor(SMFilter f) {
-        return new SMHierarchicCursor(this, mStreamReader, f);
+        return new SMHierarchicCursor(_context, this, f);
     }
 
     public SMInputCursor constructDescendantCursor(SMFilter f) {
-        return new SMFlatteningCursor(this, mStreamReader, f);
+        return new SMFlatteningCursor(_context, this, f);
     }
-
-    /*
-    ////////////////////////////////////////////
-    // Internal/package methods
-    ////////////////////////////////////////////
-     */
 }
