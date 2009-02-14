@@ -7,6 +7,7 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.*;
 
 import org.codehaus.stax2.XMLStreamWriter2;
+import org.codehaus.stax2.typed.TypedXMLStreamReader;
 
 /**
  * Class that encapsulates details about context in which StaxMate output
@@ -56,8 +57,8 @@ public final class SMOutputContext
 
     // // // We can use canonical values for some types...
 
-    final static SMOTypedValue sFalseValue = SMOTypedValue.create(false);
-    final static SMOTypedValue sTrueValue = SMOTypedValue.create(true);
+    final static SMOTypedValue FALSE_VALUE = SMOTypedValue.create(false);
+    final static SMOTypedValue TRUE_VALUE = SMOTypedValue.create(true);
 
     /*
     //////////////////////////////////////////////////////
@@ -65,7 +66,7 @@ public final class SMOutputContext
     //////////////////////////////////////////////////////
     */
 
-    final XMLStreamWriter2 mStreamWriter;
+    final XMLStreamWriter2 _streamWriter;
     final NamespaceContext mRootNsContext;
     final boolean mRepairing;
 
@@ -173,7 +174,7 @@ public final class SMOutputContext
 
     protected SMOutputContext(XMLStreamWriter2 sw, NamespaceContext rootNsCtxt)
     {
-        mStreamWriter = sw;
+        _streamWriter = sw;
         mRootNsContext = rootNsCtxt;
         Object o = sw.getProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES);
         mRepairing = (o instanceof Boolean) && ((Boolean) o).booleanValue();
@@ -366,7 +367,7 @@ public final class SMOutputContext
 
     public SMOutputtable createValue(boolean value) {
         // only 2 canonical immutable values...
-        return value ? sTrueValue : sFalseValue;
+        return value ? TRUE_VALUE : FALSE_VALUE;
     }
 
     public SMOutputtable createValue(int value) {
@@ -439,7 +440,7 @@ public final class SMOutputContext
     */
 
     public final XMLStreamWriter2 getWriter() {
-        return mStreamWriter;
+        return _streamWriter;
     }
     
     public final boolean isWriterRepairing() {
@@ -459,7 +460,7 @@ public final class SMOutputContext
         if (mIndentSuppress == 0) {
             mIndentSuppress = 1;
         }
-        mStreamWriter.writeCharacters(text);
+        _streamWriter.writeCharacters(text);
     }
     
     public void writeCharacters(char[] buf, int offset, int len)
@@ -468,7 +469,7 @@ public final class SMOutputContext
         if (mIndentSuppress == 0) {
             mIndentSuppress = 1;
         }
-        mStreamWriter.writeCharacters(buf, offset, len);
+        _streamWriter.writeCharacters(buf, offset, len);
     }
     
     public void writeCData(String text)
@@ -477,7 +478,7 @@ public final class SMOutputContext
         if (mIndentSuppress == 0) {
             mIndentSuppress = 1;
         }
-        mStreamWriter.writeCData(text);
+        _streamWriter.writeCData(text);
     }
     
     public void writeCData(char[] buf, int offset, int len)
@@ -486,7 +487,7 @@ public final class SMOutputContext
         if (mIndentSuppress == 0) {
             mIndentSuppress = 1;
         }
-        mStreamWriter.writeCData(buf, offset, len);
+        _streamWriter.writeCData(buf, offset, len);
     }
     
     public void writeComment(String text)
@@ -496,7 +497,7 @@ public final class SMOutputContext
             outputIndentation();
             mIndentLevelEmpty = false;
         }
-        mStreamWriter.writeComment(text);
+        _streamWriter.writeComment(text);
     }
     
     public void writeEntityRef(String name)
@@ -506,7 +507,7 @@ public final class SMOutputContext
         if (mIndentSuppress == 0) {
             mIndentSuppress = 1;
         }
-        mStreamWriter.writeEntityRef(name);
+        _streamWriter.writeEntityRef(name);
     }
     
     public void writeProcessingInstruction(String target, String data)
@@ -517,9 +518,9 @@ public final class SMOutputContext
             mIndentLevelEmpty = false;
         }
         if (data == null) {
-            mStreamWriter.writeProcessingInstruction(target);
+            _streamWriter.writeProcessingInstruction(target);
         } else {
-            mStreamWriter.writeProcessingInstruction(target, data);
+            _streamWriter.writeProcessingInstruction(target, data);
         }
     }
 
@@ -533,9 +534,9 @@ public final class SMOutputContext
             // If no prefix preference, let's not pass one:
             String prefix = ns.getPreferredPrefix();
             if (prefix == null) {
-                mStreamWriter.writeAttribute(ns.getURI(), localName, value);
+                _streamWriter.writeAttribute(ns.getURI(), localName, value);
             } else {
-                mStreamWriter.writeAttribute(prefix,
+                _streamWriter.writeAttribute(prefix,
                                              ns.getURI(), localName, value);
             }
             return;
@@ -547,7 +548,7 @@ public final class SMOutputContext
          * default namespace is never used...
          */
         if (ns == sNsEmpty) {
-            mStreamWriter.writeAttribute(localName, value);
+            _streamWriter.writeAttribute(localName, value);
             return;
         }
 
@@ -572,7 +573,7 @@ public final class SMOutputContext
             }
         }
 
-        mStreamWriter.writeAttribute(prefix, ns.getURI(), localName, value);
+        _streamWriter.writeAttribute(prefix, ns.getURI(), localName, value);
     }
 
     /**
@@ -607,9 +608,9 @@ public final class SMOutputContext
             String prefix = ns.getPreferredPrefix();
             // If no prefix preference, let's not pass one:
             if (prefix == null) {
-                mStreamWriter.writeStartElement(ns.getURI(), localName);
+                _streamWriter.writeStartElement(ns.getURI(), localName);
             } else {
-                mStreamWriter.writeStartElement(prefix, localName, ns.getURI());
+                _streamWriter.writeStartElement(prefix, localName, ns.getURI());
             }
             return mDefaultNs;
         }
@@ -667,11 +668,11 @@ public final class SMOutputContext
             }
         }
         
-        mStreamWriter.writeStartElement(prefix, localName, ns.getURI());
+        _streamWriter.writeStartElement(prefix, localName, ns.getURI());
         if (needToBind) {
             if (prefix.length() == 0) {
                 mDefaultNs = ns;
-                mStreamWriter.writeDefaultNamespace(ns.getURI());
+                _streamWriter.writeDefaultNamespace(ns.getURI());
             } else {
                 bindAndWriteNs(ns, prefix);
             }
@@ -695,7 +696,7 @@ public final class SMOutputContext
             mIndentLevelEmpty = false;
         }
 
-        mStreamWriter.writeEndElement();
+        _streamWriter.writeEndElement();
 
         /* Ok, if we are not in repairing mode, may need to unbind namespace
          * bindings for namespaces bound with matching start element
@@ -718,29 +719,29 @@ public final class SMOutputContext
     public void writeStartDocument()
         throws XMLStreamException
     {
-        mStreamWriter.writeStartDocument();
+        _streamWriter.writeStartDocument();
     }
 
     public void writeStartDocument(String version, String encoding)
         throws XMLStreamException
     {
         // note: Stax 1.0 has weird ordering for the args...
-        mStreamWriter.writeStartDocument(encoding, version);
+        _streamWriter.writeStartDocument(encoding, version);
     }
 
     public void writeStartDocument(String version, String encoding,
                                    boolean standalone)
         throws XMLStreamException
     {
-        mStreamWriter.writeStartDocument(version, encoding, standalone);
+        _streamWriter.writeStartDocument(version, encoding, standalone);
     }
 
     public void writeEndDocument()
         throws XMLStreamException
     {
-        mStreamWriter.writeEndDocument();
+        _streamWriter.writeEndDocument();
         // And finally, let's indicate stream writer about closure too...
-        mStreamWriter.close();
+        _streamWriter.close();
     }
 
     public void writeDoctypeDecl(String rootName,
@@ -751,7 +752,7 @@ public final class SMOutputContext
         if (mIndentSuppress == 0) {
             outputIndentation();
         }
-        mStreamWriter.writeDTD(rootName, systemId, publicId, intSubset);
+        _streamWriter.writeDTD(rootName, systemId, publicId, intSubset);
     }
 
     /*
@@ -761,15 +762,15 @@ public final class SMOutputContext
     */
 
     public void writeValue(boolean v) throws XMLStreamException {
-        mStreamWriter.writeBoolean(v);
+        _streamWriter.writeBoolean(v);
     }
 
     public void writeValue(int v) throws XMLStreamException {
-        mStreamWriter.writeInt(v);
+        _streamWriter.writeInt(v);
     }
 
     public void writeValue(long v) throws XMLStreamException {
-        mStreamWriter.writeLong(v);
+        _streamWriter.writeLong(v);
     }
 
     /*
@@ -780,7 +781,7 @@ public final class SMOutputContext
 
     public void flushWriter() throws XMLStreamException
     {
-        mStreamWriter.flush();
+        _streamWriter.flush();
     }
 
     /**
@@ -793,7 +794,7 @@ public final class SMOutputContext
      */
     public void closeWriterCompletely() throws XMLStreamException
     {
-        mStreamWriter.closeCompletely();
+        _streamWriter.closeCompletely();
     }
 
     /*
@@ -893,7 +894,7 @@ public final class SMOutputContext
 
         // And then write it out
         ns.bindAs(prefix);
-        mStreamWriter.writeNamespace(prefix, ns.getURI());
+        _streamWriter.writeNamespace(prefix, ns.getURI());
     }
 
     private void outputIndentation()
@@ -907,7 +908,7 @@ public final class SMOutputContext
             }
             // !!! TBI: Should have String-with-indexes method too in XMLStreamWriter2
             String ind = mIndentString.substring(0, offset);
-            mStreamWriter.writeRaw(ind);
+            _streamWriter.writeRaw(ind);
         }
     }
 }

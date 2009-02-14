@@ -12,6 +12,8 @@ import javax.xml.stream.events.XMLEvent;
 
 import org.codehaus.stax2.DTDInfo;
 import org.codehaus.stax2.XMLStreamReader2;
+import org.codehaus.stax2.typed.TypedXMLStreamException;
+import org.codehaus.stax2.typed.TypedXMLStreamReader;
 
 import org.codehaus.staxmate.util.DataUtil;
 
@@ -810,7 +812,8 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrCount");
         }
-        return _streamReader.getAttributeInfo().findAttributeIndex(uri, localName);
+        // As of stax2 v3.0, we have this method:
+        return _streamReader.getAttributeIndex(uri, localName);
     }
 
     /**
@@ -1017,20 +1020,13 @@ public abstract class SMInputCursor
      * @throws IllegalArgumentException If given attribute index is invalid
      */
     public boolean getAttrBooleanValue(int index)
-        throws NumberFormatException, XMLStreamException
+        throws XMLStreamException
     {
         if (!readerAccessible()) {
             throw _notAccessible("getAttrBooleanValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        String value = _streamReader.getAttributeValue(index);
-        try {
-            return DataUtil.parseBoolean(value);
-        } catch (IllegalArgumentException iae) {
-            throw constructStreamException("Attribute #"+index+" value not numeric: "+iae.getMessage());
-        }
+        // from Stax2 v3.0 Typed Access API:
+        return _streamReader.getAttributeAsBoolean(index);
     }
 
     /**
@@ -1055,10 +1051,12 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrBooleanValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        return DataUtil.parseBoolean(_streamReader.getAttributeValue(index), defValue);
+        // not the most efficient way, but should work:
+        try {
+            return _streamReader.getAttributeAsBoolean(index);
+        } catch (TypedXMLStreamException e) {
+            return defValue;
+        }
     }
 
     /**
@@ -1076,20 +1074,13 @@ public abstract class SMInputCursor
      *   is invalid
      */
     public int getAttrIntValue(int index)
-        throws NumberFormatException, XMLStreamException
+        throws XMLStreamException
     {
         if (!readerAccessible()) {
             throw _notAccessible("getAttrIntValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        String value = _streamReader.getAttributeValue(index);
-        try {
-            return DataUtil.parseInt(value);
-        } catch (IllegalArgumentException iae) {
-            throw constructStreamException("Attribute #"+index+" value not numeric: "+iae.getMessage());
-        }
+        // from Stax2 v3.0 Typed Access API:
+        return _streamReader.getAttributeAsInt(index);
     }
 
     /**
@@ -1114,10 +1105,13 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrIntValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        return DataUtil.parseInt(_streamReader.getAttributeValue(index), defValue);
+        // not the most efficient way, but should work:
+        try {
+            // from Stax2 v3.0 Typed Access API:
+            return _streamReader.getAttributeAsInt(index);
+        } catch (TypedXMLStreamException e) {
+            return defValue;
+        }
     }
 
     /**
@@ -1135,20 +1129,12 @@ public abstract class SMInputCursor
      *   is invalid
      */
     public long getAttrLongValue(int index)
-        throws NumberFormatException, XMLStreamException
+        throws XMLStreamException
     {
         if (!readerAccessible()) {
             throw _notAccessible("getAttrLongValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        String value = _streamReader.getAttributeValue(index);
-        try {
-            return DataUtil.parseLong(value);
-        } catch (IllegalArgumentException iae) {
-            throw constructStreamException("Attribute #"+index+" value not numeric: "+iae.getMessage());
-        }
+        return _streamReader.getAttributeAsLong(index);
     }
 
     /**
@@ -1176,7 +1162,66 @@ public abstract class SMInputCursor
         /* For now, let's just get it as String and convert: in future,
          * may be able to use more efficient access method(s)
          */
-        return DataUtil.parseLong(_streamReader.getAttributeValue(index), defValue);
+        try {
+            return _streamReader.getAttributeAsLong(index);
+        } catch (TypedXMLStreamException e) {
+            return defValue;
+        }
+    }
+
+    /**
+     * Method for accessing value of specified attribute as double.
+     * Method will only succeed if the attribute value is a valid
+     * double, as specified by XML Schema specification (and hence
+     * is accessible via Stax2 Typed Access API).
+     *
+     * @param index Index of attribute to access
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of double.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    public double getAttrDoubleValue(int index)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw _notAccessible("getAttrDoubleValue");
+        }
+        return _streamReader.getAttributeAsDouble(index);
+    }
+
+    /**
+     * Method for accessing value of specified attribute as double.
+     * If attribute value is not a valid double
+     * (as specified by XML Schema specification), will instead
+     * return specified "default value".
+     *
+     * @param index Index of attribute to access
+     * @param defValue Value to return if attribute value exists but
+     *   is not a valid double value
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of double.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    public double getAttrDoubleValue(int index, double defValue)
+        throws NumberFormatException, XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw _notAccessible("getAttrDoubleValue");
+        }
+        /* For now, let's just get it as String and convert: in future,
+         * may be able to use more efficient access method(s)
+         */
+        try {
+            return _streamReader.getAttributeAsDouble(index);
+        } catch (TypedXMLStreamException e) {
+            return defValue;
+        }
     }
 
     /*
@@ -1196,11 +1241,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrIntValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        String value = _streamReader.getAttributeValue(uri, localName);
-        return DataUtil.parseInt(value);
+        return getAttrIntValue(findAttrIndex(uri, localName));
     }
 
     /**
@@ -1214,11 +1255,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrIntValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
-        String valueStr = _streamReader.getAttributeValue(uri, localName);
-        return DataUtil.parseInt(valueStr, defValue);
+        return getAttrIntValue(findAttrIndex(uri, localName), defValue);
     }
 
     /*
@@ -1303,15 +1340,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
         }
-        /* !!! 02-Sep-2008, tatus: In future, should convert to using
-         *    Stax2 v3.0 Typed Access API. But that's only available
-         *    for StaxMate 2.0 and above.
-         */
-        try {
-            return DataUtil.parseBoolean(getElemStringValue());
-        } catch (IllegalArgumentException iae) {
-            throw constructStreamException("Element value not boolean: "+iae.getMessage());
-        }
+        return _streamReader.getElementAsBoolean();
     }
 
     /**
@@ -1327,16 +1356,12 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
         }
-        String value = getElemStringValue();
-        if (value.length() > 0) {
-            value = value.trim();
-            if (value.length() > 0) {
-                try {
-                    return DataUtil.parseBoolean(value);
-                } catch (IllegalArgumentException iae) { }
-            }
+        // not optimal, but should work:
+        try {
+            return _streamReader.getElementAsBoolean();
+        } catch (TypedXMLStreamException tse) {
+            return defValue;
         }
-        return defValue;
     }
 
     /**
@@ -1363,15 +1388,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
         }
-        /* !!! 02-Sep-2008, tatus: In future, should convert to using
-         *    Stax2 v3.0 Typed Access API. But that's only available
-         *    for StaxMate 2.0 and above.
-         */
-        try {
-            return DataUtil.parseInt(getElemStringValue());
-        } catch (IllegalArgumentException iae) {
-            throw constructStreamException("Element value not int: "+iae.getMessage());
-        }
+        return _streamReader.getElementAsInt();
     }
 
     /**
@@ -1387,16 +1404,11 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
         }
-        String value = getElemStringValue();
-        if (value.length() > 0) {
-            value = value.trim();
-            if (value.length() > 0) {
-                try {
-                    return DataUtil.parseInt(value);
-                } catch (IllegalArgumentException iae) { }
-            }
+        try {
+            return _streamReader.getElementAsInt();
+        } catch (TypedXMLStreamException tse) {
+            return defValue;
         }
-        return defValue;
     }
 
     /**
@@ -1423,15 +1435,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
         }
-        /* !!! 02-Sep-2008, tatus: In future, should convert to using
-         *    Stax2 v3.0 Typed Access API. But that's only available
-         *    for StaxMate 2.0 and above.
-         */
-        try {
-            return DataUtil.parseLong(getElemStringValue());
-        } catch (IllegalArgumentException iae) {
-            throw constructStreamException("Element value not long: "+iae.getMessage());
-        }
+        return _streamReader.getElementAsLong();
     }
 
     /**
@@ -1447,16 +1451,58 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
         }
-        String value = getElemStringValue();
-        if (value.length() > 0) {
-            value = value.trim();
-            if (value.length() > 0) {
-                try {
-                    return DataUtil.parseLong(value);
-                } catch (IllegalArgumentException iae) { }
-            }
+        try {
+            return _streamReader.getElementAsLong();
+        } catch (TypedXMLStreamException tse) {
+            return defValue;
         }
-        return defValue;
+    }
+
+    /**
+     * Method that can collect text <b>directly</b> contained within
+     * START_ELEMENT currently pointed by this cursor and convert
+     * it to a double value.
+     * For method to work, the value must be legal textual representation of
+     *<b>double</b>
+     * data type as specified by W3C Schema (as well as Stax2 Typed
+     * Access API).
+     * Element also can not contain mixed content (child elements;
+     * comments and processing instructions are allowed and ignored
+     * if encountered).
+     *
+     * @throws XMLStreamException if content is not accessible or
+     *    convertible to required return type
+     */
+    public double getElemDoubleValue()
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw _notAccessible("getElemDoubleValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw _wrongState("getElemDoubleValue", SMEvent.START_ELEMENT);
+        }
+        return _streamReader.getElementAsDouble();
+    }
+
+    /**
+     * Similar to {@link #getElemDoubleValue()}, but instead of failing
+     * on invalid value, returns given default value.
+     */
+    public double getElemDoubleValue(double defValue)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw _notAccessible("getElemDoubleValue");
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw _wrongState("getElemDoubleValue", SMEvent.START_ELEMENT);
+        }
+        try {
+            return _streamReader.getElementAsDouble();
+        } catch (TypedXMLStreamException tse) {
+            return defValue;
+        }
     }
 
     /*
@@ -1520,9 +1566,10 @@ public abstract class SMInputCursor
      * SMInputCursor positionedRoot = smFactory.rootElementCursor(file).advance();
      *</pre>
      * which both constructs the root element cursor, and positions it
-     * over the root element.
+     * over the root element. Can be similarly used with other kinds of
+     * cursors as well, of course
      *
-     * @since 1.4
+     * @since 2.0
      */
     public final SMInputCursor advance()
         throws XMLStreamException
