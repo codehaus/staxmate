@@ -502,7 +502,7 @@ public abstract class SMInputCursor
 
         XMLStreamReader2 sr = childIt._getStreamReader();
         int size = text.length() + sr.getTextLength()+ 20;
-        StringBuffer sb = new StringBuffer(Math.max(size, 100));
+        StringBuilder sb = new StringBuilder(Math.max(size, 100));
         sb.append(text);
         do {
             // Let's assume char array access is more efficient...
@@ -1292,6 +1292,7 @@ public abstract class SMInputCursor
          *   XMLStreamReader.getElementText(). Just need to take care
          *   to leave the cursor in a valid state
          */
+        /*
         SMInputCursor childIt = childCursor(SMFilterFactory.getNonIgnorableTextFilter());
         if (childIt.getNext() == null) {
             return "";
@@ -1311,6 +1312,9 @@ public abstract class SMInputCursor
         } while (childIt.getNext() != null);
 
         return sb.toString();
+        */
+
+        return _streamReader.getElementText();
     }
 
     /**

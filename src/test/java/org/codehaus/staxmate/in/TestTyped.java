@@ -76,6 +76,23 @@ public class TestTyped
     ////////////////////////////////////////////////////
     */
 
+    public void testTextElem()
+        throws XMLStreamException
+    {
+        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        String XML = "<root><a>xyz</a><b>abc</b></root>";
+        SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
+        assertEquals("root", rootc.getLocalName());
+        SMInputCursor crsr = rootc.childElementCursor().advance();
+        assertEquals("a", crsr.getLocalName());
+        assertEquals("xyz", crsr.getElemStringValue());
+        assertNotNull(crsr.getNext());
+        assertEquals("b", crsr.getLocalName());
+        assertEquals("abc", crsr.getElemStringValue());
+        assertNull(crsr.getNext());
+        assertNull(rootc.getNext());
+    }
+
     public void testTypedBooleanElem()
         throws XMLStreamException
     {
@@ -94,6 +111,7 @@ public class TestTyped
         // this would fail, if not for default:
         assertTrue(crsr.getElemBooleanValue(true));
         assertNull(crsr.getNext());
+        assertNull(rootc.getNext());
     }
 
     /*

@@ -337,6 +337,24 @@
         </junitreport>
    </target>
 
+    <!-- Running a single Unit Test -->
+    <target name="test.single" depends="test.compile">
+         <fail unless="test" message="Must define -Dtest" />
+       <!-- showoutput 'yes' to allow outputting debug msgs... -->
+        <junit fork="no" maxmemory="128M" showoutput="yes" printsummary="yes">
+          <formatter type="plain" usefile="no" />
+          <test name="${test}" />
+          <classpath refid="classpath.compile" />
+          <classpath>
+                <pathelement path="${dir.classes.main}" />
+                <pathelement location="${dir.classes.test}" /> 
+                <path refid="junit-libs"/>
+                <path refid="woodstox-libs"/>
+          </classpath>     
+        </junit>
+    </target>
+
+
     <!--*********************************************************************-->
     <!-- Tasks for Code coverage analysis (using Cobertura) -->
     <!--*********************************************************************-->
