@@ -77,7 +77,7 @@ public class TestPartialTraversal
   // you had a child, but hadn't traversed it?
   // True enough, State.INITIAL in skipTree needed a call to skipSubTree(0);
   // Some additional restructuring as you could not enter the
-  // 'if (mState == State.HAS_CHILD)' line due to changing mState = State.CLOSED two lines earlier
+  // 'if (_state == State.HAS_CHILD)' line due to changing _state = State.CLOSED two lines earlier
   //  These changes result in patch1.
 
   // Works initially...

@@ -35,18 +35,18 @@ public final class SMOutputFactory
     /**
      * Xml output stream factory used for constructing stream readers.
      */
-    final XMLOutputFactory mStaxFactory;
+    final XMLOutputFactory _staxFactory;
 
     /**
      * If the configured stax factory implements Stax2 API,
      * will contain upcast factory instance, otherwise null.
      */
-    final XMLOutputFactory2 mStax2Factory;
+    final XMLOutputFactory2 _stax2Factory;
 
     public SMOutputFactory(XMLOutputFactory staxF)
     {
-        mStaxFactory = staxF;
-        mStax2Factory = (staxF instanceof XMLOutputFactory2) ?
+        _staxFactory = staxF;
+        _stax2Factory = (staxF instanceof XMLOutputFactory2) ?
             (XMLOutputFactory2) staxF : null;
     }
 
@@ -61,7 +61,7 @@ public final class SMOutputFactory
      * output factory was constructed with. Factory can be configured
      * using normal property-based configuration methods.
      */
-    public XMLOutputFactory getStaxFactory() { return mStaxFactory; }
+    public XMLOutputFactory getStaxFactory() { return _staxFactory; }
 
     /*
     ////////////////////////////////////////////////////
@@ -283,12 +283,12 @@ public final class SMOutputFactory
     public XMLStreamWriter2 createStax2Writer(File f)
         throws XMLStreamException
     {
-        if (mStax2Factory != null) {
+        if (_stax2Factory != null) {
             /* have real stax2 factory; can create more optimal writer
              * (most importantly: one that automatically closes the writer)
              */
             Stax2FileResult res = new Stax2FileResult(f);
-            return (XMLStreamWriter2) mStax2Factory.createXMLStreamWriter(res);
+            return (XMLStreamWriter2) _stax2Factory.createXMLStreamWriter(res);
         }
         /* No, just stax1 factory. Could use StreamResult; but some
          * impls might not recognize it... immediate problem here:
@@ -296,7 +296,7 @@ public final class SMOutputFactory
          */
         try {
             FileOutputStream out = new FileOutputStream(f);
-            return Stax2WriterAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamWriter(out));
+            return Stax2WriterAdapter.wrapIfNecessary(_staxFactory.createXMLStreamWriter(out));
         } catch (FileNotFoundException fex) {
             throw new XMLStreamException(fex);
         }
@@ -313,7 +313,7 @@ public final class SMOutputFactory
     public XMLStreamWriter2 createStax2Writer(OutputStream out)
         throws XMLStreamException
     {
-        return Stax2WriterAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamWriter(out));
+        return Stax2WriterAdapter.wrapIfNecessary(_staxFactory.createXMLStreamWriter(out));
     }
 
     /**
@@ -327,7 +327,7 @@ public final class SMOutputFactory
     public XMLStreamWriter2 createStax2Writer(Writer w)
         throws XMLStreamException
     {
-        return Stax2WriterAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamWriter(w));
+        return Stax2WriterAdapter.wrapIfNecessary(_staxFactory.createXMLStreamWriter(w));
     }
 
     /*

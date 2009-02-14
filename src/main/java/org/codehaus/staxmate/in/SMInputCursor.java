@@ -164,11 +164,11 @@ public abstract class SMInputCursor
          */
         if (parent == null) {
             mElemTracking = Tracking.NONE;
-            mParentTrackedElement = null;
+            _parentTrackedElement = null;
             mElemInfoFactory = null;
         } else {
             mElemTracking = parent.getElementTracking();
-            mParentTrackedElement = parent.getTrackedElement();
+            _parentTrackedElement = parent.getTrackedElement();
             mElemInfoFactory = parent.getElementInfoFactory();
         }
     }
@@ -227,7 +227,7 @@ public abstract class SMInputCursor
      * @return Number of nodes (events) cursor has traversed
      */
     public int getNodeCount() {
-        return mNodeCount;
+        return _nodeCount;
     }
 
     /**
@@ -241,7 +241,7 @@ public abstract class SMInputCursor
      * @return Number of start elements cursor has traversed
      */
     public int getElementCount() {
-        return mElemCount;
+        return _elemCount;
     }
 
     /**
@@ -298,7 +298,7 @@ public abstract class SMInputCursor
      *   a valid event), or null if neither.
      */
     public SMEvent getCurrEvent() {
-        return mCurrEvent;
+        return _currEvent;
     }
 
     /**
@@ -308,7 +308,7 @@ public abstract class SMInputCursor
      * (like {@link XMLStreamConstants#START_ELEMENT}).
      */
     public int getCurrEventCode() {
-        return (mCurrEvent == null) ? 0 : mCurrEvent.getEventCode();
+        return (_currEvent == null) ? 0 : _currEvent.getEventCode();
     }
 
     /**
@@ -333,7 +333,7 @@ public abstract class SMInputCursor
      *    last iterated over when tracking has been enabled.
      */
     public SMElementInfo getTrackedElement() {
-        return mTrackedElement;
+        return _trackedElement;
     }
 
     /**
@@ -342,7 +342,7 @@ public abstract class SMInputCursor
      *    information.
      */
     public SMElementInfo getParentTrackedElement() {
-        return mParentTrackedElement;
+        return _parentTrackedElement;
     }
 
     /*
@@ -365,7 +365,7 @@ public abstract class SMInputCursor
      * @return True if the cursor is currently valid; false if not
      */
     public final boolean readerAccessible() {
-        return (mState == State.ACTIVE);
+        return (_state == State.ACTIVE);
     }
 
     /**
@@ -1595,19 +1595,19 @@ public abstract class SMInputCursor
     public SMInputCursor childCursor(SMFilter f)
         throws XMLStreamException
     {
-        if (mState != State.ACTIVE) {
-            if (mState == State.HAS_CHILD) {
+        if (_state != State.ACTIVE) {
+            if (_state == State.HAS_CHILD) {
                 throw new IllegalStateException("Child cursor already requested.");
             }
             throw new IllegalStateException("Can not iterate children: cursor does not point to a start element (state "+getStateDesc()+")");
         }
-        if (mCurrEvent != SMEvent.START_ELEMENT) {
-            throw new IllegalStateException("Can not iterate children: cursor does not point to a start element (pointing to "+mCurrEvent+")");
+        if (_currEvent != SMEvent.START_ELEMENT) {
+            throw new IllegalStateException("Can not iterate children: cursor does not point to a start element (pointing to "+_currEvent+")");
         }
 
-        mChildCursor = constructChildCursor(f);
-        mState = State.HAS_CHILD;
-        return mChildCursor;
+        _childCursor = constructChildCursor(f);
+        _state = State.HAS_CHILD;
+        return _childCursor;
     }
 
     /**
@@ -1653,19 +1653,19 @@ public abstract class SMInputCursor
     public SMInputCursor descendantCursor(SMFilter f)
         throws XMLStreamException
     {
-        if (mState != State.ACTIVE) {
-            if (mState == State.HAS_CHILD) {
+        if (_state != State.ACTIVE) {
+            if (_state == State.HAS_CHILD) {
                 throw new IllegalStateException("Child cursor already requested.");
             }
             throw new IllegalStateException("Can not iterate children: cursor does not point to a start element (state "+getStateDesc()+")");
         }
-        if (mCurrEvent != SMEvent.START_ELEMENT) {
-            throw new IllegalStateException("Can not iterate children: cursor does not point to a start element (pointing to "+mCurrEvent+")");
+        if (_currEvent != SMEvent.START_ELEMENT) {
+            throw new IllegalStateException("Can not iterate children: cursor does not point to a start element (pointing to "+_currEvent+")");
         }
 
-        mChildCursor = constructDescendantCursor(f);
-        mState = State.HAS_CHILD;
-        return mChildCursor;
+        _childCursor = constructDescendantCursor(f);
+        _state = State.HAS_CHILD;
+        return _childCursor;
     }
 
     /**
@@ -1849,7 +1849,7 @@ public abstract class SMInputCursor
          */
         SMElementInfo curr = getTrackedElement();
         if (curr != null && getCurrEvent() == SMEvent.START_ELEMENT) {
-            appendPathDesc(sb, mTrackedElement, false);
+            appendPathDesc(sb, _trackedElement, false);
         } else {
             sb.append("/*[n").append(getNodeCount()).append(']');
         }
@@ -1877,7 +1877,7 @@ public abstract class SMInputCursor
     }
 
     protected String getCurrEventDesc() {
-        return (mCurrEvent == null) ? "[null]" : mCurrEvent.toString();
+        return (_currEvent == null) ? "[null]" : _currEvent.toString();
     }
 
     /**
@@ -1920,7 +1920,7 @@ public abstract class SMInputCursor
         XMLStreamReader2 sr = _streamReader;
         return new DefaultElementInfo(parent, prevSibling,
                                       sr.getPrefix(), sr.getNamespaceURI(), sr.getLocalName(),
-                                      mNodeCount-1, mElemCount-1, getDepth());
+                                      _nodeCount-1, _elemCount-1, getDepth());
     }
 
     /**

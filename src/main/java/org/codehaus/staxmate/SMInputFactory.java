@@ -44,18 +44,18 @@ public final class SMInputFactory
     /**
      * Xml input stream factory used for constructing stream readers.
      */
-    final XMLInputFactory mStaxFactory;
+    final XMLInputFactory _staxFactory;
 
     /**
      * If the configured stax input factory implements Stax2 API,
      * will contain upcast factory instance, otherwise null.
      */
-    final XMLInputFactory2 mStax2Factory;
+    final XMLInputFactory2 _stax2Factory;
 
     public SMInputFactory(XMLInputFactory staxF)
     {
-        mStaxFactory = staxF;
-        mStax2Factory = (staxF instanceof XMLInputFactory2) ?
+        _staxFactory = staxF;
+        _stax2Factory = (staxF instanceof XMLInputFactory2) ?
             (XMLInputFactory2) staxF : null;
     }
 
@@ -65,7 +65,7 @@ public final class SMInputFactory
     /////////////////////////////////////////////////
      */
 
-    public XMLInputFactory getStaxFactory() { return mStaxFactory; }
+    public XMLInputFactory getStaxFactory() { return _staxFactory; }
 
     /*
     /////////////////////////////////////////////////
@@ -141,11 +141,11 @@ public final class SMInputFactory
     public XMLStreamReader2 createStax2Reader(URL url)
         throws XMLStreamException
     {
-        if (mStax2Factory != null) {
-            return mStax2Factory.createXMLStreamReader(url);
+        if (_stax2Factory != null) {
+            return _stax2Factory.createXMLStreamReader(url);
         }
         try {
-            XMLStreamReader sr = mStaxFactory.createXMLStreamReader(url.toExternalForm(), url.openStream());
+            XMLStreamReader sr = _staxFactory.createXMLStreamReader(url.toExternalForm(), url.openStream());
             return Stax2ReaderAdapter.wrapIfNecessary(sr);
         } catch (IOException ioe) {
             throw new XMLStreamException(ioe);
@@ -160,13 +160,13 @@ public final class SMInputFactory
 	public XMLStreamReader2 createStax2Reader(File f)
         throws XMLStreamException
     {
-        if (mStax2Factory != null) {
-            return mStax2Factory.createXMLStreamReader(f);
+        if (_stax2Factory != null) {
+            return _stax2Factory.createXMLStreamReader(f);
         }
         try {
             @SuppressWarnings("deprecation")
             String sysId = f.toURL().toExternalForm();
-            XMLStreamReader sr = mStaxFactory.createXMLStreamReader(sysId, new FileInputStream(f));
+            XMLStreamReader sr = _staxFactory.createXMLStreamReader(sysId, new FileInputStream(f));
             return Stax2ReaderAdapter.wrapIfNecessary(sr);
         } catch (IOException ioe) {
             throw new XMLStreamException(ioe);
@@ -182,11 +182,11 @@ public final class SMInputFactory
         throws XMLStreamException
     {
         Stax2ByteArraySource src = new Stax2ByteArraySource(data, offset, len);
-        if (mStax2Factory != null) {
-            return (XMLStreamReader2) mStax2Factory.createXMLStreamReader(src);
+        if (_stax2Factory != null) {
+            return (XMLStreamReader2) _stax2Factory.createXMLStreamReader(src);
         }
         try {
-            XMLStreamReader sr = mStaxFactory.createXMLStreamReader(src.constructInputStream());
+            XMLStreamReader sr = _staxFactory.createXMLStreamReader(src.constructInputStream());
             return Stax2ReaderAdapter.wrapIfNecessary(sr);
         } catch (IOException ioe) {
             throw new XMLStreamException(ioe);
@@ -208,7 +208,7 @@ public final class SMInputFactory
     public XMLStreamReader2 createStax2Reader(InputStream in)
         throws XMLStreamException
     {
-        return Stax2ReaderAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamReader(in));
+        return Stax2ReaderAdapter.wrapIfNecessary(_staxFactory.createXMLStreamReader(in));
     }
 
     /**
@@ -226,7 +226,7 @@ public final class SMInputFactory
     public XMLStreamReader2 createStax2Reader(Reader r)
         throws XMLStreamException
     {
-        return Stax2ReaderAdapter.wrapIfNecessary(mStaxFactory.createXMLStreamReader(r));
+        return Stax2ReaderAdapter.wrapIfNecessary(_staxFactory.createXMLStreamReader(r));
     }
 
     /*

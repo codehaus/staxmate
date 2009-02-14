@@ -65,7 +65,7 @@ abstract class CursorBase
      * This is the mapping array, indexed by Stax 1.0 event type integer
      * code, value being matching {@link SMEvent} enumeration value.
      */
-    private final static SMEvent[] sEventsByIds =
+    private final static SMEvent[] EVENTS_BY_IDS =
         SMEvent.constructIdToEventMapping();
 
     /*
@@ -94,26 +94,26 @@ abstract class CursorBase
     /**
      * Current state of the cursor.
      */
-    protected State mState = State.INITIAL;
+    protected State _state = State.INITIAL;
 
     /**
      * Event that this cursor currently points to, if valid, or
      * it last pointed to if not (including null if cursor has not
      * yet been advanced).
      */
-    protected SMEvent mCurrEvent = null;
+    protected SMEvent _currEvent = null;
 
     /**
      * Number of nodes iterated over by this cursor, including the
      * current one.
      */
-    protected int mNodeCount = 0;
+    protected int _nodeCount = 0;
 
     /**
      * Number of start elements iterated over by this cursor, including the
      * current one.
      */
-    protected int mElemCount = 0;
+    protected int _elemCount = 0;
 
     /**
      * Element that was last "tracked"; element over which cursor was
@@ -123,13 +123,13 @@ abstract class CursorBase
      * or not; if it's not, either child cursor is active, or this
      * cursor points to a non-start-element node.
      */
-    protected SMElementInfo mTrackedElement = null;
+    protected SMElementInfo _trackedElement = null;
 
     /**
      * Element that the parent of this cursor tracked (if any),
      * when this cursor was created.
      */
-    protected SMElementInfo mParentTrackedElement = null;
+    protected SMElementInfo _parentTrackedElement = null;
 
     /**
      * Cursor that has been opened for iterating child nodes of the
@@ -137,7 +137,7 @@ abstract class CursorBase
      * cursor hierarchy synchronized, independent of which ones are
      * traversed.
      */
-    protected SMInputCursor mChildCursor = null;
+    protected SMInputCursor _childCursor = null;
 
     /*
     ////////////////////////////////////////////
@@ -206,8 +206,8 @@ abstract class CursorBase
     protected final void rewindPastChild()
         throws XMLStreamException
     {
-        final SMInputCursor child = mChildCursor;
-        mChildCursor = null;
+        final SMInputCursor child = _childCursor;
+        _childCursor = null;
 
         child.invalidate();
 
@@ -243,13 +243,13 @@ abstract class CursorBase
     protected void invalidate()
         throws XMLStreamException
     {
-        mState = State.CLOSED;
-        mCurrEvent = null;
+        _state = State.CLOSED;
+        _currEvent = null;
 
         // child cursor(s) to delegate skipping to?
-        if (mChildCursor != null) {
-            mChildCursor.invalidate();
-            mChildCursor = null;
+        if (_childCursor != null) {
+            _childCursor.invalidate();
+            _childCursor = null;
         }
     }
 
@@ -276,7 +276,7 @@ abstract class CursorBase
      */
     protected final static SMEvent eventObjectByEventId(int type)
     {
-        return sEventsByIds[type];
+        return EVENTS_BY_IDS[type];
     }
 
     /**
@@ -290,7 +290,7 @@ abstract class CursorBase
     protected XMLStreamException _notAccessible(String method)
         throws XMLStreamException
     {
-        if (mChildCursor != null) {
+        if (_childCursor != null) {
             return constructStreamException("Can not call '"+method+"(): cursor does not point to a valid node, as it has an active open child cursor.");
         }
         return constructStreamException("Can not call '"+method+"(): cursor does not point to a valid node (curr event "+getCurrEventDesc()+"; cursor state "
@@ -304,7 +304,7 @@ abstract class CursorBase
     }
 
     protected String getStateDesc() {
-        return mState.toString();
+        return _state.toString();
     }
 
     /**
@@ -317,7 +317,7 @@ abstract class CursorBase
      */
     protected String currentEventStr()
     {
-        return (mCurrEvent == null) ? "null" : mCurrEvent.toString();
+        return (_currEvent == null) ? "null" : _currEvent.toString();
     }
 
     void _throwUnexpectedEndDoc()
@@ -334,7 +334,7 @@ abstract class CursorBase
 
     @Override
     public String toString() {
-        return "{" + getClass().getName()+": "+mState+", curr evt: "
-            +mCurrEvent+"}";
+        return "{" + getClass().getName()+": "+_state+", curr evt: "
+            +_currEvent+"}";
     }
 }

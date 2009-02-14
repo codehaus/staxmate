@@ -44,19 +44,19 @@ public class SMHierarchicCursor
     public SMEvent getNext()
         throws XMLStreamException
     {
-        if (mState == State.CLOSED) {
+        if (_state == State.CLOSED) {
             return null;
         }
         // If there is a child cursor, it has to be traversed through
-        if (mState == State.HAS_CHILD) {
+        if (_state == State.HAS_CHILD) {
             // After this, we'll be located at END_ELEMENT
             rewindPastChild();
-            mState = State.ACTIVE;
-        } else if (mState == State.INITIAL) {
-            mState = State.ACTIVE;
+            _state = State.ACTIVE;
+        } else if (_state == State.INITIAL) {
+            _state = State.ACTIVE;
         } else { // active
             // If we had a start element, need to skip the subtree...
-            if (mCurrEvent == SMEvent.START_ELEMENT) {
+            if (_currEvent == SMEvent.START_ELEMENT) {
                 skipToEndElement();
             }
         }
@@ -79,18 +79,18 @@ public class SMHierarchicCursor
             } else {
                 type = _streamReader.next();
             }
-            ++mNodeCount;
+            ++_nodeCount;
             if (type == XMLStreamConstants.END_ELEMENT) {
                 break;
             }
             if (type == XMLStreamConstants.START_ELEMENT) {
-                ++mElemCount;
+                ++_elemCount;
             } else if (type == XMLStreamConstants.END_DOCUMENT) {
                 // just a sanity check; shouldn't really be needed
                 _throwUnexpectedEndDoc();
             }
             SMEvent evt = eventObjectByEventId(type);
-            mCurrEvent = evt;
+            _currEvent = evt;
             
             // Ok, are we interested in this event?
             if (mFilter != null && !mFilter.accept(evt, this)) {
@@ -99,7 +99,7 @@ public class SMHierarchicCursor
                  */
                 if (type == XMLStreamConstants.START_ELEMENT) {
                     if (mElemTracking == Tracking.ALL_SIBLINGS) {
-                        mTrackedElement = constructElementInfo(mParentTrackedElement, mTrackedElement);
+                        _trackedElement = constructElementInfo(_parentTrackedElement, _trackedElement);
                     }
                     skipToEndElement();
                 }
@@ -108,15 +108,15 @@ public class SMHierarchicCursor
             
             // Need to update tracked element?
             if (type == XMLStreamConstants.START_ELEMENT && mElemTracking != Tracking.NONE) {
-                SMElementInfo prev = (mElemTracking == Tracking.PARENTS) ? null : mTrackedElement;
-                mTrackedElement = constructElementInfo(mParentTrackedElement, prev);
+                SMElementInfo prev = (mElemTracking == Tracking.PARENTS) ? null : _trackedElement;
+                _trackedElement = constructElementInfo(_parentTrackedElement, prev);
             }
             return evt;
         }
 
         // Ok, no more events
-        mState = State.CLOSED;
-        mCurrEvent = null;
+        _state = State.CLOSED;
+        _currEvent = null;
         return null;
     }
 

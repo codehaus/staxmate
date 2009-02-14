@@ -51,11 +51,11 @@ public class SMFlatteningCursor
          * at time when child cursor was created, which is the latest
          * node this cursor traversed over.
          */
-        if (mChildCursor != null) {
-            return mChildCursor.getBaseParentCount();
+        if (_childCursor != null) {
+            return _childCursor.getBaseParentCount();
         }
         // No event yet, or we are closed? base depth is ok then
-        if (mCurrEvent == null) {
+        if (_currEvent == null) {
             return _baseDepth;
         }
 
@@ -63,8 +63,8 @@ public class SMFlatteningCursor
          * off by one for both START_ELEMENT and END_ELEMENT.
          */
         int depth = _streamReader.getDepth();
-        if (mCurrEvent == SMEvent.START_ELEMENT
-            || mCurrEvent == SMEvent.END_ELEMENT) {
+        if (_currEvent == SMEvent.START_ELEMENT
+            || _currEvent == SMEvent.END_ELEMENT) {
             --depth;
         }
         return depth;
@@ -79,19 +79,19 @@ public class SMFlatteningCursor
     public SMEvent getNext()
         throws XMLStreamException
     {
-        if (mState == State.CLOSED) {
+        if (_state == State.CLOSED) {
             return null;
         }
 
         /* If there is a child cursor, it has to be traversed
          * through
          */
-        if (mState == State.HAS_CHILD) {
+        if (_state == State.HAS_CHILD) {
             // After this, we'll be located at END_ELEMENT
             rewindPastChild();
-            mState = State.ACTIVE;
-        } else if (mState == State.INITIAL) {
-            mState = State.ACTIVE;
+            _state = State.ACTIVE;
+        } else if (_state == State.INITIAL) {
+            _state = State.ACTIVE;
         } // nothing to do if we are active
         while (true) {
             int type;
@@ -115,7 +115,7 @@ public class SMFlatteningCursor
                 type = _streamReader.next();
             }
 
-            ++mNodeCount;
+            ++_nodeCount;
 
             if (type == XMLStreamConstants.END_ELEMENT) {
                 /* Base depth was depth at START_ELEMENT, Stax2.getDepth()
@@ -130,7 +130,7 @@ public class SMFlatteningCursor
                     break;
                 }
             } else if (type == XMLStreamConstants.START_ELEMENT) {
-                ++mElemCount;
+                ++_elemCount;
 
                 /* !!! 24-Oct-2007, tatus: This sanity check really
                  *   shouldn't be needed any more... but let's leave
@@ -141,7 +141,7 @@ public class SMFlatteningCursor
             }
 
             SMEvent evt = eventObjectByEventId(type);
-            mCurrEvent = evt;
+            _currEvent = evt;
 
             // Ok, are we interested in this event?
             if (mFilter != null && !mFilter.accept(evt, this)) {
@@ -150,8 +150,8 @@ public class SMFlatteningCursor
                 // May still need to create the tracked element?
                 if (type == XMLStreamConstants.START_ELEMENT) { 
                     if (mElemTracking == Tracking.ALL_SIBLINGS) {
-                        mTrackedElement = constructElementInfo
-                            (mParentTrackedElement, mTrackedElement);
+                        _trackedElement = constructElementInfo
+                            (_parentTrackedElement, _trackedElement);
                     }
                 }
                 continue;
@@ -161,16 +161,16 @@ public class SMFlatteningCursor
             if (type == XMLStreamConstants.START_ELEMENT
                 && mElemTracking != Tracking.NONE) {
                 SMElementInfo prev = (mElemTracking == Tracking.PARENTS) ?
-                    null : mTrackedElement;
-                mTrackedElement = constructElementInfo
-                    (mParentTrackedElement, prev);
+                    null : _trackedElement;
+                _trackedElement = constructElementInfo
+                    (_parentTrackedElement, prev);
             }
             return evt;
         }
 
         // Ok, no more events
-        mState = State.CLOSED;
-        mCurrEvent = null;
+        _state = State.CLOSED;
+        _currEvent = null;
         return null;
     }
 
