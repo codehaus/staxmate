@@ -346,6 +346,25 @@ public abstract class SMOutputContainer
         }
     }
 
+    /**
+     * Typed output method for outputting
+     * double value
+     * as (textual) xml content.
+     * Equivalent to calling
+     * <code>addCharacters(String.valueOf(value))</code>
+     * but likely more efficient (with streams that support Typed Access API)
+     * as well as more explicit semantically.
+     */
+    public void addValue(double value)
+        throws XMLStreamException
+    {
+        if (canOutputNewChild()) {
+            _context.writeValue(value);
+        } else {
+            _linkNewChild(_context.createValue(value));
+        }
+    }
+
     /*
     ////////////////////////////////////////////////////////
     // Output methods for Elements, attributes, buffered

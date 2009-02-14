@@ -19,6 +19,7 @@ public abstract class SMOTypedValue
     public static SMOTypedValue create(boolean value) { return new BooleanValue(value); }
     public static SMOTypedValue create(int value) { return new IntValue(value); }
     public static SMOTypedValue create(long value) { return new LongValue(value); }
+    public static SMOTypedValue create(double value) { return new DoubleValue(value); }
 
     protected abstract boolean doOutput(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException;
@@ -60,6 +61,19 @@ public abstract class SMOTypedValue
         final long _value;
 
         LongValue(long v) { _value = v; }
+        
+        protected boolean doOutput(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
+        {
+            ctxt.writeValue(_value);
+            return true;
+        }
+    }
+
+    private final static class DoubleValue extends SMOTypedValue
+    {
+        final double _value;
+
+        DoubleValue(double v) { _value = v; }
         
         protected boolean doOutput(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
         {

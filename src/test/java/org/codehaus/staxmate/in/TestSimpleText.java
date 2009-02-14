@@ -33,4 +33,13 @@ public class TestSimpleText
             assertEquals(text,valText);
         }
     }
+
+    public void testCollectText()
+        throws XMLStreamException
+    {
+        String XML = "<root>Some<?proc instr?> <foo>text</foo> to <![CDATA[collect]]>.</root>";
+        XMLStreamReader sr = XMLInputFactory.newInstance().createXMLStreamReader(new StringReader(XML));
+        SMInputCursor rootc = SMInputFactory.rootElementCursor(sr).advance();
+        assertEquals("Some text to collect.", rootc.collectDescendantText(true));
+    }
 }

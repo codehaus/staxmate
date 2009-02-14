@@ -378,6 +378,10 @@ public final class SMOutputContext
         return SMOTypedValue.create(value);
     }
 
+    public SMOutputtable createValue(double value) {
+        return SMOTypedValue.create(value);
+    }
+
     /*
     //////////////////////////////////////////////////////
     // Namespace handling
@@ -771,6 +775,10 @@ public final class SMOutputContext
 
     public void writeValue(long v) throws XMLStreamException {
         _streamWriter.writeLong(v);
+    }
+
+    public void writeValue(double d) throws XMLStreamException {
+        _streamWriter.writeDouble(d);
     }
 
     /*
