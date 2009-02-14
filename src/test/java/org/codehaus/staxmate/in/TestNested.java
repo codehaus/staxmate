@@ -5,7 +5,6 @@ import java.io.*;
 import javax.xml.stream.*;
 
 import org.codehaus.staxmate.SMInputFactory;
-import org.codehaus.staxmate.in.*;
 
 /**
  * Basic unit tests for verifying that traversal using nested cursors
@@ -139,7 +138,7 @@ public class TestNested
             assertEquals(1, ptCursor.getParentCount());
             assertElem(ptCursor, null, "pt");
             assertNotNull("Should be able to find attribute 'name' (current event: "
-                          +ptCursor.getCurrEvent()+", location "+ptCursor.getLocation()+")", ptCursor.getAttrValue("name"));
+                          +ptCursor.getCurrEvent()+", location "+ptCursor.getCursorLocation()+")", ptCursor.getAttrValue("name"));
             SMInputCursor propCursor = ptCursor.childElementCursor();
             while (propCursor.getNext() != null) {
                 assertEquals(2, propCursor.getParentCount());

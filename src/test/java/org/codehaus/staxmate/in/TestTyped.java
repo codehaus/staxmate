@@ -5,7 +5,6 @@ import java.io.*;
 import javax.xml.stream.*;
 
 import org.codehaus.staxmate.SMInputFactory;
-import org.codehaus.staxmate.in.*;
 
 /**
  * Basic unit tests to verify that typed access methods work as expected.

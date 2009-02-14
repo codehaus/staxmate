@@ -13,9 +13,6 @@ import javax.xml.stream.events.XMLEvent;
 import org.codehaus.stax2.DTDInfo;
 import org.codehaus.stax2.XMLStreamReader2;
 import org.codehaus.stax2.typed.TypedXMLStreamException;
-import org.codehaus.stax2.typed.TypedXMLStreamReader;
-
-import org.codehaus.staxmate.util.DataUtil;
 
 /**
  * Base class for reader-side cursors that form the main input side

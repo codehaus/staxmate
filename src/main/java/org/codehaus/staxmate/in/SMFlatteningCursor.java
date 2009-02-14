@@ -3,8 +3,6 @@ package org.codehaus.staxmate.in;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
-import org.codehaus.stax2.XMLStreamReader2;
-
 /**
  * Default implementation of generic flat (non-scoped) cursor; cursor
  * that traverse all descendants (children and grandchildren) of a start

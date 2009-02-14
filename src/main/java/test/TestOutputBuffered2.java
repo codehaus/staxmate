@@ -16,7 +16,7 @@ public class TestOutputBuffered2
         XMLStreamWriter xw = XMLOutputFactory.newInstance().createXMLStreamWriter(sw);
         SMOutputDocument doc = SMOutputFactory.createOutputDocument(xw);
 
-        final String NS_URI1 = "http://foo";
+        //final String NS_URI1 = "http://foo";
 
         doc.setIndentation("\n ", 1, 2);
         //SMNamespace ns = doc.getNamespace(NS_URI1, "p1");

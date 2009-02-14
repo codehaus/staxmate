@@ -1,7 +1,5 @@
 package org.codehaus.staxmate.in;
 
-import java.io.*;
-
 import javax.xml.stream.*;
 
 class BaseReaderTest

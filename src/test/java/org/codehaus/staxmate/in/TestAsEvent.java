@@ -9,8 +9,6 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import org.codehaus.staxmate.in.*;
-
 /**
  * Basic tests to verify that {@link SMInputCursor#asEvent} works as
  * expected.
@@ -33,7 +31,7 @@ public class TestAsEvent
         StartElement ee = evt.asStartElement();
         assertNotNull(ee);
         // should have no attributes
-        Iterator it = ee.getAttributes();
+        Iterator<?> it = ee.getAttributes();
         assertFalse(it.hasNext());
         // hierarchic cursors do not deliver END_ELEMENTs...
         assertNull(rootC.getNext());
@@ -73,7 +71,7 @@ public class TestAsEvent
         assertTrue(evt.isStartElement());
 
         // And exactly one attribute...
-        Iterator it = evt.asStartElement().getAttributes();
+        Iterator<?> it = evt.asStartElement().getAttributes();
         assertTrue(it.hasNext());
         Attribute attr = (Attribute)it.next();
         assertTrue(attr.isAttribute());

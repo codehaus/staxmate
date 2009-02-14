@@ -7,7 +7,6 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.*;
 
 import org.codehaus.stax2.XMLStreamWriter2;
-import org.codehaus.stax2.typed.TypedXMLStreamReader;
 
 /**
  * Class that encapsulates details about context in which StaxMate output

@@ -1,12 +1,8 @@
 package org.codehaus.staxmate.in;
 
-import java.io.InputStream;
-
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-
-import junit.framework.TestCase;
 
 import org.codehaus.staxmate.SMInputFactory;
 import org.codehaus.staxmate.in.SMFilterFactory;
@@ -143,7 +139,7 @@ public class TestPartialTraversal
     SMInputCursor c_iterator = b_iterator.childElementCursor();
     assertGotNextElementNamed(c_iterator,"A1B1C1");
     
-    SMInputCursor d_iterator = c_iterator.childElementCursor();
+    /*SMInputCursor d_iterator =*/ c_iterator.childElementCursor();
     
     assertGotNextElementNamed(b_iterator,"A1B2");
     assertNull(b_iterator.getNext());

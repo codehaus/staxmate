@@ -3,7 +3,6 @@ package org.codehaus.staxmate.in;
 import javax.xml.stream.*;
 
 import org.codehaus.staxmate.SMInputFactory;
-import org.codehaus.staxmate.in.*;
 
 /**
  * Basic unit tests for verifying that traversal using flattening

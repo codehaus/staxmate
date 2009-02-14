@@ -157,13 +157,14 @@ public final class SMInputFactory
      * of specified file, using Stax input factory
      * this StaxMate factory was constructed with.
      */
-    public XMLStreamReader2 createStax2Reader(File f)
+	public XMLStreamReader2 createStax2Reader(File f)
         throws XMLStreamException
     {
         if (mStax2Factory != null) {
             return mStax2Factory.createXMLStreamReader(f);
         }
         try {
+            @SuppressWarnings("deprecation")
             String sysId = f.toURL().toExternalForm();
             XMLStreamReader sr = mStaxFactory.createXMLStreamReader(sysId, new FileInputStream(f));
             return Stax2ReaderAdapter.wrapIfNecessary(sr);

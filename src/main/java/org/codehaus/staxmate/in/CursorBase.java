@@ -1,15 +1,8 @@
 package org.codehaus.staxmate.in;
 
-import java.io.IOException;
-import java.io.Writer;
-
-import javax.xml.namespace.QName;
-import javax.xml.stream.Location;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader; // for javadocs
 
-import org.codehaus.stax2.DTDInfo;
 import org.codehaus.stax2.XMLStreamReader2;
 
 /**
