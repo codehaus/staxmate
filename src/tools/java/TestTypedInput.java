@@ -10,7 +10,9 @@ public class TestTypedInput
     public static void main(String[] args)
         throws IOException, XMLStreamException
     {
-        SMInputFactory f = new SMInputFactory(SMInputFactory.getGlobalXMLInputFactory());
+        XMLInputFactory f0 = SMInputFactory.getGlobalXMLInputFactory();
+        System.out.println("[note: Input factory == "+f0.getClass()+"]");
+        SMInputFactory f = new SMInputFactory(f0);
         String XML =
             "<root><a>true</a><b>false</b></root>"
             ;

@@ -38,20 +38,20 @@ public final class SMOutputContext
      */
     final static int DEF_NS_STACK_SIZE = 16;
 
-    protected final static SMNamespace sNsEmpty =
+    protected final static SMNamespace NS_EMPTY =
         new SMGlobalNamespace("", XMLConstants.DEFAULT_NS_PREFIX);
-    protected final static SMNamespace sNsXml =
+    protected final static SMNamespace NS_XML =
         new SMGlobalNamespace(XMLConstants.XML_NS_PREFIX,
                               XMLConstants.XML_NS_URI);
-    protected final static SMNamespace sNsXmlns =
+    protected final static SMNamespace NS_XMLNS =
         new SMGlobalNamespace(XMLConstants.XMLNS_ATTRIBUTE,
                               XMLConstants.XMLNS_ATTRIBUTE_NS_URI);
     
     final static HashMap<String,SMNamespace> sGlobalNsMap = new HashMap<String, SMNamespace>();
     static {
-        sGlobalNsMap.put(sNsEmpty.getURI(), sNsEmpty);
-        sGlobalNsMap.put(sNsXml.getURI(), sNsXml);
-        sGlobalNsMap.put(sNsXmlns.getURI(), sNsXmlns);
+        sGlobalNsMap.put(NS_EMPTY.getURI(), NS_EMPTY);
+        sGlobalNsMap.put(NS_XML.getURI(), NS_XML);
+        sGlobalNsMap.put(NS_XMLNS.getURI(), NS_XMLNS);
     }
 
     // // // We can use canonical values for some types...
@@ -66,17 +66,17 @@ public final class SMOutputContext
     */
 
     final XMLStreamWriter2 _streamWriter;
-    final NamespaceContext mRootNsContext;
-    final boolean mRepairing;
+    final NamespaceContext _rootNsContext;
+    final boolean _cfgRepairing;
 
     /**
      * Prefix to use for creating automatic namespace prefixes. For example,
      * setting this to "ns" would result in automatic prefixes of form
      * "ns1", "ns2" and so on.
      */
-    String mNsPrefixPrefix = "ns";
+    String _nsPrefixPrefix = "ns";
 
-    int mNsPrefixSeqNr = 1;
+    int _nsPrefixSeqNr = 1;
 
     /**
      * Configuration flag that specifies whether by default namespaces
@@ -85,7 +85,7 @@ public final class SMOutputContext
      * when elements are output: if false, more complicated logics is used
      * (which considers preferred prefixes, past bindings etc).
      */
-    boolean mPreferDefaultNs = false;
+    boolean _cfgPreferDefaultNs = false;
 
     /*
     //////////////////////////////////////////////////////
@@ -98,24 +98,24 @@ public final class SMOutputContext
      * that have been created for use with documents output using
      * this context.
      */
-    HashMap<String, SMNamespace> mLocalNsMap = null;
+    HashMap<String, SMNamespace> _localNsMap = null;
     
     /**
      * Currently active default namespace; one that is in effect within
      * current scope (inside currently open element, if any; if none,
      * within root level).
      */
-    SMNamespace mDefaultNs = sNsEmpty;
+    SMNamespace _defaultNs = NS_EMPTY;
 
     /**
      * Stack of bound non-default namespaces.
      */
-    SMNamespace[] mNsStack = null;
+    SMNamespace[] _nsStack = null;
 
     /**
-     * Number of bound namespaces in {@link mNsStack}
+     * Number of bound namespaces in {@link _nsStack}
      */
-    int mBoundNsCount = 0;
+    int _boundNsCount = 0;
     
     /*
     //////////////////////////////////////////////////////
@@ -128,20 +128,20 @@ public final class SMOutputContext
      * it defines the longest possible indentation String to use; subset
      * by the offset indexes as necessary.
      */
-    String mIndentString = null;
+    String _indentString = null;
 
     /**
      * Current offset within indentation String, if indenting. Basically
      * offset of the first character after end of indentation String.
      */
-    int mIndentOffset = 0;
+    int _indentOffset = 0;
 
     /**
-     * Number of characters to add to <code>mIndentOffset</code> when
+     * Number of characters to add to <code>_indentOffset</code> when
      * adding a new indentation level (and conversely, subtract when
      * closing such level).
      */
-    int mIndentStep = 0;
+    int _indentStep = 0;
 
     /**
      * Counter used to suppress indentation, for levels where text
@@ -155,7 +155,7 @@ public final class SMOutputContext
      * Since this needs to be 0 for any indentation to be output,
      * it is also used as a 'flag' to see if indentation is enabled.
      */
-    int mIndentSuppress = -1;
+    int _indentSuppress = -1;
 
     /**
      * This flag is used to prevent indentation from being added
@@ -163,7 +163,7 @@ public final class SMOutputContext
      * as empty elements, or start/end tag pair, with no intervening
      * spaces.
      */
-    boolean mIndentLevelEmpty = true;
+    boolean _indentLevelEmpty = true;
 
     /*
     //////////////////////////////////////////////////////
@@ -174,9 +174,9 @@ public final class SMOutputContext
     protected SMOutputContext(XMLStreamWriter2 sw, NamespaceContext rootNsCtxt)
     {
         _streamWriter = sw;
-        mRootNsContext = rootNsCtxt;
+        _rootNsContext = rootNsCtxt;
         Object o = sw.getProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES);
-        mRepairing = (o instanceof Boolean) && ((Boolean) o).booleanValue();
+        _cfgRepairing = (o instanceof Boolean) && ((Boolean) o).booleanValue();
     }
 
     /**
@@ -202,12 +202,12 @@ public final class SMOutputContext
      */
     public void setIndentation(String indentStr, int startOffset, int step)
     {
-        mIndentString = indentStr;
-        mIndentOffset = startOffset;
-        mIndentStep = step;
+        _indentString = indentStr;
+        _indentOffset = startOffset;
+        _indentStep = step;
 
         // Important: need to set counter to 0, starts with -1
-        mIndentSuppress = 0;
+        _indentSuppress = 0;
     }
     
     /*
@@ -390,21 +390,21 @@ public final class SMOutputContext
     public final SMNamespace getNamespace(String uri)
     {
         if (uri == null || uri.length() == 0) {
-            return sNsEmpty;
+            return NS_EMPTY;
         }
-        if (mLocalNsMap != null) {
-            SMNamespace ns = (SMNamespace) mLocalNsMap.get(uri);
+        if (_localNsMap != null) {
+            SMNamespace ns = (SMNamespace) _localNsMap.get(uri);
             if (ns != null) {
                 return ns;
             }
         }
         SMNamespace ns = (SMNamespace) sGlobalNsMap.get(uri);
         if (ns == null) {
-            ns = new SMLocalNamespace(this, uri, mPreferDefaultNs, null);
-            if (mLocalNsMap == null) {
-                mLocalNsMap = new HashMap<String,SMNamespace>();
+            ns = new SMLocalNamespace(this, uri, _cfgPreferDefaultNs, null);
+            if (_localNsMap == null) {
+                _localNsMap = new HashMap<String,SMNamespace>();
             }
-            mLocalNsMap.put(uri, ns);
+            _localNsMap.put(uri, ns);
         }
         return ns;
     }
@@ -412,28 +412,28 @@ public final class SMOutputContext
     public final SMNamespace getNamespace(String uri, String prefPrefix)
     {
         if (uri == null || uri.length() == 0) {
-            return sNsEmpty;
+            return NS_EMPTY;
         }
-        if (mLocalNsMap != null) {
-            SMNamespace ns = mLocalNsMap.get(uri);
+        if (_localNsMap != null) {
+            SMNamespace ns = _localNsMap.get(uri);
             if (ns != null) {
                 return ns;
             }
         }
         SMNamespace ns = sGlobalNsMap.get(uri);
         if (ns == null) {
-            ns = new SMLocalNamespace(this, uri, mPreferDefaultNs, prefPrefix);
-            if (mLocalNsMap == null) {
-                mLocalNsMap = new HashMap<String,SMNamespace>();
+            ns = new SMLocalNamespace(this, uri, _cfgPreferDefaultNs, prefPrefix);
+            if (_localNsMap == null) {
+                _localNsMap = new HashMap<String,SMNamespace>();
             }
-            mLocalNsMap.put(uri, ns);
+            _localNsMap.put(uri, ns);
         }
         return ns;
     }
 
     public final static SMNamespace getEmptyNamespace()
     {
-        return sNsEmpty;
+        return NS_EMPTY;
     }
 
     /*
@@ -447,7 +447,7 @@ public final class SMOutputContext
     }
     
     public final boolean isWriterRepairing() {
-        return mRepairing;
+        return _cfgRepairing;
     }
 
     /*
@@ -460,8 +460,8 @@ public final class SMOutputContext
     public void writeCharacters(String text)
         throws XMLStreamException
     {
-        if (mIndentSuppress == 0) {
-            mIndentSuppress = 1;
+        if (_indentSuppress == 0) {
+            _indentSuppress = 1;
         }
         _streamWriter.writeCharacters(text);
     }
@@ -469,8 +469,8 @@ public final class SMOutputContext
     public void writeCharacters(char[] buf, int offset, int len)
         throws XMLStreamException
     {
-        if (mIndentSuppress == 0) {
-            mIndentSuppress = 1;
+        if (_indentSuppress == 0) {
+            _indentSuppress = 1;
         }
         _streamWriter.writeCharacters(buf, offset, len);
     }
@@ -478,8 +478,8 @@ public final class SMOutputContext
     public void writeCData(String text)
         throws XMLStreamException
     {
-        if (mIndentSuppress == 0) {
-            mIndentSuppress = 1;
+        if (_indentSuppress == 0) {
+            _indentSuppress = 1;
         }
         _streamWriter.writeCData(text);
     }
@@ -487,8 +487,8 @@ public final class SMOutputContext
     public void writeCData(char[] buf, int offset, int len)
         throws XMLStreamException
     {
-        if (mIndentSuppress == 0) {
-            mIndentSuppress = 1;
+        if (_indentSuppress == 0) {
+            _indentSuppress = 1;
         }
         _streamWriter.writeCData(buf, offset, len);
     }
@@ -496,9 +496,9 @@ public final class SMOutputContext
     public void writeComment(String text)
         throws XMLStreamException
     {
-        if (mIndentSuppress == 0) {
+        if (_indentSuppress == 0) {
             outputIndentation();
-            mIndentLevelEmpty = false;
+            _indentLevelEmpty = false;
         }
         _streamWriter.writeComment(text);
     }
@@ -507,8 +507,8 @@ public final class SMOutputContext
         throws XMLStreamException
     {
         // Entity references are like text output, so:
-        if (mIndentSuppress == 0) {
-            mIndentSuppress = 1;
+        if (_indentSuppress == 0) {
+            _indentSuppress = 1;
         }
         _streamWriter.writeEntityRef(name);
     }
@@ -516,9 +516,9 @@ public final class SMOutputContext
     public void writeProcessingInstruction(String target, String data)
         throws XMLStreamException
     {
-        if (mIndentSuppress == 0) {
+        if (_indentSuppress == 0) {
             outputIndentation();
-            mIndentLevelEmpty = false;
+            _indentLevelEmpty = false;
         }
         if (data == null) {
             _streamWriter.writeProcessingInstruction(target);
@@ -533,7 +533,7 @@ public final class SMOutputContext
         /* First things first: in repairing mode this is specifically
          * easy...
          */
-        if (mRepairing) {
+        if (_cfgRepairing) {
             // If no prefix preference, let's not pass one:
             String prefix = ns.getPreferredPrefix();
             if (prefix == null) {
@@ -550,7 +550,7 @@ public final class SMOutputContext
         /* No/empty namespace is simple for attributes, though; the
          * default namespace is never used...
          */
-        if (ns == sNsEmpty) {
+        if (ns == NS_EMPTY) {
             _streamWriter.writeAttribute(localName, value);
             return;
         }
@@ -594,20 +594,20 @@ public final class SMOutputContext
         throws XMLStreamException
     {
         // Indentation?
-        if (mIndentSuppress >= 0) {
-            if (mIndentSuppress == 0) {
+        if (_indentSuppress >= 0) {
+            if (_indentSuppress == 0) {
                 outputIndentation();
-                mIndentOffset += mIndentStep;
+                _indentOffset += _indentStep;
             } else {
-                ++mIndentSuppress;
+                ++_indentSuppress;
             }
-            mIndentLevelEmpty = true;
+            _indentLevelEmpty = true;
         }
 
         /* In repairing mode we won't do binding,
          * nor keep track of them
          */
-        if (mRepairing) {
+        if (_cfgRepairing) {
             String prefix = ns.getPreferredPrefix();
             // If no prefix preference, let's not pass one:
             if (prefix == null) {
@@ -615,10 +615,10 @@ public final class SMOutputContext
             } else {
                 _streamWriter.writeStartElement(prefix, localName, ns.getURI());
             }
-            return mDefaultNs;
+            return _defaultNs;
         }
 
-        SMNamespace oldDefaultNs = mDefaultNs;
+        SMNamespace oldDefaultNs = _defaultNs;
         String prefix;
         boolean needToBind = false;
 
@@ -633,7 +633,7 @@ public final class SMOutputContext
                  * may have been masked (StaxMate never masks any explicitly
                  * bound namespace declarations)
                  */
-                if (ns == sNsEmpty) {
+                if (ns == NS_EMPTY) {
                     /* Only ends up here if the default ns is not the empty
                      * one any more... If so, need to re-bind it.
                      */
@@ -674,7 +674,7 @@ public final class SMOutputContext
         _streamWriter.writeStartElement(prefix, localName, ns.getURI());
         if (needToBind) {
             if (prefix.length() == 0) {
-                mDefaultNs = ns;
+                _defaultNs = ns;
                 _streamWriter.writeDefaultNamespace(ns.getURI());
             } else {
                 bindAndWriteNs(ns, prefix);
@@ -687,16 +687,16 @@ public final class SMOutputContext
         throws XMLStreamException
     {
         // Indentation?
-        if (mIndentSuppress >= 0) {
-	    mIndentOffset -= mIndentStep;
-            if (mIndentSuppress == 0) {
-                if (!mIndentLevelEmpty) {
+        if (_indentSuppress >= 0) {
+	    _indentOffset -= _indentStep;
+            if (_indentSuppress == 0) {
+                if (!_indentLevelEmpty) {
                     outputIndentation();
                 }
             } else {
-                --mIndentSuppress;
+                --_indentSuppress;
             }
-            mIndentLevelEmpty = false;
+            _indentLevelEmpty = false;
         }
 
         _streamWriter.writeEndElement();
@@ -704,19 +704,19 @@ public final class SMOutputContext
         /* Ok, if we are not in repairing mode, may need to unbind namespace
          * bindings for namespaces bound with matching start element
          */
-        if (!mRepairing) {
-            if (mBoundNsCount > parentNsCount) {
-                int i = mBoundNsCount;
-                mBoundNsCount = parentNsCount;
+        if (!_cfgRepairing) {
+            if (_boundNsCount > parentNsCount) {
+                int i = _boundNsCount;
+                _boundNsCount = parentNsCount;
                 while (i-- > parentNsCount) {
-                    SMNamespace ns = mNsStack[i];
-                    mNsStack[i] = null;
+                    SMNamespace ns = _nsStack[i];
+                    _nsStack[i] = null;
                     ns.unbind();
                 }
             }
         }
 
-        mDefaultNs = parentDefNs;
+        _defaultNs = parentDefNs;
     }
 
     public void writeStartDocument()
@@ -752,7 +752,7 @@ public final class SMOutputContext
                                  String intSubset)
         throws XMLStreamException
     {
-        if (mIndentSuppress == 0) {
+        if (_indentSuppress == 0) {
             outputIndentation();
         }
         _streamWriter.writeDTD(rootName, systemId, publicId, intSubset);
@@ -812,7 +812,7 @@ public final class SMOutputContext
 
     public String generateUnboundPrefix() {
         while (true) {
-            String prefix = mNsPrefixPrefix + (mNsPrefixSeqNr++);
+            String prefix = _nsPrefixPrefix + (_nsPrefixSeqNr++);
             if (!isPrefixBound(prefix)) {
                 return prefix;
             }
@@ -821,8 +821,8 @@ public final class SMOutputContext
 
     public boolean isPrefixBound(String prefix)
     {
-        for (int i = mBoundNsCount; --i >= 0; ) {
-            SMNamespace ns = mNsStack[i];
+        for (int i = _boundNsCount; --i >= 0; ) {
+            SMNamespace ns = _nsStack[i];
             if (prefix.equals(ns.getBoundPrefix())) {
                 /* Note: StaxMate never creates masking bindings, so we
                  * know it's still active
@@ -832,8 +832,8 @@ public final class SMOutputContext
         }
         /* So far so good. But perhaps it's bound in the root NamespaceContext?
          */
-        if (mRootNsContext != null) {
-            String uri = mRootNsContext.getNamespaceURI(prefix);
+        if (_rootNsContext != null) {
+            String uri = _rootNsContext.getNamespaceURI(prefix);
             if (uri != null && uri.length() > 0) {
                 return true;
             }
@@ -843,9 +843,9 @@ public final class SMOutputContext
 
     public String findRootPrefix(SMNamespace ns)
     {
-        if (mRootNsContext != null) {
+        if (_rootNsContext != null) {
             String uri = ns.getURI();
-            String prefix = mRootNsContext.getPrefix(uri);
+            String prefix = _rootNsContext.getPrefix(uri);
             /* Should seldom if ever get a match for the default NS; but
              * if we do, let's not take it.
              */
@@ -867,11 +867,11 @@ public final class SMOutputContext
      *   prefix) currently
      */
     int getNamespaceCount() {
-        return mBoundNsCount;
+        return _boundNsCount;
     }
 
     boolean isDefaultNs(SMNamespace ns) {
-        return (mDefaultNs == ns);
+        return (_defaultNs == ns);
     }
 
     /*
@@ -889,15 +889,15 @@ public final class SMOutputContext
         throws XMLStreamException
     {
         // First, mark locally the fact that it's now bound
-        SMNamespace[] stack = mNsStack;
+        SMNamespace[] stack = _nsStack;
         if (stack == null) {
-            mNsStack = stack = new SMNamespace[DEF_NS_STACK_SIZE];
-        } else if (mBoundNsCount >= stack.length) {
-            mNsStack = new SMNamespace[stack.length * 2];
-            System.arraycopy(stack, 0, mNsStack, 0, stack.length);
-            stack = mNsStack;
+            _nsStack = stack = new SMNamespace[DEF_NS_STACK_SIZE];
+        } else if (_boundNsCount >= stack.length) {
+            _nsStack = new SMNamespace[stack.length * 2];
+            System.arraycopy(stack, 0, _nsStack, 0, stack.length);
+            stack = _nsStack;
         }
-        stack[mBoundNsCount++] = ns;
+        stack[_boundNsCount++] = ns;
 
         // And then write it out
         ns.bindAs(prefix);
@@ -907,14 +907,14 @@ public final class SMOutputContext
     private void outputIndentation()
         throws XMLStreamException
     {
-        int offset = mIndentOffset;
+        int offset = _indentOffset;
         if (offset > 0) {
-            int len = mIndentString.length();
+            int len = _indentString.length();
             if (offset > len) {
                 offset = len;
             }
             // !!! TBI: Should have String-with-indexes method too in XMLStreamWriter2
-            String ind = mIndentString.substring(0, offset);
+            String ind = _indentString.substring(0, offset);
             _streamWriter.writeRaw(ind);
         }
     }

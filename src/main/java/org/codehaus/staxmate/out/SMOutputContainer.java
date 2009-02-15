@@ -427,7 +427,7 @@ public abstract class SMOutputContainer
      * Note: no attributes can be added to the returned child
      * element, because textual content has already been added.
      *
-     * @since 1.4
+     * @since 2.0
      */
     public SMOutputElement addElementWithCharacters(SMNamespace ns, String localName,
                                                     String text)

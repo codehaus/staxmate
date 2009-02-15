@@ -477,10 +477,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw _notAccessible("getText");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw constructStreamException("Can not call 'getText()' when cursor is not positioned over START_ELEMENT (current event "+currentEventStr()+")"); 
+            throw _notAccessible("collectDescendantText");
         }
         SMFilter f = includeIgnorable
             ? SMFilterFactory.getTextOnlyFilter()
@@ -526,6 +523,9 @@ public abstract class SMInputCursor
     public void processDescendantText(Writer w, boolean includeIgnorable)
         throws IOException, XMLStreamException
     {
+        if (!readerAccessible()) {
+            throw _notAccessible("processDescendantText");
+        }
         SMFilter f = includeIgnorable
             ? SMFilterFactory.getTextOnlyFilter()
             : SMFilterFactory.getNonIgnorableTextFilter();
@@ -731,7 +731,7 @@ public abstract class SMInputCursor
      * @param qname Name to compare name of current event (if any)
      *   against.
      * 
-     * @since 1.4
+     * @since 2.0
      */
     public boolean hasName(QName qname)
         throws XMLStreamException
@@ -1345,6 +1345,7 @@ public abstract class SMInputCursor
         try {
             return _streamReader.getElementAsBoolean();
         } catch (TypedXMLStreamException tse) {
+            _ensureEndElement();
             return defValue;
         }
     }
@@ -1394,6 +1395,7 @@ public abstract class SMInputCursor
         try {
             return _streamReader.getElementAsInt();
         } catch (TypedXMLStreamException tse) {
+            _ensureEndElement();
             return defValue;
         }
     }
@@ -1443,6 +1445,7 @@ public abstract class SMInputCursor
         try {
             return _streamReader.getElementAsLong();
         } catch (TypedXMLStreamException tse) {
+            _ensureEndElement();
             return defValue;
         }
     }
@@ -1492,7 +1495,26 @@ public abstract class SMInputCursor
         try {
             return _streamReader.getElementAsDouble();
         } catch (TypedXMLStreamException tse) {
+            _ensureEndElement();
             return defValue;
+        }
+    }
+
+    /**
+     * This method can be called to ensure that this cursor gets to
+     * point to END_ELEMENT that closes typed element that has been
+     * read; usually this works as expected, but during type conversion
+     * exceptions handling may not work as expected
+     */
+    private void _ensureEndElement()
+        throws XMLStreamException
+    {
+        /* !!! 14-Feb-2009, tatu: not sure what exactly to do; so for now
+         *   let's rather just assert we are at END_ELEMENT
+         */
+        int code = _streamReader.getEventType();
+        if (code != XMLStreamConstants.END_ELEMENT) {
+            throw new XMLStreamException("Excepted state to be END_ELEMENT, got "+eventObjectByEventId(code), _streamReader.getLocation());
         }
     }
 
