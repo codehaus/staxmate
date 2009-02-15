@@ -360,7 +360,7 @@ public abstract class SMInputCursor
      * invalidating the cursor that was valid at that point).
      * It is also possible that none of cursors is valid at
      * some point: this is the case when formerly valid cursor
-     * reached end of its contet (END_ELEMENT).
+     * reached end of its content (END_ELEMENT).
      *
      * @return True if the cursor is currently valid; false if not
      */
@@ -382,7 +382,7 @@ public abstract class SMInputCursor
      *
      * @return Stream reader the cursor uses for getting XML events
      */
-    public XMLStreamReader2 getStreamReader() {
+    public final XMLStreamReader2 getStreamReader() {
         return _getStreamReader();
     }
 
@@ -554,7 +554,7 @@ public abstract class SMInputCursor
         throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw _notAccessible("getName");
+            throw _notAccessible("getQName");
         }
         return _streamReader.getName();
     }
@@ -1288,32 +1288,13 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemStringValue", SMEvent.START_ELEMENT);
         }
-        /* !!! 02-Sep-2008, tatus: Should really just use
-         *   XMLStreamReader.getElementText(). Just need to take care
-         *   to leave the cursor in a valid state
+        /* 14-Feb-2009, tatu: stream reader should point at matching
+         *   END_ELEMENT after 'getElementXxx' call; and we must change
+         *   our current event from START_ELEMENT to something else
+         *   (otherwise we'll try to skip a sub-tree with next getNext()).
+         *   Not sure if END_ELEMENT is the best choice, but seems to work ok.
          */
-        /*
-        SMInputCursor childIt = childCursor(SMFilterFactory.getNonIgnorableTextFilter());
-        if (childIt.getNext() == null) {
-            return "";
-        }
-        String text = childIt.getText(); // has to be a text event
-        if (childIt.getNext() == null) {
-            return text;
-        }
-        XMLStreamReader2 sr = childIt._getStreamReader();
-        int size = text.length() + sr.getTextLength()+ 20;
-        StringBuffer sb = new StringBuffer(Math.max(size, 100));
-        sb.append(text);
-        do {
-            // Let's assume char array access is more efficient...
-            sb.append(sr.getTextCharacters(), sr.getTextStart(),
-                      sr.getTextLength());
-        } while (childIt.getNext() != null);
-
-        return sb.toString();
-        */
-
+        _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementText();
     }
 
@@ -1341,6 +1322,8 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
         }
+        // need to change curr event (see comments for getElemStringValue)
+        _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsBoolean();
     }
 
@@ -1357,6 +1340,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
         }
+        _currEvent = SMEvent.END_ELEMENT;
         // not optimal, but should work:
         try {
             return _streamReader.getElementAsBoolean();
@@ -1389,6 +1373,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
         }
+        _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsInt();
     }
 
@@ -1405,6 +1390,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
         }
+        _currEvent = SMEvent.END_ELEMENT;
         try {
             return _streamReader.getElementAsInt();
         } catch (TypedXMLStreamException tse) {
@@ -1436,6 +1422,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
         }
+        _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsLong();
     }
 
@@ -1452,6 +1439,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
         }
+        _currEvent = SMEvent.END_ELEMENT;
         try {
             return _streamReader.getElementAsLong();
         } catch (TypedXMLStreamException tse) {
@@ -1483,6 +1471,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemDoubleValue", SMEvent.START_ELEMENT);
         }
+        _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsDouble();
     }
 
@@ -1499,6 +1488,7 @@ public abstract class SMInputCursor
         if (getCurrEvent() != SMEvent.START_ELEMENT) {
             throw _wrongState("getElemDoubleValue", SMEvent.START_ELEMENT);
         }
+        _currEvent = SMEvent.END_ELEMENT;
         try {
             return _streamReader.getElementAsDouble();
         } catch (TypedXMLStreamException tse) {

@@ -15,6 +15,7 @@
     <property name="dir.src" location="${basedir}/src" />
     <property name="dir.src.java" location="${dir.src}/main/java" />
     <property name="dir.src.test" location="${dir.src}/test/java" />
+    <property name="dir.src.tools" location="${dir.src}/tools/java" />
     <!-- Libs -->
     <property name="dir.lib" location="${basedir}/lib" />
     <!-- Build-related -->
@@ -67,6 +68,7 @@
                too. This way src packages are proper supersets of binary ones
             -->
           <include name="lib/*.jar" />
+          <include name="lib/junit/*.jar" />
     </patternset>
 
 
@@ -134,7 +136,12 @@
          source="1.5" target="1.5"
         >
             <include name="org/codehaus/staxmate/**/*.java" />
-            <include name="test/**/*.java" />
+            <classpath refid="classpath.compile" />
+        </javac>
+        <javac srcdir="${dir.src.tools}" destdir="${dir.classes.main}" debug="true"
+         source="1.5" target="1.5"
+        >
+            <include name="**/*.java" />
             <classpath refid="classpath.compile" />
         </javac>
     </target>
