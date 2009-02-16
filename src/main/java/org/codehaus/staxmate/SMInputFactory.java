@@ -65,6 +65,11 @@ public final class SMInputFactory
     /////////////////////////////////////////////////
      */
 
+    /**
+     * Accessor for getting the Stax input factory that this input
+     * factory uses for constructing {@link XMLStreamReader} instances
+     * it needs.
+     */
     public XMLInputFactory getStaxFactory() { return _staxFactory; }
 
     /*
