@@ -27,16 +27,13 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
     <!-- Stax API jar is needed; 1.0.1 preferable over vanilla 1.0, since
          it contains one critical bug fix to implementation auto-detection
       -->
-    <!-- But how about Stax2 jar dependency? Should it be separately
-         modelled? (Woodstox provides it, but Sjsxp will not)
-      -->
     <dependency>
       <groupId>stax</groupId>
       <artifactId>stax-api</artifactId>
       <version>1.0.1</version>
     </dependency>
     <!-- Stax2 API (and matching RI), too, is required, not included,
-         We need version 3.x of it
+         We need version 3.x of it to get Typed Access API
       -->
     <dependency>
       <groupId>org.codehaus.woodstox</groupId>

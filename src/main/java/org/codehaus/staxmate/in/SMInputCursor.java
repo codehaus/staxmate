@@ -511,6 +511,22 @@ public abstract class SMInputCursor
     }
 
     /**
+     * Same as calling {@link #collectDescendantText(boolean)} with 'false':
+     * that is, do not include ignorable white space (as determined by DTD
+     * or Schema) in the result text.
+     *<p>
+     * Note: it is not common to have have ignorable white space; it usually
+     * results from indentation, but its detection requires DTD/schema-aware
+     * processing
+     *
+     * @since 2.0.0
+     */
+    public final String collectDescendantText() throws XMLStreamException
+    {
+        return collectDescendantText(false);
+    }
+
+    /**
      * Method similar to {@link #collectDescendantText}, but will write
      * the text to specified Writer instead of collecting it into a
      * String.
@@ -758,7 +774,7 @@ public abstract class SMInputCursor
      * @return Information about currently pointed-to input stream
      *   event, if we are pointing to one; null otherwise
      *
-     * @since 2.0
+     * @since 2.0.0
      */
     public XMLEvent asEvent()
         throws XMLStreamException
@@ -809,7 +825,7 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrCount");
         }
-        // As of stax2 v3.0, we have this method:
+        // As of stax2 v3.0 (TypedXMLStreamReader), we have this method:
         return _streamReader.getAttributeIndex(uri, localName);
     }
 
