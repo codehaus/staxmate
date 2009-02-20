@@ -62,7 +62,6 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
       <scope>test</scope>
     </dependency>
 
-
   </dependencies>
 
   <!-- Licensing -->
@@ -115,6 +114,23 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
 
     </pluginManagement>
   </build>
+
+  <!-- 20-Feb-2009, tatu: Let's default to Codehaus Maven2
+       repository for now, shorter propagation delay
+   -->
+  <repositories>
+    <repository>
+      <id>codehaus</id>
+      <name>Codehaus</name>
+      <layout>default</layout>
+      <url>http://repository.codehaus.org</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+    </repository>
+  </repositories>
 
   <!-- Let's also try to automate deployments?
   <distributionManagement>
