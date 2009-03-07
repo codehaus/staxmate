@@ -1,6 +1,6 @@
 Version: 2.0.0
 
-Release date: xx-Feb-2008
+Release date: xx-Mar-2008
 
 Description:
   Major upgrade, based on new functionality offered Stax2-api version 3.0.
@@ -17,6 +17,8 @@ New/improved functionality:
 * [STAXMATE-7]: Added "SMInputCursor.asEvent()" to allow for
   accessing stream information in a more convenient form and retaining
   it if need be.
+* [STAXMATE-8]: Added "DOMConverter", which allows building DOM trees
+  from Stax stream reader, writing DOM trees into Stax stream writers
 * [STAXMATE-22]: Added "SMInputCursor.advance()" to support more
   convenient creation of positioned root cursors.
 * Most basic Typed Access API types support for cursors as well as

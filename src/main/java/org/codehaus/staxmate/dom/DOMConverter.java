@@ -362,10 +362,8 @@ public class DOMConverter
         XMLStreamWriter2 sw = Stax2WriterAdapter.wrapIfNecessary(sw0);
 
         sw.writeStartDocument();
-
-        NsStack nsStack = NsStack.rootInstance(sw);
         for (Node child = doc.getFirstChild(); child != null; child = child.getNextSibling()) {
-            _writeNode(sw, child, nsStack);
+            _writeNode(sw, child);
         }
         sw.writeEndDocument();
         sw.close();
@@ -375,9 +373,8 @@ public class DOMConverter
         throws XMLStreamException
     {
         XMLStreamWriter2 sw = Stax2WriterAdapter.wrapIfNecessary(sw0);
-        NsStack nss = NsStack.rootInstance(sw);
         for (int i = 0, len = nodes.getLength(); i < len; ++i) {
-            _writeNode(sw, (Node) nodes.item(i), nss);
+            _writeNode(sw, (Node) nodes.item(i));
         }
     }
 
@@ -385,12 +382,12 @@ public class DOMConverter
         throws XMLStreamException
     {
         XMLStreamWriter2 sw = Stax2WriterAdapter.wrapIfNecessary(sw0);
-        _writeNode(sw, node, NsStack.rootInstance(sw));
+        _writeNode(sw, node);
     }
 
     /*
     ////////////////////////////////////////////////////////
-    // Helper methods
+    // Helper methods, property detection
     ////////////////////////////////////////////////////////
      */
 
@@ -408,19 +405,27 @@ public class DOMConverter
         return true;
     }
 
+    /* Not used, 06-Mar-2009, tatu
     protected static boolean _isRepairing(XMLStreamWriter sw)
         throws XMLStreamException
     {
         Object o = sw.getProperty(XMLOutputFactory.IS_REPAIRING_NAMESPACES);
         return (o instanceof Boolean) && ((Boolean) o).booleanValue();
     }
+    */
 
-    protected void _writeNode(XMLStreamWriter2 sw, Node node, NsStack nsStack)
+    /*
+    ////////////////////////////////////////////////////////
+    // Helper methods, output
+    ////////////////////////////////////////////////////////
+     */
+
+    protected void _writeNode(XMLStreamWriter2 sw, Node node)
         throws XMLStreamException
     {
         switch (node.getNodeType()) {
         case Node.ELEMENT_NODE:
-            _writeElement(sw, (Element) node, nsStack);
+            _writeElement(sw, (Element) node);
             break;
         case Node.TEXT_NODE:
             // Do we care about whether it's actually CDATA?
@@ -494,10 +499,9 @@ public class DOMConverter
      *
      * @param elem Element to output
      */
-    protected void _writeElement(XMLStreamWriter2 sw, Element elem, NsStack nsStack)
+    protected void _writeElement(XMLStreamWriter2 sw, Element elem)
         throws XMLStreamException
     {
-        boolean sharedNsStack = true; // flag to indicate if we need a copy
         String elemPrefix = elem.getPrefix();
         if (elemPrefix == null) {
             elemPrefix = "";
@@ -506,27 +510,11 @@ public class DOMConverter
         if (elemUri == null) {
             elemUri = "";
         }
-
-        boolean repairing = nsStack.isRepairing();
         sw.writeStartElement(elemPrefix, elem.getLocalName(), elemUri);
-        // In non-repairing mode, we need to output namespaces...
-        if (!repairing) {
-            // First, is the namespace element itself uses bound?
-            if (!nsStack.hasBinding(elemPrefix, elemUri)) {
-                nsStack = nsStack.childInstance();
-                sharedNsStack = false;
-                nsStack.addBinding(elemPrefix, elemUri);
-                if (elemPrefix.length() == 0) { //def ns
-                    sw.setDefaultNamespace(elemUri);
-                    sw.writeDefaultNamespace(elemUri);
-                } else {
-                    sw.setPrefix(elemPrefix, elemUri);
-                    sw.writeNamespace(elemPrefix, elemUri);
-                }
-            }
-        }
 
-        // And in any case, may have attributes:
+        /* And in any case, may have attributes; list also contains
+         * namespace declarations (stupid DOM)
+         */
         NamedNodeMap attrs = elem.getAttributes();
         for (int i = 0, len = attrs.getLength(); i < len; ++i) {
             Attr attr = (Attr) attrs.item(i);
@@ -539,27 +527,24 @@ public class DOMConverter
              * to the empty namespace.
              */
             if (aPrefix == null || aPrefix.length() == 0) { // no NS
-                sw.writeAttribute(ln, value);
-            } else {
-                String aNsUri = attr.getNamespaceURI();
-                // Attribute NS declared?
-                if (!repairing && !nsStack.hasBinding(aPrefix, aNsUri)) {
-                    if (sharedNsStack) {
-                        nsStack = nsStack.childInstance();
-                        sharedNsStack = false;
-                    }
-                    nsStack.addBinding(aPrefix, aNsUri);
-                    // Binding prefix is optional, but let's do it nonetheless
-                    sw.setPrefix(aPrefix, aNsUri);
-                    sw.writeNamespace(aPrefix, aNsUri);
+                if ("xmlns".equals(ln)) {
+                    sw.writeDefaultNamespace(value);
+                } else {
+                    sw.writeAttribute(ln, value);
                 }
-                sw.writeAttribute(aPrefix, aNsUri, ln, value);
+            } else {
+                // Ok: is it a namespace declaration?
+                if ("xmlns".equals(aPrefix)) {
+                    sw.writeNamespace(ln, value);
+                } else {
+                    sw.writeAttribute(aPrefix, attr.getNamespaceURI(), ln, value);
+                }
             }
         }
 
         // And then children, recursively:
         for (Node child = elem.getFirstChild(); child != null; child = child.getNextSibling()) {
-            _writeNode(sw, child, nsStack);
+            _writeNode(sw, child);
         }
 
         sw.writeEndElement();
@@ -596,81 +581,6 @@ public class DOMConverter
             sb.append(prefix).append(':').append(localName);
             _lastQName = sb.toString();
             return _lastQName;
-        }
-    }
-
-    /**
-     * Internal helper class, used for keeping track of bound namespaces.
-     * It is only needed since Dom has nasty habit of not keeping good track
-     * of changes to the namespace binding of the element itself -- all other
-     * declarations are properly stored as "additional" namespaces, and can
-     * be easily bound on output... but not this primary namespace. Yuck.
-     */
-    private final static class NsStack
-    {
-        final static String[] PREDEFS = new String[] {
-            "xml", XMLConstants.XML_NS_URI,
-            "xmlns", XMLConstants.XMLNS_ATTRIBUTE_NS_URI,
-            "", "",
-        };
-
-        final boolean _repairing;
-
-        String[] _nsData;
-
-        int _end = 0;
-
-        private NsStack(boolean repairing, String[] data, int end)
-        {
-            _repairing = repairing;
-            _nsData = data;
-            _end = end;
-        }
-
-        public static NsStack rootInstance(XMLStreamWriter2 sw)
-            throws XMLStreamException
-        {
-            return new NsStack(_isRepairing(sw), PREDEFS, PREDEFS.length);
-        }
-
-        public NsStack childInstance()
-        {
-            // Can not share array of the root instance
-            if (_nsData == PREDEFS) {
-                String[] data = new String[16];
-                System.arraycopy(_nsData, 0, data, 0, _end);
-                return new NsStack(_repairing, data, _end);
-            }
-            return new NsStack(_repairing, _nsData, _end);
-        }
-
-        public boolean isRepairing() { return _repairing; }
-
-        public boolean hasBinding(String prefix, String uri)
-        {
-            int i = _end - 2;
-            for (; i >= 0; i -= 2) {
-                if (_nsData[i].equals(prefix)) {
-                    // This is the most recent binding...
-                    return _nsData[i+1].equals(uri);
-                }
-            }
-            return false;
-        }
-
-        public void addBinding(String prefix, String uri)
-        {
-            if (prefix == null) {
-                prefix = "";
-            }
-            if (_end >= _nsData.length) {
-                String[] old = _nsData;
-                _nsData = new String[old.length * 2];
-                System.arraycopy(old, 0, _nsData, 0, old.length);
-            }
-            _nsData[_end] = prefix;
-            _nsData[_end+1] = uri;
-            _end += 2;
         }
     }
 }

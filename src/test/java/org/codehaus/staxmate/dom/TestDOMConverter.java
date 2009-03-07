@@ -99,9 +99,6 @@ public class TestDOMConverter
 
         String docStr = sw.toString();
 
-        System.err.println("DOC = '"+docStr+"'");
-
-
         XMLStreamReader sr = getCoalescingReader(docStr);
         assertTokenType(START_ELEMENT, sr.next());
 
