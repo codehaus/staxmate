@@ -18,7 +18,7 @@ import org.codehaus.staxmate.in.*;
  *<p>
  * Nested cursor are used to iterate a single level nested events,
  * so they can only traverse over immediate children of the event
- * (generally, START_ELEEMENT) that the parent cursor points to.
+ * (generally, START_ELEMENT) that the parent cursor points to.
  * Flattening cursors on the other hand traverse over all the
  * descendants (children, children of children etc) of the parent
  * START_ELEMENT. One additional difference is that the flattening

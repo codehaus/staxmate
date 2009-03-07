@@ -34,6 +34,13 @@ public abstract class BaseTest
         return f.createXMLStreamReader(new StringReader(content));
     }
 
+    protected XMLStreamWriter getSimpleWriter(Writer w)
+        throws XMLStreamException
+    {
+        XMLOutputFactory f = XMLOutputFactory.newInstance();
+        return f.createXMLStreamWriter(w);
+    }
+
     /*
     ////////////////////////////////////////////////////////
     // Assertion support

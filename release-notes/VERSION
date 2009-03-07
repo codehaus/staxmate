@@ -19,6 +19,8 @@ New/improved functionality:
   it if need be.
 * [STAXMATE-22]: Added "SMInputCursor.advance()" to support more
   convenient creation of positioned root cursors.
+* Most basic Typed Access API types support for cursors as well as
+  output elements.
 
 == History: ==
 
