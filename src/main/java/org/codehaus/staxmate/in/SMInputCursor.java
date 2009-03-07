@@ -1172,9 +1172,6 @@ public abstract class SMInputCursor
         if (!readerAccessible()) {
             throw _notAccessible("getAttrLongValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
         try {
             return _streamReader.getAttributeAsLong(index);
         } catch (TypedXMLStreamException e) {
@@ -1222,20 +1219,49 @@ public abstract class SMInputCursor
      *   is invalid
      */
     public double getAttrDoubleValue(int index, double defValue)
-        throws NumberFormatException, XMLStreamException
+        throws XMLStreamException
     {
         if (!readerAccessible()) {
             throw _notAccessible("getAttrDoubleValue");
         }
-        /* For now, let's just get it as String and convert: in future,
-         * may be able to use more efficient access method(s)
-         */
         try {
             return _streamReader.getAttributeAsDouble(index);
         } catch (TypedXMLStreamException e) {
             return defValue;
         }
     }
+
+    /**
+     * Method for accessing value of specified attribute as an
+     * Enum value of specified type, if content non-empty.
+     * If it is empty, will return null. And if non-empty value
+     * is not equal to name() of one of Enum values, will throw
+     * a {@link TypedXMLStreamException} to indicate the problem.
+     *
+     * @param index Index of attribute to access
+     *
+     * @throws XMLStreamException If specified attribute can not be
+     *   accessed (due to cursor state), or if attribute value
+     *   is not a valid textual representation of double.
+     * @throws IllegalArgumentException If given attribute index
+     *   is invalid
+     */
+    /* !!!
+    public <T extends Enum<T>> T getAttrEnumValue(int index, Class<T> enumType)
+        throws NumberFormatException, XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw _notAccessible("getAttrLongValue");
+        }
+        // For now, let's just get it as String and convert: in future,
+        // may be able to use more efficient access method(s)
+        try {
+            return _streamReader.getAttributeAsLong(index);
+        } catch (TypedXMLStreamException e) {
+            return defValue;
+        }
+    }
+    */
 
     /*
     ////////////////////////////////////////////////////
