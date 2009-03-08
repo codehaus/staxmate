@@ -5,20 +5,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.codehaus.staxmate</groupId>
   <artifactId>staxmate</artifactId>
-  <name>StaxMate</name>
   <packaging>bundle</packaging>
   <version>2.0.0-SNAPSHOT</version>
-  <description>
-StaxMate is a light-weight framework that adds convenience to streaming XML-processing  without significant additional overhead.
-It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox or Sjsxp (default Stax implementation of JDK 1.6) and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.
-</description>
-
- <!-- Contact information -->
-
-  <url>http://staxmate.codehaus.org</url>
-  <issueManagement>
-    <url>http://jira.codehaus.org/browse/STAXMATE</url>
-  </issueManagement>
 
  <!-- Dependency information -->
  
@@ -59,24 +47,9 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
 
   </dependencies>
 
-  <!-- Licensing -->
-  <licenses>
-    <license>
-      <name>BSD</name>
-      <url>http://www.opensource.org/licenses/bsd-license.php</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <organization>
-    <name>Codehaus</name>
-    <url>http://www.codehaus.org/</url>
-  </organization>
-
   <!-- Also: must specify 1.5 source level, not default -->
   <build>
-    <pluginManagement>
-      <plugins>
+    <plugins>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>  
           <configuration>
@@ -84,6 +57,37 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
             <target>1.5</target>  
           </configuration>  
         </plugin>
+
+        <!-- Plus, let's make jars OSGi bundles as well  -->
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+<!--version>2.0.0</version-->
+          <extensions>true</extensions>
+          <configuration>
+            <instructions>
+              <Bundle-Name>StaxMate</Bundle-Name>
+              <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+              <Bundle-Description>StaxMate -- Perfect companion for your stax processor</Bundle-Description>
+              <Bundle-Vendor>FasterXML.com</Bundle-Vendor>
+              <Import-Package>
+javax.xml*,
+org.w3c.dom,
+org.codehaus.stax2*
+</Import-Package>
+              <Private-Package>
+org.codehaus.staxmate.util
+</Private-Package>
+              <Export-Package>
+org.codehaus.staxmate,
+org.codehaus.staxmate.in,
+org.codehaus.staxmate.out,
+org.codehaus.staxmate.dom
+</Export-Package>
+            </instructions>
+          </configuration>
+        </plugin>
+
         <!-- Need to configure test task, to skip base classes
           -->
         <plugin>
@@ -105,34 +109,35 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
           <artifactId>maven-surefire-report-plugin</artifactId>
           <version>2.4.2</version>
         </plugin>
-        <!-- Plus, let's make jars OSGi bundles as well  -->
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-<version>2.0.0</version>
-          <extensions>true</extensions>
-          <configuration>
-            <instructions>
-              <Bundle-Name>StaxMate</Bundle-Name>
-              <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
-              <Bundle-Description>StaxMate -- Perfect companion for your stax processor</Bundle-Description>
-              <Bundle-Vendor>FasterXML.com</Bundle-Vendor>
-              <Import-Package>
-javax.xml.stream.*, org.codehaus.stax2.*
-</Import-Package>
-              <Export-Package>
-org.codehaus.staxmate,
-org.codehaus.staxmate.in,
-org.codehaus.staxmate.out,
-org.codehaus.staxmate.dom
-</Export-Package>
-            </instructions>
-          </configuration>
-        </plugin>
-      </plugins>
-
-    </pluginManagement>
+    </plugins>
   </build>
+
+  <name>StaxMate</name>
+  <description>
+StaxMate is a light-weight framework that adds convenience to streaming XML-processing  without significant additional overhead.
+It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox or Sjsxp (default Stax implementation of JDK 1.6) and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.
+</description>
+ <!-- Contact information -->
+  <url>http://staxmate.codehaus.org</url>
+  <issueManagement>
+    <url>http://jira.codehaus.org/browse/STAXMATE</url>
+  </issueManagement>
+
+  <!-- Licensing -->
+  <licenses>
+    <license>
+      <name>BSD</name>
+      <url>http://www.opensource.org/licenses/bsd-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>Codehaus</name>
+    <url>http://www.codehaus.org/</url>
+  </organization>
+
+
 
   <!-- 20-Feb-2009, tatu: Let's default to Codehaus Maven2
        repository for now, shorter propagation delay
@@ -145,15 +150,26 @@ org.codehaus.staxmate.dom
       <url>http://repository.codehaus.org</url>
       <releases>
         <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
+        <updatePolicy>daily</updatePolicy>
         <checksumPolicy>warn</checksumPolicy>
       </releases>
     </repository>
+    <repository>
+      <id>maven</id>
+      <name>Maven</name>
+      <layout>default</layout>
+      <url>http://repo1.maven.org/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+    </repository>
+
   </repositories>
 
-  <!-- Let's also try to automate deployments?
+  <!-- Let's also try to automate deployments? -->
   <distributionManagement>
   </distributionManagement>
-    -->
 
 </project>
