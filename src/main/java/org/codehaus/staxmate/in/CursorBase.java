@@ -4,11 +4,11 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
 import org.codehaus.stax2.XMLStreamReader2;
+import org.codehaus.stax2.typed.TypedXMLStreamException;
 
 /**
- * Abstract base class used to 'hide' methods so that while they are
- * available for sub-classes ({@link SMInputCursor} and its sub-classes),
- * they are not prominently visible via javadocs.
+ * Abstract base class that contains non-public methods to be used by
+ * public sub-classes ({@link SMInputCursor} and its sub-classes).
  *
  * @author Tatu Saloranta
  */
@@ -330,6 +330,11 @@ abstract class CursorBase
         throws IllegalStateException
     {
         throw new IllegalStateException("Expected to encounter END_ELEMENT with depth >= "+expDepth+", got "+actDepth);
+    }
+
+    TypedXMLStreamException _constructTypedException(String value, IllegalArgumentException rootCause, String msg)
+    {
+        return new TypedXMLStreamException(value, msg, _getStreamReader().getLocation(), rootCause);
     }
 
     @Override

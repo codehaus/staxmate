@@ -221,8 +221,12 @@ public abstract class SMInputCursor
      * Method to access number of nodes cursor has traversed
      * (including ones that were filtered out, if any).
      * Starts with 0, and is incremented each time
-     *   underlying stream reader's {@link XMLStreamReader#next} method
-     *   is called, but not counting child cursors' node counts.
+     * underlying stream reader's {@link XMLStreamReader#next} method
+     * is called, but not counting child cursors' node counts.
+     * Whether END_ELEMENTs (end tags) are included depends on type
+     * of cursor: for nested (which do not return events for end tags)
+     * they are not counted, but for flattened one (that do return)
+     * they are counted as nodes.
      *
      * @return Number of nodes (events) cursor has traversed
      */
@@ -242,14 +246,6 @@ public abstract class SMInputCursor
      */
     public int getElementCount() {
         return _elemCount;
-    }
-
-    /**
-     * @deprecated Use {@link #getParentCount()} instead
-     */
-    @Deprecated
-    public final int getDepth() {
-        return getParentCount();
     }
 
     /**
@@ -1059,7 +1055,7 @@ public abstract class SMInputCursor
      *   is invalid
      */
     public boolean getAttrBooleanValue(int index, boolean defValue)
-        throws NumberFormatException, XMLStreamException
+        throws XMLStreamException
     {
         if (!readerAccessible()) {
             throw _notAccessible("getAttrBooleanValue");
@@ -1113,7 +1109,7 @@ public abstract class SMInputCursor
      *   is invalid
      */
     public int getAttrIntValue(int index, int defValue)
-        throws NumberFormatException, XMLStreamException
+        throws XMLStreamException
     {
         if (!readerAccessible()) {
             throw _notAccessible("getAttrIntValue");
@@ -1167,7 +1163,7 @@ public abstract class SMInputCursor
      *   is invalid
      */
     public long getAttrLongValue(int index, long defValue)
-        throws NumberFormatException, XMLStreamException
+        throws  XMLStreamException
     {
         if (!readerAccessible()) {
             throw _notAccessible("getAttrLongValue");
@@ -1246,22 +1242,22 @@ public abstract class SMInputCursor
      * @throws IllegalArgumentException If given attribute index
      *   is invalid
      */
-    /* !!!
     public <T extends Enum<T>> T getAttrEnumValue(int index, Class<T> enumType)
-        throws NumberFormatException, XMLStreamException
+        throws XMLStreamException
     {
         if (!readerAccessible()) {
-            throw _notAccessible("getAttrLongValue");
+            throw _notAccessible("getAttrEnumValue");
         }
-        // For now, let's just get it as String and convert: in future,
-        // may be able to use more efficient access method(s)
+        String value = _streamReader.getAttributeValue(index).trim();
+        if (value.length() == 0) {
+            return null;
+        }
         try {
-            return _streamReader.getAttributeAsLong(index);
-        } catch (TypedXMLStreamException e) {
-            return defValue;
+            return Enum.valueOf(enumType, value);
+        } catch (IllegalArgumentException iae) {
+            throw _constructTypedException(value, iae, "Invalid enumeration value '"+value+"'; not one of values of "+enumType.getName());
         }
     }
-    */
 
     /*
     ////////////////////////////////////////////////////
@@ -1324,12 +1320,7 @@ public abstract class SMInputCursor
     public String getElemStringValue()
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemStringValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemStringValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemStringValue");
         /* 14-Feb-2009, tatu: stream reader should point at matching
          *   END_ELEMENT after 'getElementXxx' call; and we must change
          *   our current event from START_ELEMENT to something else
@@ -1358,12 +1349,7 @@ public abstract class SMInputCursor
     public boolean getElemBooleanValue()
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemBooleanValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemBooleanValue");
         // need to change curr event (see comments for getElemStringValue)
         _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsBoolean();
@@ -1376,12 +1362,7 @@ public abstract class SMInputCursor
     public boolean getElemBooleanValue(boolean defValue)
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemBooleanValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemBooleanValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemBooleanValue");
         _currEvent = SMEvent.END_ELEMENT;
         // not optimal, but should work:
         try {
@@ -1410,12 +1391,7 @@ public abstract class SMInputCursor
     public int getElemIntValue()
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemIntValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemIntValue");
         _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsInt();
     }
@@ -1427,12 +1403,7 @@ public abstract class SMInputCursor
     public int getElemIntValue(int defValue)
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemIntValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemIntValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemIntValue");
         _currEvent = SMEvent.END_ELEMENT;
         try {
             return _streamReader.getElementAsInt();
@@ -1460,12 +1431,7 @@ public abstract class SMInputCursor
     public long getElemLongValue()
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemLongValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemLongValue");
         _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsLong();
     }
@@ -1477,12 +1443,7 @@ public abstract class SMInputCursor
     public long getElemLongValue(long defValue)
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemLongValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemLongValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemLongValue");
         _currEvent = SMEvent.END_ELEMENT;
         try {
             return _streamReader.getElementAsLong();
@@ -1510,12 +1471,7 @@ public abstract class SMInputCursor
     public double getElemDoubleValue()
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemDoubleValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemDoubleValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemDoubleValue");
         _currEvent = SMEvent.END_ELEMENT;
         return _streamReader.getElementAsDouble();
     }
@@ -1527,12 +1483,7 @@ public abstract class SMInputCursor
     public double getElemDoubleValue(double defValue)
         throws XMLStreamException
     {
-        if (!readerAccessible()) {
-            throw _notAccessible("getElemDoubleValue");
-        }
-        if (getCurrEvent() != SMEvent.START_ELEMENT) {
-            throw _wrongState("getElemDoubleValue", SMEvent.START_ELEMENT);
-        }
+        _verifyElemAccess("getElemDoubleValue");
         _currEvent = SMEvent.END_ELEMENT;
         try {
             return _streamReader.getElementAsDouble();
@@ -1543,12 +1494,60 @@ public abstract class SMInputCursor
     }
 
     /**
+     * Method that can collect text <b>directly</b> contained within
+     * START_ELEMENT currently pointed by this cursor and convert
+     * it to one of enumerated values of given type, if textual
+     * value non-type, and otherwise to null.
+     * If a non-empty value that is not one of legal enumerated values
+     * is encountered, a {@link TypedXMLStreamException} is thrown.
+     *<p>
+     * Element also can not contain mixed content (child elements;
+     * comments and processing instructions are allowed and ignored
+     * if encountered).
+     *
+     * @throws XMLStreamException if content is not accessible or
+     *    convertible to required return type
+     * @throws TypedXMLStreamException if element value is non-empty
+     *   and not one of allowed values for the enumeration type
+     */
+    public <T extends Enum<T>> T getElemEnumValue(Class<T> enumType)
+        throws XMLStreamException
+    {
+        _verifyElemAccess("getElemEnumValue");
+        _currEvent = SMEvent.END_ELEMENT;
+        String value = _streamReader.getElementText().trim();
+        if (value.length() == 0) {
+            return null;
+        }
+        try {
+            return Enum.valueOf(enumType, value);
+        } catch (IllegalArgumentException iae) {
+            throw _constructTypedException(value, iae, "Invalid enumeration value '"+value+"'; not one of values of "+enumType.getName());
+        }
+    }
+
+    /**
+     * Helper method called by getElemXxxValue methods to ensure that
+     * the state is appropriate for the call
+     */
+    private final void _verifyElemAccess(String method)
+        throws XMLStreamException
+    {
+        if (!readerAccessible()) {
+            throw _notAccessible(method);
+        }
+        if (getCurrEvent() != SMEvent.START_ELEMENT) {
+            throw _wrongState(method, SMEvent.START_ELEMENT);
+        }
+    }
+
+    /**
      * This method can be called to ensure that this cursor gets to
      * point to END_ELEMENT that closes typed element that has been
      * read; usually this works as expected, but during type conversion
      * exceptions handling may not work as expected
      */
-    private void _ensureEndElement()
+    private final void _ensureEndElement()
         throws XMLStreamException
     {
         /* !!! 14-Feb-2009, tatu: not sure what exactly to do; so for now
@@ -1978,7 +1977,7 @@ public abstract class SMInputCursor
         XMLStreamReader2 sr = _streamReader;
         return new DefaultElementInfo(parent, prevSibling,
                                       sr.getPrefix(), sr.getNamespaceURI(), sr.getLocalName(),
-                                      _nodeCount-1, _elemCount-1, getDepth());
+                                      _nodeCount-1, _elemCount-1, getParentCount());
     }
 
     /**

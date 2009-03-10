@@ -5,7 +5,7 @@ import java.io.*;
 import javax.xml.stream.*;
 import static javax.xml.stream.XMLStreamConstants.*;
 
-import org.codehaus.staxmate.in.SMInputCursor;
+import org.codehaus.staxmate.in.*;
 
 public abstract class BaseTest
     extends junit.framework.TestCase
@@ -65,6 +65,12 @@ public abstract class BaseTest
         assertTokenType(expType, crsr.getCurrEventCode());
     }
 
+    protected void assertToken(SMEvent expEvent, SMEvent actEvent)
+        throws XMLStreamException
+    {
+        assertTokenType(expEvent.getEventCode(), actEvent.getEventCode());
+    }
+
     protected void assertElem(XMLStreamReader sr, String expURI, String expLN)
         throws XMLStreamException
     {
@@ -76,6 +82,16 @@ public abstract class BaseTest
             }
         } else {
             assertEquals(expURI, sr.getNamespaceURI());
+        }
+    }
+
+    protected void assertException(Throwable e, String match)
+    {
+        String msg = e.getMessage();
+        String lmsg = msg.toLowerCase();
+        String lmatch = match.toLowerCase();
+        if (lmsg.indexOf(lmatch) < 0) {
+            fail("Expected an exception with sub-string \""+match+"\": got one with message \""+msg+"\"");
         }
     }
 

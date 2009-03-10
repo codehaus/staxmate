@@ -4,6 +4,8 @@ import java.io.*;
 
 import javax.xml.stream.*;
 
+import org.codehaus.stax2.typed.TypedXMLStreamException;
+
 import org.codehaus.staxmate.SMInputFactory;
 
 /**
@@ -14,6 +16,10 @@ import org.codehaus.staxmate.SMInputFactory;
 public class TestTyped
     extends BaseReaderTest
 {
+    enum DummyEnum {
+        OK, FAIL, UNKNOWN;
+    }
+
     /*
     ////////////////////////////////////////////////////
     // Tests for typed attributes
@@ -70,6 +76,31 @@ public class TestTyped
         assertEquals(0.25, rootc.getAttrDoubleValue(1, 0.25));
     }
 
+    public void testValidTypedEnumAttr()
+        throws XMLStreamException
+    {
+        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        String XML = "<root attr='' attr2='FAIL' />";
+        SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
+        assertEquals("root", rootc.getLocalName());
+        assertNull(rootc.getAttrEnumValue(0, DummyEnum.class));
+        assertEquals(DummyEnum.FAIL, rootc.getAttrEnumValue(1, DummyEnum.class));
+    }
+
+    public void testInvalidTypedEnumAttr()
+        throws XMLStreamException
+    {
+        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        String XML = "<root attr='Foobar' />";
+        SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
+        assertEquals("root", rootc.getLocalName());
+        try {
+            /*DummyEnum en =*/ rootc.getAttrEnumValue(0, DummyEnum.class);
+        } catch (TypedXMLStreamException tex) {
+            assertException(tex, "invalid enumeration value");
+        }
+    }
+
     /*
     ////////////////////////////////////////////////////
     // Simple tests for typed elements
@@ -114,9 +145,51 @@ public class TestTyped
         assertNull(rootc.getNext());
     }
 
-    /*
-    ////////////////////////////////////////////////////
-    // And then tests to see that traversal works
-    ////////////////////////////////////////////////////
-    */
+    public void testTypedIntElem()
+        throws XMLStreamException
+    {
+        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        String XML = "<root><a>  -1</a><b>  ?</b></root>";
+        SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
+        assertEquals("root", rootc.getLocalName());
+        SMInputCursor crsr = rootc.childElementCursor().advance();
+        assertEquals("a", crsr.getLocalName());
+        assertEquals(-1, crsr.getElemIntValue());
+        assertNotNull(crsr.getNext());
+        assertEquals("b", crsr.getLocalName());
+        // let's verify we get the failure as we should
+        try {
+            /*int v = */ crsr.getElemIntValue();
+        } catch (TypedXMLStreamException tex) {
+            assertException(tex, "not a valid lexical representation of int");
+        }
+        // nonetheless, cursors should be valid in this case
+        assertNull(crsr.getNext());
+        assertNull(rootc.getNext());
+    }
+
+    public void testValidTypedEnumElem()
+        throws XMLStreamException
+    {
+        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        String XML = "<root>    OK </root>";
+        SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
+        assertEquals("root", rootc.getLocalName());
+        assertEquals(DummyEnum.OK, rootc.getElemEnumValue(DummyEnum.class));
+        assertNull(rootc.getNext());
+    }
+
+    public void testInvalidTypedEnumElem()
+        throws XMLStreamException
+    {
+        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        String XML = "<root>  x </root>";
+        SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
+        assertEquals("root", rootc.getLocalName());
+        try {
+            /*DummyEnum en =*/ rootc.getElemEnumValue(DummyEnum.class);
+        } catch (TypedXMLStreamException tex) {
+            assertException(tex, "invalid enumeration value");
+        }
+    }
 }

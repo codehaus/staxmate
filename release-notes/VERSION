@@ -19,9 +19,13 @@ New/improved functionality:
   it if need be.
 * [STAXMATE-8]: Added "DOMConverter", which allows building DOM trees
   from Stax stream reader, writing DOM trees into Stax stream writers
+* [STAXMATE-10]: Typed accessor for Java Enum values (above and beyond
+  basic Stax2 Typed Access API types)
 * [STAXMATE-22]: Added "SMInputCursor.advance()" to support more
   convenient creation of positioned root cursors.
-* Most basic Typed Access API types support for cursors as well as
+* [STAXMATE-28]: StaxMate jar is now a valid OSGi bundle, with complete
+  import/export statements.
+* Most basic Typed Access API types support for both cursors and
   output elements.
 
 == History: ==
