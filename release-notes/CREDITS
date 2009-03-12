@@ -14,3 +14,8 @@ Michel Goldstein:
   * Reported [STAXMATE-1], another problem with hierarchic cursor
     traversal, and contributed unit test for testing it.
     [1.0.0]
+
+Gregg Helt:
+  * Requested [STAXMATE-25]: Allow pre-declaring namespaces with
+   "SMOutputElement.predeclareNamespace"
+    [2.0.0]
