@@ -33,7 +33,7 @@ public abstract class SMOCharacters
         return new ArrayBased3(buf, offset, len);
     }
     
-    protected abstract boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected abstract boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException;
     
     /*
@@ -51,7 +51,7 @@ public abstract class SMOCharacters
             mText = text;
         }
         
-        protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+        protected boolean _output(SMOutputContext ctxt, boolean canClose)
             throws XMLStreamException
         {
             ctxt.writeCharacters(mText);
@@ -69,7 +69,7 @@ public abstract class SMOCharacters
             mBuf = buf;
         }
 
-        protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+        protected boolean _output(SMOutputContext ctxt, boolean canClose)
             throws XMLStreamException
         {
             ctxt.writeCharacters(mBuf, 0, mBuf.length);
@@ -90,7 +90,7 @@ public abstract class SMOCharacters
             mLen = len;
         }
         
-        protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+        protected boolean _output(SMOutputContext ctxt, boolean canClose)
             throws XMLStreamException
         {
             ctxt.writeCharacters(mBuf, mOffset, mLen);

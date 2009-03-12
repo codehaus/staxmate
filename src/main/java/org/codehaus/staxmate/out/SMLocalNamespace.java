@@ -12,10 +12,10 @@ public final class SMLocalNamespace
      * Output context in which this namespace is to be used (scope of
      * which it is bound)
      */
-    protected final SMOutputContext mContext;
+    protected final SMOutputContext _context;
 
     /**
-     * Prefererred (or suggested) prefix for the namespace;
+     * Preferred (or suggested) prefix for the namespace;
      * StaxMate will try to use this prefix if possible when binding
      * namespaces and also passes it to the underlying stream writer.
      *<p>
@@ -23,17 +23,17 @@ public final class SMLocalNamespace
      * and there is also a way to explicitly set it. Finally, it will
      * also be set if a dynamic prefix is created for the namespace
      */
-    protected String mPrefPrefix;
+    protected String _preferredPrefix;
 
     /**
      * Prefix this namespace is currently bound to, if any.
      */
-    protected String mCurrPrefix = null;
+    protected String _currPrefix = null;
 
     /**
      * Last prefix this name was bound to, if any.
      */
-    protected String mPrevPrefix = null;
+    protected String _prevPrefix = null;
 
     /**
      * Flag that indicates whether this namespaces prefers to be bound
@@ -41,9 +41,14 @@ public final class SMLocalNamespace
      * will use this preference in some situations to determine how to
      * best bind this namespace to a prefix or as the default namespace.
      */
-    protected boolean mPreferDefaultNs;
+    protected boolean _preferDefaultNs;
 
-    protected boolean mIsPermanent;
+    /**
+     * Flag that indicates whether this binding (with current prefix) is
+     * permanent or not; that is, whether prefix associated with the
+     * namespace URI can still change or not.
+     */
+    protected boolean _isPermanent;
 
     /**
      * @param ctxt Output context that "owns" this namespace (within which
@@ -60,9 +65,9 @@ public final class SMLocalNamespace
                                String prefPrefix)
     {
         super(uri);
-        mContext = ctxt;
-        mPrefPrefix = prefPrefix;
-        mPreferDefaultNs = preferDefaultNs;
+        _context = ctxt;
+        _preferredPrefix = prefPrefix;
+        _preferDefaultNs = preferDefaultNs;
     }
 
     /*
@@ -72,31 +77,31 @@ public final class SMLocalNamespace
      */
 
     public String getPreferredPrefix() {
-        return mPrefPrefix;
+        return _preferredPrefix;
     }
     
     public String getBoundPrefix() {
-        return mCurrPrefix;
+        return _currPrefix;
     }
 
     public String getLastBoundPrefix() {
-        return mPrevPrefix;
+        return _prevPrefix;
     }
 
     public boolean prefersDefaultNs() {
-        return mPreferDefaultNs;
+        return _preferDefaultNs;
     }
 
     public void prefersDefaultNs(boolean state) {
-        mPreferDefaultNs = state;
+        _preferDefaultNs = state;
     }
 
     public void setPreferredPrefix(String prefPrefix) {
-        mPrefPrefix = prefPrefix;
+        _preferredPrefix = prefPrefix;
     }
 
     protected boolean isValidIn(SMOutputContext ctxt) {
-        return ctxt == mContext;
+        return ctxt == _context;
     }
 
     /**
@@ -105,39 +110,39 @@ public final class SMLocalNamespace
      * allow it). So let's allow transitions to and from null, but not
      * between two non-empty prefixes.
      */
-    protected void bindAs(String prefix)
+    protected void _bindAs(String prefix)
     {
-        if (mCurrPrefix != null) {
+        if (_currPrefix != null) {
             /* Let's not bother checking for equality -- any calls to re-bind
              * are errors in implementation, and are never called by the
              * end application
              */
-            throw new IllegalStateException("Trying to re-bind URI '"+mURI
-                                            +"', from prefix '"+mCurrPrefix
+            throw new IllegalStateException("Trying to re-bind URI '"+_uri
+                                            +"', from prefix '"+_currPrefix
                                             +"' to prefix '"+prefix+"'");
         }
-        mCurrPrefix = mPrevPrefix = prefix;
+        _currPrefix = _prevPrefix = prefix;
     }
 
-    protected void bindPermanentlyAs(String prefix)
+    protected void _bindPermanentlyAs(String prefix)
     {
         // First, let's do the binding
-        bindAs(prefix);
+        _bindAs(prefix);
         // and then let's mark it as a permanent one...
-        if (mIsPermanent) {
-            throw new IllegalStateException("Trying to call permanentlyBindAs() twice (for URI '"+mURI+"', prefix '"+prefix+"')");
+        if (_isPermanent) {
+            throw new IllegalStateException("Trying to call permanentlyBindAs() twice (for URI '"+_uri+"', prefix '"+prefix+"')");
         }
-        mIsPermanent = true;
+        _isPermanent = true;
     }
 
-    protected void unbind()
+    protected void _unbind()
     {
         // Sanity check:
-        if (mCurrPrefix == null) {
-            throw new IllegalStateException("Trying to unbind an unbound namespace (URI '"+mURI+"')");
+        if (_currPrefix == null) {
+            throw new IllegalStateException("Trying to unbind an unbound namespace (URI '"+_uri+"')");
         }
-        if (!mIsPermanent) { // permanent ones just won't unbind... 
-            mCurrPrefix = null;
+        if (!_isPermanent) { // permanent ones just won't unbind... 
+            _currPrefix = null;
         }
     }
 }

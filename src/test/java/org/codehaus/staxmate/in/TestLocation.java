@@ -5,7 +5,6 @@ import java.io.*;
 import javax.xml.stream.*;
 
 import org.codehaus.staxmate.SMInputFactory;
-import org.codehaus.staxmate.in.*;
 
 /**
  * Unit test for verifying that location-related information is properly

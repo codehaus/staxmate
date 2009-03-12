@@ -19,10 +19,9 @@ import javax.xml.stream.XMLStreamException;
  */
 public abstract class SMOutputtable
 {
-    protected SMOutputtable mNext = null;
+    protected SMOutputtable _next = null;
 
-    protected SMOutputtable() {
-    }
+    protected SMOutputtable() { }
 
     /*
     /////////////////////////////////////////////////////
@@ -31,14 +30,14 @@ public abstract class SMOutputtable
      */
 
     protected SMOutputtable getNext() {
-        return mNext;
+        return _next;
     }
 
     protected void _linkNext(SMOutputtable next) {
-        if (mNext != null) {
+        if (_next != null) {
             throw new IllegalStateException("Can not re-set next once it has been set once");
         }
-        mNext = next;
+        _next = next;
     }
 
     /*
@@ -66,14 +65,14 @@ public abstract class SMOutputtable
      * @return True if the whole node could be output, ie. neither it nor
      *   its children are buffered.
      */
-    protected abstract boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected abstract boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException;
 
     /**
-     * Method similar to {@link #doOutput}, except that this method will
+     * Method similar to {@link #_output}, except that this method will
      * always succeed in doing the output. Specifically, it will force all
      * buffered nodes to be unbuffered, and then output.
      */
-    protected abstract void forceOutput(SMOutputContext ctxt)
+    protected abstract void _forceOutput(SMOutputContext ctxt)
         throws XMLStreamException;
 }

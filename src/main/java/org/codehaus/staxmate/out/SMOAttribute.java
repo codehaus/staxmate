@@ -20,7 +20,7 @@ public class SMOAttribute
         _value = value;
     }
 
-    protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
         ctxt.writeAttribute(_namespace, _localName, _value);

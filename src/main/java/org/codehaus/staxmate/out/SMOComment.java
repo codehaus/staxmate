@@ -16,7 +16,7 @@ public class SMOComment
         mText = text;
     }
 
-    protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
         ctxt.writeComment(mText);

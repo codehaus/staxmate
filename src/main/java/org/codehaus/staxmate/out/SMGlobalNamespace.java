@@ -13,12 +13,12 @@ public final class SMGlobalNamespace
     /**
      * Prefix this namespace is (permanently) bound to.
      */
-    protected final String mPrefix;
+    protected final String _prefix;
 
     protected SMGlobalNamespace(String uri, String prefix)
     {
         super(uri);
-        mPrefix = prefix;
+        _prefix = prefix;
     }
     
     /*
@@ -28,15 +28,15 @@ public final class SMGlobalNamespace
     */
     
     public String getPreferredPrefix() {
-        return mPrefix;
+        return _prefix;
     }
 
     public String getBoundPrefix() {
-        return mPrefix;
+        return _prefix;
     }
 
     public String getLastBoundPrefix() {
-        return mPrefix;
+        return _prefix;
     }
 
     public boolean prefersDefaultNs() {
@@ -61,17 +61,17 @@ public final class SMGlobalNamespace
      * gets called, an exception will be thrown (but note that this
      * being an 'internal' method, this is more like an assertion).
      */
-    protected void bindAs(String prefix) {
+    protected void _bindAs(String prefix) {
         throw new IllegalArgumentException("Global namespace (prefix '"
-                                           +mPrefix+"') can not be bound to a different prefix");
+                                           +_prefix+"') can not be bound to a different prefix");
     }
 
-    protected void bindPermanentlyAs(String prefix) {
-        bindAs(prefix); // to throw the error
+    protected void _bindPermanentlyAs(String prefix) {
+        _bindAs(prefix); // to throw the error
     }
 
-    protected void unbind() {
+    protected void _unbind() {
         throw new IllegalArgumentException("Global namespace (prefix '"
-                                           +mPrefix+"') can not be unbound");
+                                           +_prefix+"') can not be unbound");
     }
 }

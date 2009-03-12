@@ -30,7 +30,7 @@ public class SMRootFragment
     ///////////////////////////////////////////////////////////
      */
 
-    protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
         // Should never get called if not active...
@@ -38,22 +38,22 @@ public class SMRootFragment
             throwIfClosed();
         }
         if (canClose) {
-            return closeAndOutputChildren();
+            return _closeAndOutputChildren();
         }
-        return closeAllButLastChild();
+        return _closeAllButLastChild();
     }
 
-    protected void forceOutput(SMOutputContext ctxt)
+    protected void _forceOutput(SMOutputContext ctxt)
         throws XMLStreamException
     {
         // Should never get called if not active...
         if (!_active) {
             throwIfClosed();
         }
-        forceChildOutput();
+        _forceChildOutput();
     }
     
-    protected void childReleased(SMOutputtable child)
+    protected void _childReleased(SMOutputtable child)
         throws XMLStreamException
     {
         // Should never get called if not active...
@@ -67,20 +67,20 @@ public class SMRootFragment
          * there's no need to try to inform anyone else.
          */
         if (child == _firstChild) {
-            closeAllButLastChild();
+            _closeAllButLastChild();
         }
 
         // Either way, we are now done
     }
 
-    public boolean canOutputNewChild()
+    public boolean _canOutputNewChild()
         throws XMLStreamException
     {
         // Should never get called if not active...
         if (!_active) {
             throwIfClosed();
         }
-        return (_firstChild == null) || closeAndOutputChildren();
+        return (_firstChild == null) || _closeAndOutputChildren();
     }
 
     public void getPath(StringBuilder sb)
@@ -113,9 +113,9 @@ public class SMRootFragment
             return;
         }
         // Let's first try to close them nicely:
-        if (!doOutput(_context, true)) {
+        if (!_output(_context, true)) {
             // but if that doesn't work, should just unbuffer all children...
-            forceOutput(_context);
+            _forceOutput(_context);
         }
         // Either way, we are now closed:
         _active = false;

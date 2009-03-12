@@ -50,7 +50,7 @@ public final class SMBufferedElement
     {
         _isBuffered = false;
         if (_parent != null) {
-            _parent.childReleased(this);
+            _parent._childReleased(this);
         }
     }
 
@@ -61,18 +61,18 @@ public final class SMBufferedElement
      */
 
     // Base impl is fine:
-    //protected void childReleased(SMOutputtable child) throws XMLStreamException
+    //protected void _childReleased(SMOutputtable child) throws XMLStreamException
 
     /* Base implementation is mostly fine, but let's add some sanity
      * checking
      */
-    protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
         if (_isBuffered) {
             _throwBuffered();
         }
-        return super.doOutput(ctxt, canClose);
+        return super._output(ctxt, canClose);
     }
 
     /*

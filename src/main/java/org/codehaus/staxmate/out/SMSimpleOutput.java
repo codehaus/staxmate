@@ -27,15 +27,15 @@ abstract class SMSimpleOutput
      * output differs, and there isn't much point in factoring out
      * 'return true;' part... so let's leave this abstract
      */
-    protected abstract boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected abstract boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException;
 
-    protected void forceOutput(SMOutputContext ctxt)
+    protected void _forceOutput(SMOutputContext ctxt)
         throws XMLStreamException
     {
         /* For simple output nodes this is simple; can just call
          * normal output methods as these are never buffered
          */
-        doOutput(ctxt, true);
+        _output(ctxt, true);
     }
 }

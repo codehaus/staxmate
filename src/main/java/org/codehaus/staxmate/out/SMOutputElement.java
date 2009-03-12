@@ -69,6 +69,12 @@ public class SMOutputElement
      */
     protected int _parentNsCount;
 
+    /*
+    ///////////////////////////////////////////////////////////
+    // Life-cycle
+    ///////////////////////////////////////////////////////////
+     */
+
     protected SMOutputElement(SMOutputContext ctxt,
                               String localName, SMNamespace ns)
     {
@@ -76,14 +82,6 @@ public class SMOutputElement
         _parent = null;
         _localName = localName;
         _namespace = ns;
-    }
-    
-    public String getLocalName() {
-        return _localName;
-    }
-    
-    public SMNamespace getNamespace() {
-        return _namespace;
     }
 
     public void linkParent(SMOutputContainer parent, boolean blocked)
@@ -100,7 +98,33 @@ public class SMOutputElement
 
     /*
     ///////////////////////////////////////////////////////////
-    // Additional output methods
+    // Simple public accessors
+    ///////////////////////////////////////////////////////////
+     */
+
+    /**
+     * Method that can be used to get the local name of this element
+     */
+    public String getLocalName() {
+        return _localName;
+    }
+    
+    /**
+     * Method that can be used to get the namespace of the element.
+     * Note that the returned value is never null; if no namespace
+     * was passed during construction,
+     * "no namespace" ({@link SMOutputContext#getEmptyNamespace()})
+     * is used instead.
+     *
+     * @return Namespace of this element.
+     */
+    public SMNamespace getNamespace() {
+        return _namespace;
+    }
+
+    /*
+    ///////////////////////////////////////////////////////////
+    // Additional (wrt SMOutputContainer) output methods
     ///////////////////////////////////////////////////////////
      */
 
@@ -174,7 +198,8 @@ public class SMOutputElement
     ///////////////////////////////////////////////////////////
      */
 
-    protected void childReleased(SMOutputtable child)
+    @Override
+    protected void _childReleased(SMOutputtable child)
         throws XMLStreamException
     {
         // Ok; first of all, only first child matters:
@@ -198,11 +223,12 @@ public class SMOutputElement
              * but it is necessary to do since children are not to handle
              * how preceding buffered siblings should be dealt with.
              */
-            _parent.childReleased(this);
+            _parent._childReleased(this);
         }
     }
     
-    protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    @Override
+    protected boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
         switch (_outputState) {
@@ -219,9 +245,9 @@ public class SMOutputElement
         // Any children? Need to try to close them too
         if (_firstChild != null) {
             if (canClose) {
-                closeAndOutputChildren();
+                _closeAndOutputChildren();
             } else {
-                closeAllButLastChild();
+                _closeAllButLastChild();
             }
         }
 
@@ -235,20 +261,22 @@ public class SMOutputElement
         return true;
     }
     
-    protected void forceOutput(SMOutputContext ctxt)
+    @Override
+    protected void _forceOutput(SMOutputContext ctxt)
         throws XMLStreamException
     {
         // Let's first ask nicely:
-        if (doOutput(_context, true)) {
+        if (_output(_context, true)) {
             ; // all done (including outputting end element)
         } else {
             // ... but if that doesn't work, let's negotiate bit more:
-            forceChildOutput();
+            _forceChildOutput();
             doWriteEndElement();
         }
     }
     
-    public boolean canOutputNewChild()
+    @Override
+    public boolean _canOutputNewChild()
         throws XMLStreamException
     {
         /* This is fairly simple; if we are blocked, can not output it right
@@ -269,9 +297,10 @@ public class SMOutputElement
         if (_firstChild == null) { // no children -> ok
             return true;
         }
-        return closeAndOutputChildren();
+        return _closeAndOutputChildren();
     }
 
+    @Override
     public void getPath(StringBuilder sb)
     {
         if (_parent != null) {

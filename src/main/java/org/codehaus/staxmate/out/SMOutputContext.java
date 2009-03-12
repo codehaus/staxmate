@@ -561,7 +561,7 @@ public final class SMOutputContext
             prefix = findRootPrefix(ns);
             if (prefix != null) {
                 // Yup. Need to mark it as permanently bound, then
-                ns.bindPermanentlyAs(prefix);
+                ns._bindPermanentlyAs(prefix);
             } else {
                 // Ok. So which prefix should we bind (can't use def ns)?
                 prefix = ns.getLastBoundPrefix();
@@ -647,7 +647,7 @@ public final class SMOutputContext
                 prefix = findRootPrefix(ns);
                 if (prefix != null) {
                     // Yup. Need to mark it as permanently bound, then
-                    ns.bindPermanentlyAs(prefix);
+                    ns._bindPermanentlyAs(prefix);
                 } else {
                     needToBind = true; // yes, need to bind it
                     // Bind as the default namespace?
@@ -711,7 +711,7 @@ public final class SMOutputContext
                 while (i-- > parentNsCount) {
                     SMNamespace ns = _nsStack[i];
                     _nsStack[i] = null;
-                    ns.unbind();
+                    ns._unbind();
                 }
             }
         }
@@ -900,7 +900,7 @@ public final class SMOutputContext
         stack[_boundNsCount++] = ns;
 
         // And then write it out
-        ns.bindAs(prefix);
+        ns._bindAs(prefix);
         _streamWriter.writeNamespace(prefix, ns.getURI());
     }
 

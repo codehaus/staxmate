@@ -167,7 +167,7 @@ public abstract class SMOutputContainer
     public void addCharacters(String text)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeCharacters(text);
         } else {
             _linkNewChild(_context.createCharacters(text));
@@ -187,7 +187,7 @@ public abstract class SMOutputContainer
     public void addCharacters(char[] buf, int offset, int len)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeCharacters(buf, offset, len);
         } else {
             _linkNewChild(_context.createCharacters(buf, offset, len));
@@ -204,7 +204,7 @@ public abstract class SMOutputContainer
     public void addCData(String text)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeCData(text);
         } else {
             _linkNewChild(_context.createCData(text));
@@ -221,7 +221,7 @@ public abstract class SMOutputContainer
     public void addCData(char[] buf, int offset, int len)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeCData(buf, offset, len);
         } else {
             _linkNewChild(_context.createCData(buf, offset, len));
@@ -238,7 +238,7 @@ public abstract class SMOutputContainer
     public void addComment(String text)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeComment(text);
         } else {
             _linkNewChild(_context.createComment(text));
@@ -259,7 +259,7 @@ public abstract class SMOutputContainer
     public void addEntityRef(String name)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeEntityRef(name);
         } else {
             _linkNewChild(_context.createEntityRef(name));
@@ -276,7 +276,7 @@ public abstract class SMOutputContainer
     public void addProcessingInstruction(String target, String data)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeProcessingInstruction(target, data);
         } else {
             _linkNewChild(_context.createProcessingInstruction(target, data));
@@ -301,7 +301,7 @@ public abstract class SMOutputContainer
      */
     public void addValue(boolean value) throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeValue(value);
         } else {
             _linkNewChild(_context.createValue(value));
@@ -320,7 +320,7 @@ public abstract class SMOutputContainer
     public void addValue(int value)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeValue(value);
         } else {
             _linkNewChild(_context.createValue(value));
@@ -339,7 +339,7 @@ public abstract class SMOutputContainer
     public void addValue(long value)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeValue(value);
         } else {
             _linkNewChild(_context.createValue(value));
@@ -358,7 +358,7 @@ public abstract class SMOutputContainer
     public void addValue(double value)
         throws XMLStreamException
     {
-        if (canOutputNewChild()) {
+        if (_canOutputNewChild()) {
             _context.writeValue(value);
         } else {
             _linkNewChild(_context.createValue(value));
@@ -392,7 +392,7 @@ public abstract class SMOutputContainer
         ns = _verifyNamespaceArg(ns);
 
         // Ok, let's see if we are blocked already
-        boolean blocked = !canOutputNewChild();
+        boolean blocked = !_canOutputNewChild();
         SMOutputElement newElem = new SMOutputElement(ctxt, localName, ns);
         _linkNewChild(newElem);
         newElem.linkParent(this, blocked);
@@ -442,7 +442,7 @@ public abstract class SMOutputContainer
         throws XMLStreamException
     {
         // Ok; first, let's see if we are blocked already
-        boolean blocked = !canOutputNewChild();
+        boolean blocked = !_canOutputNewChild();
         _linkNewChild((SMOutputtable) buffered);
         buffered.linkParent(this, blocked);
         return buffered;
@@ -516,10 +516,12 @@ public abstract class SMOutputContainer
     ////////////////////////////////////////////////////////
     */
 
-    protected abstract boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    @Override
+    protected abstract boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException;
 
-    protected abstract void forceOutput(SMOutputContext ctxt)
+    @Override
+    protected abstract void _forceOutput(SMOutputContext ctxt)
         throws XMLStreamException;
 
     /*
@@ -540,7 +542,7 @@ public abstract class SMOutputContainer
      * @param child Child node that now neither is nor contains any buffered
      *    nodes.
      */
-    protected abstract void childReleased(SMOutputtable child)
+    protected abstract void _childReleased(SMOutputtable child)
         throws XMLStreamException;
    
     /**
@@ -552,7 +554,7 @@ public abstract class SMOutputContainer
      * @return True if all children (if any) were completely output; false
      *   if there was at least one buffered child that couldn't be output.
      */
-    public abstract boolean canOutputNewChild()
+    public abstract boolean _canOutputNewChild()
         throws XMLStreamException;
 
     /*
@@ -572,6 +574,11 @@ public abstract class SMOutputContainer
         return sb.toString();
     }
 
+    /**
+     * Method that can be called to get an XPath like description
+     * of the relative location of this output node, starting from root.
+     * Path will be appended to given StringBuilder.
+     */
     public abstract void getPath(StringBuilder sb);
 
     /*
@@ -600,15 +607,15 @@ public abstract class SMOutputContainer
      * @return True if all descendants (children, recursively) were
      *   succesfully output, possibly closing them first if necessary
      */
-    protected final boolean closeAndOutputChildren()
+    protected final boolean _closeAndOutputChildren()
         throws XMLStreamException
     {
         while (_firstChild != null) {
-            if (!_firstChild.doOutput(_context, true)) {
+            if (!_firstChild._output(_context, true)) {
                 // Nope, node was buffered or had buffered child(ren)
                 return false;
             }
-            _firstChild = _firstChild.mNext;
+            _firstChild = _firstChild._next;
         }
         _lastChild = null;
         return true;
@@ -619,17 +626,17 @@ public abstract class SMOutputContainer
      * the last, and if that succeeds, output last child if it need
      * not be closed (true for non-element/simple children).
      */
-    protected final boolean closeAllButLastChild()
+    protected final boolean _closeAllButLastChild()
         throws XMLStreamException
     {
         SMOutputtable child = _firstChild;
         while (child != null) {
-            SMOutputtable next = child.mNext;
+            SMOutputtable next = child._next;
             /* Need/can not force closing of the last child, but all
              * previous can and should be closed:
              */
             boolean notLast = (next != null);
-            if (!_firstChild.doOutput(_context, notLast)) {
+            if (!_firstChild._output(_context, notLast)) {
                 // Nope, node was buffered or had buffered child(ren)
                 return false;
             }
@@ -639,14 +646,14 @@ public abstract class SMOutputContainer
         return true;
     }
 
-    protected final void forceChildOutput()
+    protected final void _forceChildOutput()
         throws XMLStreamException
     {
         SMOutputtable child = _firstChild;
         _firstChild = null;
         _lastChild = null;
-        for (; child != null; child = child.mNext) {
-            child.forceOutput(_context);
+        for (; child != null; child = child._next) {
+            child._forceOutput(_context);
         }
     }
 

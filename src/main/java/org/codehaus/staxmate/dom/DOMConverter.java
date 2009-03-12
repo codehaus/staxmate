@@ -1,7 +1,5 @@
 package org.codehaus.staxmate.dom;
 
-import java.io.*;
-import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,8 +13,6 @@ import org.codehaus.stax2.XMLStreamReader2;
 import org.codehaus.stax2.XMLStreamWriter2;
 import org.codehaus.stax2.ri.Stax2ReaderAdapter;
 import org.codehaus.stax2.ri.Stax2WriterAdapter;
-
-import org.codehaus.staxmate.in.*;
 
 /**
  * Class that can build DOM trees and fragments using
@@ -166,7 +162,6 @@ public class DOMConverter
      * Stax 1.0 specs which defined behavior of XMLStreamReader.close().
      *
      * @param r Stream reader from which input is read.
-     * @return <code>Document</code> - DOM document object.
      * @throws XMLStreamException If the reader threw such exception (to
      *   indicate a parsing or I/O problem)
      */
@@ -183,14 +178,9 @@ public class DOMConverter
      * parent/child relationship; this improves performance somewhat
      * (classic recursion-by-iteration-and-explicit stack transformation)
      *
-     * @param f Node factory to use for creating JDOM nodes
      * @param r0 Stream reader to use for reading the document from which
      *   to build the tree
      * @param doc <code>Document</code> being built.
-     * @param tmod Text modifier to use for modifying content of text
-     *   nodes (CHARACTERS, not CDATA), if any; null if no modifications
-     *   are needed (modifier is usually used for trimming unnecessary
-     *   but non-ignorable white space).
      */
     protected void _build(XMLStreamReader r0, Document doc)
         throws XMLStreamException

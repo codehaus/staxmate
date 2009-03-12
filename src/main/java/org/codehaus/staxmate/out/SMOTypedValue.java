@@ -21,7 +21,7 @@ public abstract class SMOTypedValue
     public static SMOTypedValue create(long value) { return new LongValue(value); }
     public static SMOTypedValue create(double value) { return new DoubleValue(value); }
 
-    protected abstract boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected abstract boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException;
     
     /*
@@ -36,7 +36,7 @@ public abstract class SMOTypedValue
 
         BooleanValue(boolean v) { _value = v; }
         
-        protected boolean doOutput(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
+        protected boolean _output(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
         {
             ctxt.writeValue(_value);
             return true;
@@ -49,7 +49,7 @@ public abstract class SMOTypedValue
 
         IntValue(int v) { _value = v; }
         
-        protected boolean doOutput(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
+        protected boolean _output(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
         {
             ctxt.writeValue(_value);
             return true;
@@ -62,7 +62,7 @@ public abstract class SMOTypedValue
 
         LongValue(long v) { _value = v; }
         
-        protected boolean doOutput(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
+        protected boolean _output(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
         {
             ctxt.writeValue(_value);
             return true;
@@ -75,7 +75,7 @@ public abstract class SMOTypedValue
 
         DoubleValue(double v) { _value = v; }
         
-        protected boolean doOutput(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
+        protected boolean _output(SMOutputContext ctxt, boolean canClose) throws XMLStreamException
         {
             ctxt.writeValue(_value);
             return true;

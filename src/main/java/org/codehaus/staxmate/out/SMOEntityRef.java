@@ -12,7 +12,7 @@ public class SMOEntityRef
         mName = name;
     }
 
-    protected boolean doOutput(SMOutputContext ctxt, boolean canClose)
+    protected boolean _output(SMOutputContext ctxt, boolean canClose)
         throws XMLStreamException
     {
         ctxt.writeEntityRef(mName);

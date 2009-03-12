@@ -8,11 +8,11 @@ public abstract class SMNamespace
     /**
      * URI of the actual namespace this class encapsulates
      */
-    protected final String mURI;
+    protected final String _uri;
 
     protected SMNamespace(String uri)
     {
-        mURI = uri;
+        _uri = uri;
     }
 
     /*
@@ -22,7 +22,7 @@ public abstract class SMNamespace
      */
 
     public final String getURI() {
-        return mURI;
+        return _uri;
     }
 
     /**
@@ -71,7 +71,7 @@ public abstract class SMNamespace
      * will not be called when the namespace is defined as the default
      * namespace, but only when it is also bound to a prefix.
      */
-    protected abstract void bindAs(String prefix);
+    protected abstract void _bindAs(String prefix);
 
     /**
      * Method used to permanently bind this (local) namespace to a prefix.
@@ -80,7 +80,7 @@ public abstract class SMNamespace
      * essentially mark a local instace as behaving similar to a global
      * one.
      */
-    protected abstract void bindPermanentlyAs(String prefix);
+    protected abstract void _bindPermanentlyAs(String prefix);
 
     /**
      * Method called to indicate that the namespace is no longer bound
@@ -88,5 +88,5 @@ public abstract class SMNamespace
      * Since default namespace declarations do not cause binding, this
      * method will not be called for default namespaces either.
      */
-    protected abstract void unbind();
+    protected abstract void _unbind();
 }
