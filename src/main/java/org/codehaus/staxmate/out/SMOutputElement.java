@@ -192,6 +192,30 @@ public class SMOutputElement
         addAttribute(ns, localName, String.valueOf(value));
     }
 
+    /**
+     * Method that can be (but never has to) called to force declaration
+     * of given namespace for this element, if that is possible (i.e.
+     * no binding has been added for the preferred prefix of given
+     * namespace). This is usually done as a minor optimization or
+     * cosmetic improvement so that child elements need not declare
+     * the namespace. Since namespace declarations are otherwise output
+     * automatically when and as needed, this method never has to be called
+     * (from correctness standpoint), but it may produce more aestethically
+     * pleasing and compact output when properly used.
+     *<p>
+     * Note: in cases where the given namespace can not be bound to preferred
+     * URI, exact behavior is undefined: two possible outcomes are that no
+     * namespace declaration is added, or that one with different prefix
+     * (but given namespace URI) is added. No error is reported at any rate.
+     *
+     * @since 2.0.0
+     */
+    public void predeclareNamespace(SMNamespace ns)
+        throws XMLStreamException
+    {
+        // !!! TBI
+    }
+
     /*
     ///////////////////////////////////////////////////////////
     // Abstract method implementations
