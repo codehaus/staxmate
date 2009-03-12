@@ -38,6 +38,11 @@ public abstract class SMNamespace
 
     public abstract boolean prefersDefaultNs();
 
+    public final boolean isBoundToPrefix() {
+        String prefix = getBoundPrefix();
+        return (prefix != null) && prefix.length() != 0;
+    }
+
     /*
     ///////////////////////////////////
     // Mutators

@@ -105,7 +105,7 @@ public final class SMOutputContext
      * current scope (inside currently open element, if any; if none,
      * within root level).
      */
-    SMNamespace _defaultNs = NS_EMPTY;
+    SMNamespace _defaultNS = NS_EMPTY;
 
     /**
      * Stack of bound non-default namespaces.
@@ -117,6 +117,11 @@ public final class SMOutputContext
      */
     int _boundNsCount = 0;
     
+    /**
+     * Namespace of the last START_ELEMENT output.
+     */
+    SMNamespace _currElemNS;
+
     /*
     //////////////////////////////////////////////////////
     // Indentation settings, state
@@ -312,6 +317,14 @@ public final class SMOutputContext
 
     public SMOutputtable createAttribute(SMNamespace ns, String localName, String value) {
         return new SMOAttribute(ns, localName, value);
+    }
+
+    /**
+     * Method called by {@link SMOutputElement} to add buffered namespace
+     * pre-declaration.
+     */
+    public SMOutputtable createNamespace(SMNamespace ns, SMNamespace parentDefaultNS, int parentNsCount) {
+        return new SMONamespace(ns, parentDefaultNS, parentNsCount);
     }
 
     public SMOutputtable createCharacters(String text) {
@@ -580,6 +593,49 @@ public final class SMOutputContext
     }
 
     /**
+     * Method called to try to pre-declare given namespace
+     */
+    public void predeclareNamespace(SMNamespace ns, SMNamespace parentDefaultNS,
+                                    int parentNsCount)
+        throws XMLStreamException
+    {
+        String prefix = ns.getPreferredPrefix();
+
+        // very easy in repairing mode...
+        if (_cfgRepairing) {
+            // If no prefix preference, let's not pass one:
+            if (prefix == null) {
+                _streamWriter.writeDefaultNamespace(ns.getURI());
+            } else {
+                _streamWriter.writeNamespace(prefix, ns.getURI());
+            }
+            return;
+        }
+
+        // If not repairing, we need to handle bindings.
+
+        /* Other than that, just need to avoid re-declaring
+         * default namespace or explicit prefix
+         */
+        if (prefix == null) {
+            /* Default namespace is tricky; can only pre-declare if
+             * (a) hasn't been declared yet and
+             * (b) element itself has explicit prefix
+             */
+            if (_defaultNS == parentDefaultNS
+                && _currElemNS != null
+                && _currElemNS.isBoundToPrefix()) {
+                _defaultNS = ns;
+                _streamWriter.writeDefaultNamespace(ns.getURI());
+            }
+        } else { // explicit prefix...
+            if (!isPrefixBoundLocally(prefix, parentNsCount)) {
+                bindAndWriteNs(ns, prefix);
+            }
+        }
+    }
+
+    /**
      * Method called by the element object when it is about to get written
      * out. In this case, element will keep track of part of namespace
      * context information for this context object (to save allocation
@@ -603,6 +659,7 @@ public final class SMOutputContext
             }
             _indentLevelEmpty = true;
         }
+        _currElemNS = ns;
 
         /* In repairing mode we won't do binding,
          * nor keep track of them
@@ -615,10 +672,10 @@ public final class SMOutputContext
             } else {
                 _streamWriter.writeStartElement(prefix, localName, ns.getURI());
             }
-            return _defaultNs;
+            return _defaultNS;
         }
 
-        SMNamespace oldDefaultNs = _defaultNs;
+        SMNamespace oldDefaultNs = _defaultNS;
         String prefix;
         boolean needToBind = false;
 
@@ -674,7 +731,7 @@ public final class SMOutputContext
         _streamWriter.writeStartElement(prefix, localName, ns.getURI());
         if (needToBind) {
             if (prefix.length() == 0) {
-                _defaultNs = ns;
+                _defaultNS = ns;
                 _streamWriter.writeDefaultNamespace(ns.getURI());
             } else {
                 bindAndWriteNs(ns, prefix);
@@ -716,7 +773,7 @@ public final class SMOutputContext
             }
         }
 
-        _defaultNs = parentDefNs;
+        _defaultNS = parentDefNs;
     }
 
     public void writeStartDocument()
@@ -841,6 +898,21 @@ public final class SMOutputContext
         return false;
     }
 
+    /**
+     * Similar to {@link #isPrefixBound}, but only considers bindings
+     * added by the current start element.
+     */
+    public boolean isPrefixBoundLocally(String prefix, int parentNsCount)
+    {
+        for (int i = parentNsCount; i < _boundNsCount; ++i) {
+            SMNamespace ns = _nsStack[i];
+            if (prefix.equals(ns.getBoundPrefix())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String findRootPrefix(SMNamespace ns)
     {
         if (_rootNsContext != null) {
@@ -871,7 +943,7 @@ public final class SMOutputContext
     }
 
     boolean isDefaultNs(SMNamespace ns) {
-        return (_defaultNs == ns);
+        return (_defaultNS == ns);
     }
 
     /*

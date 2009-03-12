@@ -196,12 +196,18 @@ public class SMOutputElement
      * Method that can be (but never has to) called to force declaration
      * of given namespace for this element, if that is possible (i.e.
      * no binding has been added for the preferred prefix of given
-     * namespace). This is usually done as a minor optimization or
+     * namespace).
+     * This is usually done as a minor optimization or
      * cosmetic improvement so that child elements need not declare
      * the namespace. Since namespace declarations are otherwise output
      * automatically when and as needed, this method never has to be called
      * (from correctness standpoint), but it may produce more aestethically
      * pleasing and compact output when properly used.
+     *<p>
+     * Default namespace can often not be pre-declared using this method,
+     * because that would change namespace of the element itself if it
+     * has no prefix, so method is most often called for namespaces with
+     * explicit prefix.
      *<p>
      * Note: in cases where the given namespace can not be bound to preferred
      * URI, exact behavior is undefined: two possible outcomes are that no
@@ -213,7 +219,23 @@ public class SMOutputElement
     public void predeclareNamespace(SMNamespace ns)
         throws XMLStreamException
     {
-        // !!! TBI
+        /* Let's validate argument; means that null is accepted as
+         * "default namespace", actually
+         */
+        ns = _verifyNamespaceArg(ns);
+        
+        // Ok, what can we do, then?
+        switch (_outputState) {
+        case OUTPUT_NONE: // blocked
+            _linkNewChild(_context.createNamespace(ns, _parentDefaultNs, _parentNsCount));
+
+            break;
+        case OUTPUT_ATTRS: // perfect
+            _context.predeclareNamespace(ns, _parentDefaultNs, _parentNsCount);
+            break;
+        default:
+            _throwClosedForNsDecls();
+        } 
     }
 
     /*
@@ -388,6 +410,15 @@ public class SMOutputElement
             "ELEMENT-CLOSED" : "CHILDREN-ADDED";
         throw new IllegalStateException
             ("Can't add attributes for an element (path = '"
+             +getPath()+"'), element state '"+desc+"'");
+    }
+
+    protected void _throwClosedForNsDecls()
+    {
+        String desc = (_outputState == OUTPUT_CLOSED) ?
+            "ELEMENT-CLOSED" : "CHILDREN-ADDED";
+        throw new IllegalStateException
+            ("Can't add namespace declaration for an element (path = '"
              +getPath()+"'), element state '"+desc+"'");
     }
 }
