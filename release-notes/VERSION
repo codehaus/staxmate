@@ -1,13 +1,13 @@
 Version: 1.3.1
 
-Release date: XX-Nov-2008
+Release date: 06-Dec-2008
 
 Description:
   Patch release to resolve critical bugs.
 
 Problems fixed:
 
-  * [STAXMATE-26]: NPE when passing null namespace to SMOutputContainer.createBufferedElement()
+* [STAXMATE-26]: NPE when passing null namespace to SMOutputContainer.createBufferedElement()
 * [STAXMATE-27]: Attributes were not retained for buffered elements.
 
 == History: ==

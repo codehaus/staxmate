@@ -4,7 +4,7 @@
 
     <!-- Version information -->
     <property name="IMPL_TITLE" value="StaxMate" />
-    <property name="IMPL_VERSION" value="1.3.0" />
+    <property name="IMPL_VERSION" value="1.3.1" />
     <property name="IMPL_VENDOR" value="http://staxmate.codehaus.org" />
 
     <property name="BASENAME" value="staxmate-${IMPL_VERSION}" />
@@ -166,7 +166,7 @@
             </filterset>
        </copy>
        <!-- 03-Dec-2008, tatu: temporarily also copy stax2-2.1 jar and pom -->
-       <copy file="${SrcDir}/maven/stax2.pom" tofile="${DistDir}/maven/stax2-2.1.pom" />
+       <copy file="${SrcDir}/maven/stax2.pom" tofile="${DistDir}/stax2-2.1.pom" />
        <copy file="${LibDir}/stax2-2.1.jar" tofile="${DistDir}/stax2-2.1.jar" />
         <xmlvalidate lenient="true">
         <!-- lenient: check only well-formedness, no dtd/schema (yet) -->
