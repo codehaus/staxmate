@@ -195,7 +195,8 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
 
   </repositories>
 
-  <!-- Let's also try to automate deployments? -->
+  <!-- Let's also try to automate deployments?
+    -->
   <distributionManagement>
     <repository>
       <uniqueVersion>false</uniqueVersion>
@@ -207,7 +208,7 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
     <snapshotRepository>
       <uniqueVersion>true</uniqueVersion>
       <id>codehaus-snapshot</id>
-      <name>Propellors Snapshots</name>
+      <name>Codehaus Snapshots</name>
       <url>dav:https://dav.codehaus.org/snapshots.repository/staxmate</url>
       <layout>default</layout>
     </snapshotRepository>

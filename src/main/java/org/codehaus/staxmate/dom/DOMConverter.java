@@ -174,7 +174,7 @@ public class DOMConverter
 
     /**
      * This method takes a <code>XMLStreamReader</code> and builds up
-     * a JDOM tree. Recursion has been eliminated by using nodes'
+     * a DOM tree. Recursion has been eliminated by using nodes'
      * parent/child relationship; this improves performance somewhat
      * (classic recursion-by-iteration-and-explicit stack transformation)
      *
