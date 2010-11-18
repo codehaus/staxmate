@@ -13,13 +13,13 @@ import org.codehaus.staxmate.SMInputFactory;
  *
  * @author Tatu Saloranta
  */
-public class TestTyped
-    extends ReaderTestBase
+public class TestTyped extends ReaderTestBase
 {
     private enum DummyEnum {
         OK, FAIL, UNKNOWN;
     }
 
+    // 18-Nov-2010, tatu: Uncomment to test with SJSXP directly
     /*
     @Override
     protected XMLInputFactory getStaxInputFactory() {
@@ -118,7 +118,7 @@ public class TestTyped
     // Simple tests for typed elements
     ////////////////////////////////////////////////////
     */
-
+    
     public void testTextElem()
         throws XMLStreamException
     {

@@ -15,9 +15,9 @@ import org.codehaus.stax2.typed.TypedXMLStreamException;
 abstract class CursorBase
 {
     /*
-    ////////////////////////////////////////////
-    // Constants, initial cursor state
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Constants, initial cursor state
+    /**********************************************************************
      */
 
     // // // Constants for the cursor state
@@ -56,9 +56,9 @@ abstract class CursorBase
     }
 
     /*
-    ////////////////////////////////////////////
-    // Constants, other
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Constants, other
+    /**********************************************************************
      */
 
     /**
@@ -69,9 +69,9 @@ abstract class CursorBase
         SMEvent.constructIdToEventMapping();
 
     /*
-    ////////////////////////////////////////////
-    // Iteration state
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Iteration state
+    /**********************************************************************
      */
 
     protected final SMInputContext _context;
@@ -140,9 +140,9 @@ abstract class CursorBase
     protected SMInputCursor _childCursor = null;
 
     /*
-    ////////////////////////////////////////////
-    // Life-cycle
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
 
     /**
@@ -157,9 +157,9 @@ abstract class CursorBase
     }
 
     /*
-    ////////////////////////////////////////////
-    // Methods we need from sub-class
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Methods we need from sub-class
+    /**********************************************************************
      */
 
     /**
@@ -180,10 +180,10 @@ abstract class CursorBase
         throws XMLStreamException;
 
     /*
-    ////////////////////////////////////////////
-    // Methods sub-classes need or can override
-    // to customize behaviour:
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Methods sub-classes need or can override
+    /* to customize behaviour:
+    /**********************************************************************
      */
 
     /**
@@ -228,6 +228,15 @@ abstract class CursorBase
                 }
                 break;
             } else if (type == XMLStreamConstants.END_DOCUMENT) {
+                /* 18-Nov-2010, This check causes unit test failures, esp. 3 for "TestTyped",
+                 *    for "non-stax2-native" parser (Sjsxp).
+                 *    It should not; but commenting out following check can help...
+                 */
+                /*
+                if (this.isRootCursor()) {
+                    break;
+                }
+                */
                 _throwUnexpectedEndDoc();
             }
         }
@@ -254,9 +263,9 @@ abstract class CursorBase
     }
 
     /*
-    ////////////////////////////////////////////
-    // Package methods
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Package methods
+    /**********************************************************************
      */
 
     /**
@@ -323,7 +332,8 @@ abstract class CursorBase
     void _throwUnexpectedEndDoc()
         throws XMLStreamException
     {
-        throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()+")");
+        throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()
+                +"; reader impl "+_getStreamReader().getClass().getName()+")");
     }
 
     void _throwWrongEndElem(int expDepth, int actDepth)

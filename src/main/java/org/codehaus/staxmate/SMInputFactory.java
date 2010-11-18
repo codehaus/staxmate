@@ -162,7 +162,7 @@ public final class SMInputFactory
      * of specified file, using Stax input factory
      * this StaxMate factory was constructed with.
      */
-	public XMLStreamReader2 createStax2Reader(File f)
+    public XMLStreamReader2 createStax2Reader(File f)
         throws XMLStreamException
     {
         if (_stax2Factory != null) {
