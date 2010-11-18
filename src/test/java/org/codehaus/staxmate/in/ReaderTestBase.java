@@ -2,8 +2,9 @@ package org.codehaus.staxmate.in;
 
 import javax.xml.stream.*;
 
-class BaseReaderTest
-    extends org.codehaus.staxmate.BaseTest
+// important: keep abstract so JUnit won't be confused
+abstract class ReaderTestBase
+    extends org.codehaus.staxmate.StaxMateTestBase
 {
     protected void assertElem(SMInputCursor crsr, String expURI, String expLN)
         throws XMLStreamException

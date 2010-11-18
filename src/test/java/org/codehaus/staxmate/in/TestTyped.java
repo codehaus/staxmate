@@ -14,9 +14,9 @@ import org.codehaus.staxmate.SMInputFactory;
  * @author Tatu Saloranta
  */
 public class TestTyped
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
-    enum DummyEnum {
+    private enum DummyEnum {
         OK, FAIL, UNKNOWN;
     }
 

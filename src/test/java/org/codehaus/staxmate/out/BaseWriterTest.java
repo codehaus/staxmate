@@ -6,8 +6,8 @@ import javax.xml.stream.*;
 
 import org.codehaus.staxmate.*;
 
-class BaseWriterTest
-    extends org.codehaus.staxmate.BaseTest
+abstract class BaseWriterTest
+    extends org.codehaus.staxmate.StaxMateTestBase
 {
     protected SMOutputDocument createSimpleDoc(Writer w)
         throws XMLStreamException

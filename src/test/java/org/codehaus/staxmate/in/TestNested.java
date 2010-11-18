@@ -11,7 +11,7 @@ import org.codehaus.staxmate.SMInputFactory;
  * works as expected
  */
 public class TestNested
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
     public void testSimpleTwoLevel()
         throws Exception

@@ -11,7 +11,7 @@ import org.codehaus.staxmate.SMInputFactory;
  * kept track of, and accessible.
  */
 public class TestLocation
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
     /**
      * Unit test that will verify that "node count" is kept track of

@@ -14,7 +14,7 @@ import javax.xml.stream.events.XMLEvent;
  * expected.
  */
 public class TestAsEvent
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
     final static String SIMPLE_XML =
         "<root>fobar<?proc instr?><!--comment-stuff-->"

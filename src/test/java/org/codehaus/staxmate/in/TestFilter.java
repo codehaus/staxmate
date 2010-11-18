@@ -11,7 +11,7 @@ import org.codehaus.staxmate.SMInputFactory;
  * work as expected
  */
 public class TestFilter
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
     public void testChildElementFilter()
         throws Exception

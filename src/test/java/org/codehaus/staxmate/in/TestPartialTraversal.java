@@ -15,7 +15,7 @@ import org.codehaus.staxmate.in.SMInputCursor;
  * @author egentry
  */
 public class TestPartialTraversal
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
   SMInputCursor a_iterator;
 

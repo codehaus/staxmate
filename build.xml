@@ -133,13 +133,13 @@
         <!-- 02-Sep-2008, tatu: Baseline is 1.5 for now (StaxMate 1.x)
           -->
         <javac srcdir="${dir.src.java}" destdir="${dir.classes.main}" debug="true"
-         source="1.5" target="1.5"
+         source="1.5" target="1.5" includeantruntime="false"
         >
             <include name="org/codehaus/staxmate/**/*.java" />
             <classpath refid="classpath.compile" />
         </javac>
         <javac srcdir="${dir.src.tools}" destdir="${dir.classes.main}" debug="true"
-         source="1.5" target="1.5"
+         source="1.5" target="1.5" includeantruntime="false"
         >
             <include name="**/*.java" />
             <classpath refid="classpath.compile" />
@@ -252,7 +252,7 @@
 
     <target name="test.compile" depends="jars">
         <javac srcdir="${dir.src.test}" destdir="${dir.classes.test}" debug="true"
-         source="1.5" target="1.5"
+         source="1.5" target="1.5" includeantruntime="false"
         >
             <include name="**/*.java" />
             <classpath refid="classpath.compile" />
@@ -269,6 +269,7 @@
          showoutput="yes">
             <batchtest fork="no" todir="${dir.test.xmlresults}">
                 <fileset dir="${dir.classes.test}">
+                    <exclude name="**/*$*.class"/>
                     <include name="**/Test*.class"/>
                 </fileset>
             </batchtest>

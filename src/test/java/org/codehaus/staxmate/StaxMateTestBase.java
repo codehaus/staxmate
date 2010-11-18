@@ -7,15 +7,15 @@ import static javax.xml.stream.XMLStreamConstants.*;
 
 import org.codehaus.staxmate.in.*;
 
-public abstract class BaseTest
+public abstract class StaxMateTestBase
     extends junit.framework.TestCase
 {
     protected SMInputFactory _inputFactory;
 
     /*
-    ////////////////////////////////////////////////////////
-    // Factory methods
-    ////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Factory methods
+    /**********************************************************************
      */
 
     protected SMInputFactory getInputFactory()
@@ -96,9 +96,9 @@ public abstract class BaseTest
     }
 
     /*
-    ////////////////////////////////////////////////////////
-    // Other accessors
-    ////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Other accessors
+    /**********************************************************************
      */
 
     /**

@@ -12,7 +12,7 @@ import org.codehaus.staxmate.SMInputFactory;
  * @author Tatu Saloranta
  */
 public class TestSimpleText
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
     public void testSimpleRead()
         throws XMLStreamException

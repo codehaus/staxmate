@@ -8,10 +8,10 @@ import static javax.xml.stream.XMLStreamConstants.*;
 
 import org.w3c.dom.*;
 
-import org.codehaus.staxmate.BaseTest;
+import org.codehaus.staxmate.StaxMateTestBase;
 
 public class TestDOMConverter
-    extends BaseTest
+    extends StaxMateTestBase
 {
     /**
      * Unit test that verifies that a proper DOM tree can be constructed

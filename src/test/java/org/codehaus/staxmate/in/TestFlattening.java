@@ -9,7 +9,7 @@ import org.codehaus.staxmate.SMInputFactory;
  * (non-nested) cursors works as expected
  */
 public class TestFlattening
-    extends BaseReaderTest
+    extends ReaderTestBase
 {
     public void testTwoLevelMixed()
         throws Exception
