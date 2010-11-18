@@ -89,7 +89,7 @@ public final class SMInputFactory
      *   means that no filtering will be done.
      */
     public static SMHierarchicCursor hierarchicCursor(XMLStreamReader sr, SMFilter f) {
-        return constructHierarchic(Stax2ReaderAdapter.wrapIfNecessary(sr), f);
+        return constructHierarchic(wrapIfNecessary(sr), f);
     }
 
     /**
@@ -103,7 +103,7 @@ public final class SMInputFactory
      *   means that no filtering will be done.
      */
     public static SMFlatteningCursor flatteningCursor(XMLStreamReader sr, SMFilter f) {
-        return constructFlattening(Stax2ReaderAdapter.wrapIfNecessary(sr), f);
+        return constructFlattening(wrapIfNecessary(sr), f);
     }
 
     /**
@@ -151,7 +151,7 @@ public final class SMInputFactory
         }
         try {
             XMLStreamReader sr = _staxFactory.createXMLStreamReader(url.toExternalForm(), url.openStream());
-            return Stax2ReaderAdapter.wrapIfNecessary(sr);
+            return wrapIfNecessary(sr);
         } catch (IOException ioe) {
             throw new XMLStreamException(ioe);
         }
@@ -172,7 +172,7 @@ public final class SMInputFactory
             @SuppressWarnings("deprecation")
             String sysId = f.toURL().toExternalForm();
             XMLStreamReader sr = _staxFactory.createXMLStreamReader(sysId, new FileInputStream(f));
-            return Stax2ReaderAdapter.wrapIfNecessary(sr);
+            return wrapIfNecessary(sr);
         } catch (IOException ioe) {
             throw new XMLStreamException(ioe);
         }
@@ -192,7 +192,7 @@ public final class SMInputFactory
         }
         try {
             XMLStreamReader sr = _staxFactory.createXMLStreamReader(src.constructInputStream());
-            return Stax2ReaderAdapter.wrapIfNecessary(sr);
+            return wrapIfNecessary(sr);
         } catch (IOException ioe) {
             throw new XMLStreamException(ioe);
         }
@@ -213,7 +213,7 @@ public final class SMInputFactory
     public XMLStreamReader2 createStax2Reader(InputStream in)
         throws XMLStreamException
     {
-        return Stax2ReaderAdapter.wrapIfNecessary(_staxFactory.createXMLStreamReader(in));
+        return wrapIfNecessary(_staxFactory.createXMLStreamReader(in));
     }
 
     /**
@@ -231,7 +231,7 @@ public final class SMInputFactory
     public XMLStreamReader2 createStax2Reader(Reader r)
         throws XMLStreamException
     {
-        return Stax2ReaderAdapter.wrapIfNecessary(_staxFactory.createXMLStreamReader(r));
+        return wrapIfNecessary(_staxFactory.createXMLStreamReader(r));
     }
 
     /*
@@ -419,10 +419,10 @@ public final class SMInputFactory
     }
 
     /*
-    ///////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
+     */
 
     private final static SMHierarchicCursor constructHierarchic(XMLStreamReader2 sr, SMFilter f)
     {
@@ -436,11 +436,26 @@ public final class SMInputFactory
         return new SMFlatteningCursor(ctxt, null, f);
     }
 
+    private final static XMLStreamReader2 wrapIfNecessary(XMLStreamReader sr)
+    {
+        return Stax2ReaderAdapter.wrapIfNecessary(sr);     
+// 18-Nov-2010, tatu: We may want to force wrapping, sometimes; if so, must subclass like so:        
+//        return new ForcedAdapter(sr);
+    }
+    
     /*
-    ///////////////////////////////////////////////////////
-    // Helper classes
-    ///////////////////////////////////////////////////////
+    private final static class ForcedAdapter extends Stax2ReaderAdapter {
+        public ForcedAdapter(XMLStreamReader sr) {
+            super(sr);
+        }
+    }
     */
+    
+    /*
+    /**********************************************************************
+    /* Helper classes
+    /**********************************************************************
+     */
 
     /**
      * Helper class used for implementing efficient lazy instantiation of
