@@ -21,6 +21,18 @@ public class TestTyped
     }
 
     /*
+    @Override
+    protected XMLInputFactory getStaxInputFactory() {
+        try {
+            return (XMLInputFactory) Class.forName("com.sun.xml.internal.stream.XMLInputFactoryImpl").newInstance();
+        } catch (Exception e) {
+            fail("Unexpected problem: "+e);
+            return null;
+        }
+    }
+    */
+    
+    /*
     ////////////////////////////////////////////////////
     // Tests for typed attributes
     ////////////////////////////////////////////////////
@@ -29,7 +41,7 @@ public class TestTyped
     public void testTypedBooleanAttr()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root attr='true' attr2='1' attr3='' />";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -43,7 +55,7 @@ public class TestTyped
     public void testTypedIntAttr()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root attr='-37' attr2='foobar' />";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -55,7 +67,7 @@ public class TestTyped
     public void testTypedLongAttr()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root attr='-37' attr2='' />";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -67,7 +79,7 @@ public class TestTyped
     public void testTypedDoubleAttr()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root attr='-0.1' attr2='' />";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -79,7 +91,7 @@ public class TestTyped
     public void testValidTypedEnumAttr()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root attr='' attr2='FAIL' />";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -90,7 +102,7 @@ public class TestTyped
     public void testInvalidTypedEnumAttr()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root attr='Foobar' />";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -110,7 +122,7 @@ public class TestTyped
     public void testTextElem()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root><a>xyz</a><b>abc</b></root>";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -127,7 +139,7 @@ public class TestTyped
     public void testTypedBooleanElem()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root><a>true</a><b>   0 </b><c>...</c></root>";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -148,7 +160,7 @@ public class TestTyped
     public void testTypedIntElem()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root><a>  -1</a><b>  ?</b></root>";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -171,7 +183,7 @@ public class TestTyped
     public void testValidTypedEnumElem()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root>    OK </root>";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());
@@ -182,7 +194,7 @@ public class TestTyped
     public void testInvalidTypedEnumElem()
         throws XMLStreamException
     {
-        SMInputFactory sf = new SMInputFactory(XMLInputFactory.newInstance());
+        SMInputFactory sf = getInputFactory();
         String XML = "<root>  x </root>";
         SMInputCursor rootc = sf.rootElementCursor(new StringReader(XML)).advance();
         assertEquals("root", rootc.getLocalName());

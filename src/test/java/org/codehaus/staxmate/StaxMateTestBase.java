@@ -21,11 +21,15 @@ public abstract class StaxMateTestBase
     protected SMInputFactory getInputFactory()
     {
         if (_inputFactory == null) {
-            _inputFactory = new SMInputFactory(XMLInputFactory.newInstance());
+            _inputFactory = new SMInputFactory(getStaxInputFactory());
         }
         return _inputFactory;
     }
 
+    protected XMLInputFactory getStaxInputFactory() {
+        return XMLInputFactory.newInstance();
+    }
+    
     protected XMLStreamReader getCoalescingReader(String content)
         throws XMLStreamException
     {

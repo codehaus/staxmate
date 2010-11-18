@@ -298,6 +298,7 @@
         <junit fork="no" printsummary="yes" haltonfailure="no" showoutput="yes">
             <batchtest fork="no" todir="${dir.test.xmlresults}">
                 <fileset dir="${dir.classes.test}">
+                    <exclude name="**/*$*.class"/>
                     <include name="**/Test*.class"/>
                 </fileset>
             </batchtest>
@@ -325,6 +326,7 @@
         <junit fork="no" printsummary="yes" haltonfailure="no" showoutput="yes">
             <batchtest fork="no" todir="${dir.test.xmlresults}">
                 <fileset dir="${dir.classes.test}">
+                    <exclude name="**/*$*.class"/>
                     <include name="**/Test*.class"/>
                 </fileset>
             </batchtest>
@@ -362,6 +364,37 @@
         </junit>
     </target>
 
+    <target name="test.single.sjsxp" depends="test.compile">
+         <fail unless="test" message="Must define -Dtest" />
+       <!-- showoutput 'yes' to allow outputting debug msgs... -->
+        <junit fork="no" maxmemory="128M" showoutput="yes" printsummary="yes">
+          <formatter type="plain" usefile="no" />
+          <test name="${test}" />
+          <classpath refid="classpath.compile" />
+          <classpath>
+                <pathelement path="${dir.classes.main}" />
+                <pathelement location="${dir.classes.test}" /> 
+                <path refid="junit-libs"/>
+                <path refid="sjsxp-libs"/>
+          </classpath>     
+        </junit>
+    </target>
+
+    <target name="test.single.aalto" depends="test.compile">
+         <fail unless="test" message="Must define -Dtest" />
+       <!-- showoutput 'yes' to allow outputting debug msgs... -->
+        <junit fork="no" maxmemory="128M" showoutput="yes" printsummary="yes">
+          <formatter type="plain" usefile="no" />
+          <test name="${test}" />
+          <classpath refid="classpath.compile" />
+          <classpath>
+                <pathelement path="${dir.classes.main}" />
+                <pathelement location="${dir.classes.test}" /> 
+                <path refid="junit-libs"/>
+                <path refid="aalto-libs"/>
+          </classpath>     
+        </junit>
+    </target>
 
     <!--*********************************************************************-->
     <!-- Tasks for Code coverage analysis (using Cobertura) -->
