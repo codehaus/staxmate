@@ -3,10 +3,38 @@
  <!-- General information -->
 
   <modelVersion>4.0.0</modelVersion>
+  <prerequisites>
+    <maven>2.2.1</maven>
+  </prerequisites>
   <groupId>org.codehaus.staxmate</groupId>
   <artifactId>staxmate</artifactId>
   <packaging>bundle</packaging>
-  <version>2.1.0</version>
+  <version>2.0.1</version>
+
+  <name>StaxMate</name>
+  <description>
+StaxMate is a light-weight framework that adds convenience to streaming XML-processing  without significant additional overhead.
+It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox or Sjsxp (default Stax implementation of JDK 1.6) and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.
+</description>
+ <!-- Contact information -->
+  <url>http://staxmate.codehaus.org</url>
+  <issueManagement>
+    <url>http://jira.codehaus.org/browse/STAXMATE</url>
+  </issueManagement>
+
+  <!-- Licensing -->
+  <licenses>
+    <license>
+      <name>BSD</name>
+      <url>http://www.opensource.org/licenses/bsd-license.php</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>Codehaus</name>
+    <url>http://www.codehaus.org/</url>
+  </organization>
 
  <!-- Dependency information -->
  
@@ -69,6 +97,19 @@
             </execution>
           </executions>
         </plugin>
+
+        <!-- javadocs? yes please -->
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-javadoc-plugin</artifactId>
+         <version>2.6.1</version>
+          <configuration>
+              <encoding>UTF-8</encoding>
+              <links>
+                  <link>http://java.sun.com/javase/6/docs/api/</link>
+              </links>
+          </configuration>
+       </plugin>
 
         <!-- Plus, let's make jars OSGi bundles as well  -->
         <plugin>
@@ -136,35 +177,49 @@ org.codehaus.staxmate.dom
             <!-- version>2.0</version -->
         </plugin>
 
+        <!-- for maven release, need yet another plug-in -->
+        <!-- And Sonatype also mandates GPG... -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.0</version>
+          <configuration>
+            <mavenExecutorId>forked-path</mavenExecutorId>
+          </configuration>
+        </plugin>
+
     </plugins>
   </build>
 
-  <name>StaxMate</name>
-  <description>
-StaxMate is a light-weight framework that adds convenience to streaming XML-processing  without significant additional overhead.
-It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox or Sjsxp (default Stax implementation of JDK 1.6) and offers two basic abstractions: Cursors, which build on XMLStreamReaders and Output objects, which build on XMLStreamWriters.
-</description>
- <!-- Contact information -->
-  <url>http://staxmate.codehaus.org</url>
-  <issueManagement>
-    <url>http://jira.codehaus.org/browse/STAXMATE</url>
-  </issueManagement>
-
-  <!-- Licensing -->
-  <licenses>
-    <license>
-      <name>BSD</name>
-      <url>http://www.opensource.org/licenses/bsd-license.php</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <organization>
-    <name>Codehaus</name>
-    <url>http://www.codehaus.org/</url>
-  </organization>
-
-
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
   <!-- 20-Feb-2009, tatu: Let's default to Codehaus Maven2
        repository for now, shorter propagation delay

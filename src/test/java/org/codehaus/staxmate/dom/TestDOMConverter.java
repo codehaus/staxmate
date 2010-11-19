@@ -114,20 +114,56 @@ public class TestDOMConverter
         assertTokenType(END_DOCUMENT, sr.next());
     }
 
-    public void testIssue39() throws Exception
+    public void testIssue39a() throws Exception
     {
         final String XML =
 "<?xml version='1.0'?>\n"
 +"<root><node att1='n1-att1' att2='n1-att2'>n1-text</node>\n"
 +"<node att1='n2-att1' att2='n2-att2'>n2-text</node></root>"
-/*
-            "<root><node /><node /></root>"
-            */
         ;
         XMLStreamReader sr = getStaxInputFactory().createXMLStreamReader(new StringReader(XML));
 
         while (true) {
             if (sr.getEventType() == XMLStreamReader.START_ELEMENT) {
+                Document doc = new DOMConverter().buildDocument(sr);
+                assertNotNull(doc);
+            }
+            if (!sr.hasNext()) {
+                break;
+            }
+            sr.next();
+        }
+        sr.close();
+    }
+
+    public void testIssue39b() throws Exception
+    {
+        final String XML =
+"<root>"
++"        <children>"
++"                <child>"
++"                        <schild>a</schild>"
++"                        <schild>b</schild>"
++"                        <schild>c</schild>"
++"                </child>"
++"                <child>"
++"                        <schild>d</schild>"
++"                        <schild>e</schild>"
++"                        <schild>f</schild>"
++"                </child>"
++"                <child>"
++"                        <schild>g</schild>"
++"                        <schild>h</schild>"
++"                        <schild>i</schild>"
++"                </child>"
++"        </children>"
++"       </root>"
+            ;
+        XMLStreamReader sr = getStaxInputFactory().createXMLStreamReader(new StringReader(XML));
+
+        while (true) {
+            if (sr.getEventType() == XMLStreamReader.START_ELEMENT
+                    && sr.getLocalName().equals("child")) {                    
                 Document doc = new DOMConverter().buildDocument(sr);
                 assertNotNull(doc);
             }
