@@ -1,9 +1,21 @@
-Version: 2.0.0
+Version: 2.0.1
 
-Release date: 12-Mar-2008
+Release date:
+  xx-Dec-2010
 
 Description:
-  Major upgrade, based on new functionality offered Stax2-api version 3.0.
+  Patch release for 2.0.0
+
+Problems fixed:
+
+* [STAXMATE-39] Problems with DomConverter, building DOM trees from Stax reader.
+ (reported by Guillaume L)
+
+------------------------------------------------------------------------
+== History: ==
+------------------------------------------------------------------------
+
+2.0.0: [12-Mar-2009]
 
 Compatibility changes:
 
@@ -30,8 +42,6 @@ New/improved functionality:
   import/export statements.
 * Most basic Typed Access API types support for both cursors and
   output elements.
-
-== History: ==
 
 1.3.1: [06-Dec-2008]
 

@@ -19,3 +19,7 @@ Gregg Helt:
   * Requested [STAXMATE-25]: Allow pre-declaring namespaces with
    "SMOutputElement.predeclareNamespace"
     [2.0.0]
+
+Guillaume Lefebvre:
+  * Reported [STAXMATE-39]: Problems with DomConverter, building DOM trees from Stax reader.
+   [2.0.1]
