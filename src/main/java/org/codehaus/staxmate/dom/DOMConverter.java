@@ -95,9 +95,8 @@ public class DOMConverter
      * {@link DocumentBuilderFactory} constructed; if this is not wanted,
      * caller should construct DocumentBuilder separately.
      *<p>
-     * Note: underlying stream reader will be closed by the method, but
-     * generally this does NOT mean that the stream will be (as per
-     * Stax 1.0 specs which defined behavior of XMLStreamReader.close().
+     * Note: underlying stream reader will not be closed by calling this
+     * method.
      *
      * @param r Stream reader from which input is read.
      * @return <code>Document</code> - DOM document object.
@@ -124,9 +123,8 @@ public class DOMConverter
      * given DocumentBuilder and
      * populated using the given StAX stream reader.
      *<p>
-     * Note: underlying stream reader will be closed by the method, but
-     * generally this does NOT mean that the stream will be (as per
-     * Stax 1.0 specs which defined behavior of XMLStreamReader.close().
+     * Note: underlying stream reader will not be closed by calling this
+     * method.
      *
      * @param r Stream reader from which input is read.
      * @return <code>Document</code> - DOM document object.
@@ -145,41 +143,36 @@ public class DOMConverter
      * This method will populate given {@link org.w3c.dom.Document} using
      * the given StAX stream reader instance.
      *<p>
-     * Note: underlying stream reader will be closed by the method, but
-     * generally this does NOT mean that the stream will be (as per
-     * Stax 1.0 specs which defined behavior of XMLStreamReader.close().
+     * This method takes a <code>XMLStreamReader</code> and builds up
+     * a DOM tree under given document object.
+     *<p>
+     * Implementation note: recursion has been eliminated by using nodes'
+     * parent/child relationship; this improves performance somewhat
+     * (classic recursion-by-iteration-and-explicit stack transformation)
+     *<p>
+     * Note: underlying stream reader will not be closed by calling this
+     * method.
      *
      * @param r Stream reader from which input is read.
+     * @param doc <code>Document</code> being built.
      * @throws XMLStreamException If the reader threw such exception (to
      *   indicate a parsing or I/O problem)
      */
     public void buildDocument(XMLStreamReader r, Document doc)
         throws XMLStreamException
     {
-        _build(r, doc);
-        r.close();
-    }
+        /* One important distinction; to build "whole" document (including
+         * PIs and comments outside of root node), we must start with
+         * START_DOCUMENT event.
+         */
+        boolean wholeDoc = (r.getEventType() == XMLStreamConstants.START_DOCUMENT);
 
-    /**
-     * This method takes a <code>XMLStreamReader</code> and builds up
-     * a DOM tree. Recursion has been eliminated by using nodes'
-     * parent/child relationship; this improves performance somewhat
-     * (classic recursion-by-iteration-and-explicit stack transformation)
-     *
-     * @param r0 Stream reader to use for reading the document from which
-     *   to build the tree
-     * @param doc <code>Document</code> being built.
-     */
-    protected void _build(XMLStreamReader r0, Document doc)
-        throws XMLStreamException
-    {
-        XMLStreamReader2 sr = Stax2ReaderAdapter.wrapIfNecessary(r0);
+        XMLStreamReader2 sr = Stax2ReaderAdapter.wrapIfNecessary(r);
         QNameRecycler recycler = new QNameRecycler();
         boolean nsAware = _isNamespaceAware(sr);
         Node current = doc; // At top level
 
-        main_loop:
-
+    main_loop:
         for (int evtType = sr.getEventType(); true; evtType = sr.next()) {
             Node child;
 
@@ -214,8 +207,14 @@ public class DOMConverter
 
             case XMLStreamConstants.END_ELEMENT:
                 current = current.getParentNode();
-                if (current == null) {
-                    current = doc;
+                if (current == null || current == doc) {
+                    /* 19-Nov-2010, tatu: If the root element closed, we now need
+                     *    to bail out UNLESS we are building "whole document"
+                     *    (in which case still need to get possible PIs, comments)
+                     */
+                    if (!wholeDoc) {
+                        break main_loop;
+                    }
                 }
                 continue main_loop;
 

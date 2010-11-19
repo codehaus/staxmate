@@ -23,7 +23,7 @@ public class TestDOMConverter
         String XML =
             "<root>abc<?proc    instr?>"
             +"<leaf xmlns:a='http://foo' attr='3' a:b='c' /></root>"
-            +"<!--comment-stuff-->"
+            +"    <!--comment-stuff-->   "
             ;
         DOMConverter conv = new DOMConverter();
         XMLStreamReader sr = getCoalescingReader(XML);
@@ -139,33 +139,37 @@ public class TestDOMConverter
     public void testIssue39b() throws Exception
     {
         final String XML =
-"<root>"
-+"        <children>"
-+"                <child>"
-+"                        <schild>a</schild>"
-+"                        <schild>b</schild>"
-+"                        <schild>c</schild>"
-+"                </child>"
-+"                <child>"
-+"                        <schild>d</schild>"
-+"                        <schild>e</schild>"
-+"                        <schild>f</schild>"
-+"                </child>"
-+"                <child>"
-+"                        <schild>g</schild>"
-+"                        <schild>h</schild>"
-+"                        <schild>i</schild>"
-+"                </child>"
-+"        </children>"
+"<root>\n"
++"        <children>\n"
++"                <child>\n"
++"                        <schild>a</schild>A\n"
++"                        <schild>b</schild>B\n"
++"                        <schild>c</schild>C\n"
++"                </child>D\n"
++"                <child>E\n"
++"                        <schild>d</schild>\n"
++"                        <schild>e</schild>\n"
++"                        <schild>f</schild>\n"
++"                </child>\n"
++"                <child>\n"
++"                        <schild>g</schild>\n"
++"                        <schild>h</schild>\n"
++"                        <schild>i</schild>\n"
++"                </child>\n"
++"        </children>\n"
 +"       </root>"
             ;
         XMLStreamReader sr = getStaxInputFactory().createXMLStreamReader(new StringReader(XML));
 
+        int count = 0;
+        
         while (true) {
-            if (sr.getEventType() == XMLStreamReader.START_ELEMENT
-                    && sr.getLocalName().equals("child")) {                    
-                Document doc = new DOMConverter().buildDocument(sr);
-                assertNotNull(doc);
+            if (sr.getEventType() == XMLStreamReader.START_ELEMENT) {
+                if (sr.getLocalName().equals("child")) {                    
+                    Document doc = new DOMConverter().buildDocument(sr);
+                    assertNotNull(doc);
+                    ++count;
+                }
             }
             if (!sr.hasNext()) {
                 break;
@@ -173,6 +177,7 @@ public class TestDOMConverter
             sr.next();
         }
         sr.close();
+        assertEquals(3, count);
     }
     
     /*
