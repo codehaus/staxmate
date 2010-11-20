@@ -23,3 +23,8 @@ Gregg Helt:
 Guillaume Lefebvre:
   * Reported [STAXMATE-39]: Problems with DomConverter, building DOM trees from Stax reader.
    [2.0.1]
+
+Rohan Hant:
+  * Reported [STAXMATE-37]: getElemStringValue causes unexpected end_document when using
+  default Sun Java6 XMLInputFactory (note: caused by Stax2 RI bug, outside of StaxMate)
+  [2.0.1]

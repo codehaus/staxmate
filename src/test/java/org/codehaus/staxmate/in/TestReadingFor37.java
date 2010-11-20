@@ -14,7 +14,6 @@ public class TestReadingFor37 extends ReaderTestBase
     /**********************************************************************
      */
 
-    /*
     public void testStaxMate37aWithNative() throws Exception {
         _testStaxMate37a(false);
     }
@@ -26,7 +25,6 @@ public class TestReadingFor37 extends ReaderTestBase
     public void testStaxMate37bWithNative() throws Exception {
         _testStaxMate37b(false);
     }
-*/
 
     public void testStaxMate37bWithWrapper() throws Exception {
         _testStaxMate37b(true);
@@ -43,7 +41,6 @@ public class TestReadingFor37 extends ReaderTestBase
         String XML = "<root>\n<a>xyz</a>\n</root>";
         SMInputCursor rootC = _rootCursor(wrap, XML);
         SMInputCursor c = rootC.childElementCursor().advance();
-//      SMInputCursor c = sf.rootElementCursor(sr).advance().childElementCursor().advance();
         assertEquals(SMEvent.START_ELEMENT, c.getCurrEvent());
         assertEquals("a", c.getLocalName());
         assertEquals("xyz", c.getElemStringValue());
@@ -55,7 +52,6 @@ public class TestReadingFor37 extends ReaderTestBase
         String XML = "<root>\n<a>xyz</a>\n<b>abc</b>\n</root>";
         SMInputCursor rootC = _rootCursor(wrap, XML);
         SMInputCursor c = rootC.childElementCursor().advance();
-//      SMInputCursor c = sf.rootElementCursor(sr).advance().childElementCursor().advance();
         assertEquals(SMEvent.START_ELEMENT, c.getCurrEvent());
         assertEquals("a", c.getLocalName());
         assertEquals("xyz", c.getElemStringValue());

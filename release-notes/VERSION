@@ -1,13 +1,16 @@
 Version: 2.0.1
 
 Release date:
-  xx-Dec-2010
+  xx-Nov-2010
 
 Description:
   Patch release for 2.0.0
 
 Problems fixed:
 
+* [STAXMATE-37] getElemStringValue causes unexpected end_document when using
+  default Sun Java6 XMLInputFactory (note: caused by Stax2 RI bug, outside of StaxMate)
+ (reported by Rohan H)
 * [STAXMATE-39] Problems with DomConverter, building DOM trees from Stax reader.
  (reported by Guillaume L)
 
