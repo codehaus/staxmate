@@ -60,9 +60,9 @@ public final class SMInputFactory
     }
 
     /*
-    /////////////////////////////////////////////////
-    // Access to underlying Stax factory
-    /////////////////////////////////////////////////
+    /**********************************************************************
+    /* Access to underlying Stax factory
+    /**********************************************************************
      */
 
     /**
@@ -73,9 +73,9 @@ public final class SMInputFactory
     public XMLInputFactory getStaxFactory() { return _staxFactory; }
 
     /*
-    /////////////////////////////////////////////////
-    // Cursor construction, underlying methods
-    /////////////////////////////////////////////////
+    /**********************************************************************
+    /* Cursor construction, underlying methods
+    /**********************************************************************
      */
 
     /**
@@ -133,9 +133,9 @@ public final class SMInputFactory
     }
 
     /*
-    /////////////////////////////////////////////////
-    // Stream reader construction
-    /////////////////////////////////////////////////
+    /**********************************************************************
+    /* Stream reader construction
+    /**********************************************************************
      */
 
     /**
@@ -235,9 +235,9 @@ public final class SMInputFactory
     }
 
     /*
-    /////////////////////////////////////////////////
-    // Cursor construction, "full service" (non-static)
-    /////////////////////////////////////////////////
+    /**********************************************************************
+    /* Cursor construction, "full service" (non-static)
+    /**********************************************************************
      */
 
     /**
@@ -362,10 +362,10 @@ public final class SMInputFactory
     }
 
     /*
-    ///////////////////////////////////////////////////////
-    // Convenience methods
-    ///////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Convenience methods
+    /**********************************************************************
+     */
 
     /**
      * Convenience method that will get a lazily constructed shared
@@ -424,19 +424,19 @@ public final class SMInputFactory
     /**********************************************************************
      */
 
-    private final static SMHierarchicCursor constructHierarchic(XMLStreamReader2 sr, SMFilter f)
+    protected final static SMHierarchicCursor constructHierarchic(XMLStreamReader2 sr, SMFilter f)
     {
         SMInputContext ctxt = new SMInputContext(sr);
         return new SMHierarchicCursor(ctxt, null, f);
     }
 
-    private final static SMFlatteningCursor constructFlattening(XMLStreamReader2 sr, SMFilter f)
+    protected final static SMFlatteningCursor constructFlattening(XMLStreamReader2 sr, SMFilter f)
     {
         SMInputContext ctxt = new SMInputContext(sr);
         return new SMFlatteningCursor(ctxt, null, f);
     }
 
-    private final static XMLStreamReader2 wrapIfNecessary(XMLStreamReader sr)
+    protected final static XMLStreamReader2 wrapIfNecessary(XMLStreamReader sr)
     {
         return Stax2ReaderAdapter.wrapIfNecessary(sr);     
 // 18-Nov-2010, tatu: We may want to force wrapping, sometimes; if so, must subclass like so:        

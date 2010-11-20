@@ -333,7 +333,8 @@ abstract class CursorBase
         throws XMLStreamException
     {
         throw new IllegalStateException("Unexpected END_DOCUMENT encountered (root = "+isRootCursor()
-                +"; reader impl "+_getStreamReader().getClass().getName()+")");
+                +"; reader impl "+_getStreamReader().getClass().getName()+"); location: "
+                +_streamReader.getLocation());
     }
 
     void _throwWrongEndElem(int expDepth, int actDepth)

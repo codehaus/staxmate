@@ -2,6 +2,9 @@ package org.codehaus.staxmate.in;
 
 import javax.xml.stream.*;
 
+import org.codehaus.stax2.XMLStreamReader2;
+import org.codehaus.stax2.ri.Stax2ReaderAdapter;
+
 // important: keep abstract so JUnit won't be confused
 abstract class ReaderTestBase
     extends org.codehaus.staxmate.StaxMateTestBase
@@ -22,6 +25,28 @@ abstract class ReaderTestBase
             if (!expURI.equals(uri)) {
                 fail("Expected element to have non-empty namespace '"+expURI+"', got '"+uri+"'");
             }
+        }
+    }
+
+    protected XMLStreamReader2 forceWrapping(XMLStreamReader sr)
+    {
+        return new ForcedWrapper(sr);
+    }
+
+    /*
+    ////////////////////////////////////////////////////
+    // Helper classes
+    ////////////////////////////////////////////////////
+    */
+
+    /**
+     * Helper class needed to be able to wrap any stream reader, not
+     * just ones that do not implement XMLStreamReader2
+     */
+    final static class ForcedWrapper extends Stax2ReaderAdapter
+    {
+        public ForcedWrapper(XMLStreamReader sr) {
+            super(sr);
         }
     }
 }

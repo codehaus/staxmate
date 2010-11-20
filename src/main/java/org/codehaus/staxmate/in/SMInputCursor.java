@@ -1327,8 +1327,9 @@ public abstract class SMInputCursor
          *   (otherwise we'll try to skip a sub-tree with next getNext()).
          *   Not sure if END_ELEMENT is the best choice, but seems to work ok.
          */
+        String str = _streamReader.getElementText();
         _currEvent = SMEvent.END_ELEMENT;
-        return _streamReader.getElementText();
+        return str;
     }
 
     /**

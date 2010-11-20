@@ -33,10 +33,10 @@ public class TestTyped extends ReaderTestBase
     */
     
     /*
-    ////////////////////////////////////////////////////
-    // Tests for typed attributes
-    ////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Tests for typed attributes
+    /**********************************************************************
+     */
 
     public void testTypedBooleanAttr()
         throws XMLStreamException
@@ -114,10 +114,10 @@ public class TestTyped extends ReaderTestBase
     }
 
     /*
-    ////////////////////////////////////////////////////
-    // Simple tests for typed elements
-    ////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Simple tests for typed elements
+    /**********************************************************************
+     */
     
     public void testTextElem()
         throws XMLStreamException

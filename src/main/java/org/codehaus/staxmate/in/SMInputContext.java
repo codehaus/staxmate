@@ -37,9 +37,9 @@ public final class SMInputContext
     protected XMLStreamReader2 getStreamReader() { return _streamReader; }
 
     /*
-    ////////////////////////////////////////////////////////////
-    // Public API: access to location information
-    ////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API: access to location information
+    /**********************************************************************
      */
 
     public int getDepth()
