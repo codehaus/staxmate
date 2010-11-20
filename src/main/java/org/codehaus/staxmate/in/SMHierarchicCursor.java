@@ -1,7 +1,6 @@
 package org.codehaus.staxmate.in;
 
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.*;
 
 import org.codehaus.stax2.XMLStreamReader2;
 
@@ -15,9 +14,9 @@ public class SMHierarchicCursor
     extends SMInputCursor
 {
     /*
-    ////////////////////////////////////////////
-    // Life cycle
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Life cycle
+    /**********************************************************************
      */
 
     public SMHierarchicCursor(SMInputContext ctxt, SMInputCursor parent, SMFilter f)
@@ -26,9 +25,9 @@ public class SMHierarchicCursor
     }
 
     /*
-    ///////////////////////////////////////////////////
-    // Public API, accessing cursor state information
-    ///////////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API, accessing cursor state information
+    /**********************************************************************
      */
 
     public int getParentCount() {
@@ -36,9 +35,9 @@ public class SMHierarchicCursor
     }
 
     /*
-    ////////////////////////////////////////////
-    // Public API, iterating
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API, iterating
+    /**********************************************************************
      */
 
     public SMEvent getNext()
@@ -131,9 +130,9 @@ public class SMHierarchicCursor
     }
 
     /*
-    ////////////////////////////////////////////
-    // Internal methods
-    ////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
 
     /**
