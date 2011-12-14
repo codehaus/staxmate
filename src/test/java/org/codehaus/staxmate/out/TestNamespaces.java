@@ -5,9 +5,6 @@ import java.io.*;
 import javax.xml.stream.*;
 import static javax.xml.stream.XMLStreamConstants.*;
 
-import org.codehaus.staxmate.SMOutputFactory;
-import org.codehaus.staxmate.out.*;
-
 public class TestNamespaces
     extends BaseWriterTest
 {

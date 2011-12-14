@@ -28,3 +28,7 @@ Rohan Hant:
   * Reported [STAXMATE-37]: getElemStringValue causes unexpected end_document when using
   default Sun Java6 XMLInputFactory (note: caused by Stax2 RI bug, outside of StaxMate)
   [2.0.1]
+
+Prokopis Prokopidis:
+  * Reported [STAXMATE-41]: NPE when outputting non-NS attributes via DOM writer
+  [2.0.2]

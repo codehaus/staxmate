@@ -496,6 +496,11 @@ public class DOMConverter
             Attr attr = (Attr) attrs.item(i);
             String aPrefix = attr.getPrefix();
             String ln = attr.getLocalName();
+            // ad per [STAXMATE-41], localName not always available...
+            if (ln == null) {
+                ln = attr.getName();
+            }
+            
             String value = attr.getValue();
 
             /* With attributes things are bit simpler: they will never use

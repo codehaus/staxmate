@@ -8,15 +8,22 @@ Description:
 
 Problems fixed:
 
+* [STAXMATE-41] NPE with DOM attributes when document built in non-NS mode
+  (reported by Prokopis P)
+
+------------------------------------------------------------------------
+== History: ==
+------------------------------------------------------------------------
+
+2.0.1: [20-Nov-2010]
+
+Problems fixed:
+
 * [STAXMATE-37] getElemStringValue causes unexpected end_document when using
   default Sun Java6 XMLInputFactory (note: caused by Stax2 RI bug, outside of StaxMate)
  (reported by Rohan H)
 * [STAXMATE-39] Problems with DomConverter, building DOM trees from Stax reader.
  (reported by Guillaume L)
-
-------------------------------------------------------------------------
-== History: ==
-------------------------------------------------------------------------
 
 2.0.0: [12-Mar-2009]
 
