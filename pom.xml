@@ -18,6 +18,13 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
 </description>
  <!-- Contact information -->
   <url>http://staxmate.codehaus.org</url>
+
+  <scm>
+    <connection>scm:svn:https://svn.codehaus.org/staxmate/trunk</connection>
+    <developerConnection>scm:svn:https://svn.codehaus.org/staxmate/trunk</developerConnection>
+    <url>http://staxmate.codehaus.org</url>
+  </scm>
+
   <issueManagement>
     <url>http://jira.codehaus.org/browse/STAXMATE</url>
   </issueManagement>
