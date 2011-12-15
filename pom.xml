@@ -127,7 +127,7 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
           <configuration>
             <instructions>
               <Bundle-Name>StaxMate</Bundle-Name>
-              <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+              <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
               <Bundle-Description>StaxMate -- Perfect companion for your stax processor</Bundle-Description>
               <Bundle-Vendor>FasterXML.com</Bundle-Vendor>
               <Import-Package>
