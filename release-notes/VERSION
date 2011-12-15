@@ -1,14 +1,14 @@
-Version: 2.0.1
+Version: 2.0.2
 
 Release date:
-  xx-Nov-2010
+  15-Dec-2011
 
 Description:
-  Patch release for 2.0.0
+  Another patch release for 2.0.0
 
 Problems fixed:
 
-* [STAXMATE-41] NPE with DOM attributes when document built in non-NS mode
+* [STAXMATE-41] NPE with DOM elements/attributes when document built in non-NS mode
   (reported by Prokopis P)
 
 ------------------------------------------------------------------------

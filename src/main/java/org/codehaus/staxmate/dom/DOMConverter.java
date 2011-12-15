@@ -486,7 +486,13 @@ public class DOMConverter
         if (elemUri == null) {
             elemUri = "";
         }
-        sw.writeStartElement(elemPrefix, elem.getLocalName(), elemUri);
+        String ln = elem.getLocalName();
+        // as per [STAXMATE-41], localName not always available...
+        if (ln == null) {
+            ln = elem.getNodeName();
+        }
+
+        sw.writeStartElement(elemPrefix, ln, elemUri);
 
         /* And in any case, may have attributes; list also contains
          * namespace declarations (stupid DOM)
@@ -495,8 +501,8 @@ public class DOMConverter
         for (int i = 0, len = attrs.getLength(); i < len; ++i) {
             Attr attr = (Attr) attrs.item(i);
             String aPrefix = attr.getPrefix();
-            String ln = attr.getLocalName();
-            // ad per [STAXMATE-41], localName not always available...
+            ln = attr.getLocalName();
+            // as per [STAXMATE-41], localName not always available...
             if (ln == null) {
                 ln = attr.getName();
             }

@@ -180,9 +180,7 @@ public class TestDOMConverter
         assertEquals(3, count);
     }
     
-    /**
-     * Test for [STAXMATE-41]
-     */
+    // Test for [STAXMATE-41]
     public void testReadWriteWithAttributes() throws Exception
     {
         XMLStreamReader sr = XMLInputFactory.newInstance().createXMLStreamReader(
@@ -203,6 +201,29 @@ public class TestDOMConverter
         xml = xml.replaceAll("\"", "'");
         // should probably traverse, instead of direct comparison but...
         assertEquals("<?xml version='1.0' encoding='UTF-8'?><test new='test'>A test.</test>", xml);
+    }
+
+    // Test for [STAXMATE-41]
+    public void testReadWriteElement() throws Exception
+    {
+        XMLStreamReader sr = XMLInputFactory.newInstance().createXMLStreamReader(
+                new ByteArrayInputStream("<?xml version='1.0' encoding='UTF-8'?><test></test>".getBytes("UTF-8")));
+        Document doc = new DOMConverter().buildDocument(sr);
+        sr.close();
+
+        // Attempt to modify dom.Document
+        doc.getDocumentElement().appendChild(doc.createElement("child"));
+
+        XMLOutputFactory xof = XMLOutputFactory.newInstance();
+        StringWriter out = new StringWriter();
+        XMLStreamWriter writerX = xof.createXMLStreamWriter(out);
+        new DOMConverter().writeDocument(doc, writerX);
+        out.close();
+        String xml = out.toString();
+        // let's convert all double-quotes to apostrophes, for comparison
+        xml = xml.replaceAll("\"", "'");
+        // should probably traverse, instead of direct comparison but...
+        assertEquals("<?xml version='1.0' encoding='UTF-8'?><test><child/></test>", xml);
     }
     
     /*
