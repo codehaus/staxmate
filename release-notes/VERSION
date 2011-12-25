@@ -17,6 +17,8 @@ Problems fixed:
 
 2.0.1: [20-Nov-2010]
 
+NOTE: requires new version of stax2-api, 3.0.4 (at least for STAXMATE-37)
+
 Problems fixed:
 
 * [STAXMATE-37] getElemStringValue causes unexpected end_document when using

@@ -4,10 +4,10 @@
 
     <!-- Version information -->
     <property name="IMPL_TITLE" value="StaxMate" />
-    <property name="IMPL_VERSION" value="2.0.0" />
+    <property name="IMPL_VERSION" value="2.0.2" />
     <property name="IMPL_VENDOR" value="http://staxmate.codehaus.org" />
 
-    <property name="REQ_STAX2_VERSION" value="3.0.1" />
+    <property name="REQ_STAX2_VERSION" value="3.0.4" />
 
     <property name="BASENAME" value="staxmate-${IMPL_VERSION}" />
 
