@@ -14,7 +14,7 @@
   <groupId>org.codehaus.staxmate</groupId>
   <artifactId>staxmate</artifactId>
   <packaging>bundle</packaging>
-  <version>2.0.3-SNAPSHOT</version>
+  <version>2.0.3</version>
 
   <name>StaxMate</name>
   <description>
@@ -25,9 +25,9 @@ It builds on top of a Stax (JSR-173) compliant XML processors such as Woodstox o
   <url>http://staxmate.codehaus.org</url>
 
   <scm>
-    <connection>scm:svn:https://svn.codehaus.org/staxmate/tags/staxmate-2.0.2b</connection>
-    <developerConnection>scm:svn:https://svn.codehaus.org/staxmate/tags/staxmate-2.0.2b</developerConnection>
-    <url>http://staxmate.codehaus.org/tags/staxmate-2.0.2b</url>
+    <connection>scm:svn:https://svn.codehaus.org/staxmate/tags/staxmate-2.0.3</connection>
+    <developerConnection>scm:svn:https://svn.codehaus.org/staxmate/tags/staxmate-2.0.3</developerConnection>
+    <url>http://staxmate.codehaus.org/tags/staxmate-2.0.3</url>
   </scm>
 
   <issueManagement>
