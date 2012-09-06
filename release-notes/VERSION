@@ -1,7 +1,7 @@
 Version: 2.0.2
 
 Release date:
-  15-Dec-2011
+  06-Sep-2012
 
 Description:
   Another patch release for 2.0.0
@@ -10,6 +10,11 @@ Problems fixed:
 
 * [STAXMATE-41] NPE with DOM elements/attributes when document built in non-NS mode
   (reported by Prokopis P)
+
+Other:
+
+* Now specifies dependency as Woodstox 4.1; although may still work on 4.0.x
+ (just not tested or officially supported)
 
 ------------------------------------------------------------------------
 == History: ==
